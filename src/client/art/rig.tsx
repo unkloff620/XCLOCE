@@ -47,7 +47,9 @@ export type Worn = Record<string, string | undefined>;
  * mode "ink" — the tattoos: the «наколки» grid (the 21 tattoo places), a tap picks the place (zone id, tattoos.ts ZONES);
  * mode "body" — the looks (hair): every part outlined, as before.
  */
-export type RigEdit = { mode: "items" | "body" | "ink"; part: string | null; onPick?: (part: string) => void };
+export type RigEdit = { mode: "items" | "body" | "ink"; part: string | null; onPick?: (part: string) => void;
+  /** turned round (the wardrobe's rotate button): the hero's back on the stool, the back's tattoo places (tattoos.ts BACK_ZONES) */
+  back?: boolean };
 const EditCtx = createContext<RigEdit | null>(null);
 
 /** the thin outline of every part in the looks editor (the clothes and the tattoos have their own grids) */
@@ -147,7 +149,8 @@ async function placeAt(grid: Grid, x: number, y: number): Promise<string | null>
   const order = PLACES[grid].order as readonly string[];
   return n > 0 && a.data[(py * a.width + px) * 4 + 3] > 0 ? order[n - 1] ?? null : null;
 }
-async function pickAt(x: number, y: number, layers: HitLayer[], mode: RigEdit["mode"]): Promise<string | null> {
+async function pickAt(x: number, y: number, layers: HitLayer[], mode: RigEdit["mode"], back?: boolean): Promise<string | null> {
+  if (back) return mode === "ink" ? placeAt("bzone", x, y) : null;
   if (mode === "ink") return placeAt("zone", x, y);
   if (mode === "items") {
     // a worn thing that sticks out past the body (a hat, a jacket) is still its slot; the body itself by the grid
@@ -274,7 +277,7 @@ function Highlight({ edit }: { edit: RigEdit }) {
   const shapes = partShapes(edit, look, worn);
   return (
     <g pointerEvents="none" className="rig-hl-part">
-      {edit.part && edit.mode !== "body" && <PlacePic grid={edit.mode === "ink" ? "zone" : "slot"} id={edit.part} />}
+      {edit.part && edit.mode !== "body" && <PlacePic grid={edit.back ? "bzone" : edit.mode === "ink" ? "zone" : "slot"} id={edit.part} />}
       {/* all the pieces of the part (a jacket and both sleeves) under one ring: one whole outline, not one per piece */}
       <g filter="url(#rig-ring)">
         {shapes.map((sh, k) => {
@@ -876,10 +879,35 @@ function Seat({ level = 0 }: { level?: number }) {
   return <image href="/assets/home/seat-1.webp" x={SEAT.x} y={SEAT.y} width={SEAT.w} height={SEAT.w * SEAT.aspect} preserveAspectRatio="none" />;
 }
 
+/**
+ * The hero turned round (the wardrobe, the user 2026-11-26): his back on the plain stool whatever chair stands in the
+ * room, bare (no clothes are drawn from behind), with the back's tattoos (TATTOO_FIT part "back") and its places grid.
+ */
+function BackBody({ look, edit }: { look: Look; edit: RigEdit }) {
+  const src = `${look.skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${look.skin}` : "/assets/hero"}/back.webp?v=${ART_VER.heroPart}`;
+  return (
+    <LookCtx.Provider value={look}>
+      <OutlineDefs />
+      <ellipse cx="500" cy="1282" rx="400" ry="30" fill="rgba(0,0,0,0.3)" />
+      <Seat level={0} />
+      <image href={src} x={0} y={0} width={1000} height={1400} preserveAspectRatio="none" />
+      <Ink part="back" />
+      {edit.mode === "ink" && (
+        <>
+          <PreloadPlaces grid="bzone" />
+          <image className="rig-grid" href={`/assets/hero/tattoo/bzones.webp?v=${PLACE_ART_V}`} x={0} y={0} width={1000} height={1400} preserveAspectRatio="none" pointerEvents="none" />
+          {edit.part && <g pointerEvents="none" className="rig-hl-part"><PlacePic grid="bzone" id={edit.part} /></g>}
+        </>
+      )}
+    </LookCtx.Provider>
+  );
+}
+
 /** Rig contents in its own 1000×1400 coordinates (place inside an <svg viewBox="0 0 1000 1400">). */
 function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number; look?: Look; worn?: Worn; seatOnly?: boolean; edit?: RigEdit }) {
   // the room editor hides the hero: only the seat stays, so the room behind is seen
   if (seatOnly) return <>{seat !== undefined && seat !== false && <Seat level={typeof seat === "number" ? seat : 0} />}</>;
+  if (edit?.back) return <BackBody look={look ?? DEFAULT_LOOK} edit={edit} />;
   return (
     <LookCtx.Provider value={look ?? DEFAULT_LOOK}>
     <WornCtx.Provider value={worn ?? {}}>
@@ -1006,14 +1034,14 @@ export function RigViewport({ x, y, scale, seat, still, look, worn, seatOnly, ed
   // the pictures' pixels are read once the editor opens, so the first tap is answered at once
   useEffect(() => { layers.forEach((l) => !l.rect && void alphaOf(l.href)); }, [layers]);
   // the clothes / tattoo grid's tap map too (a picture loaded only when the editor opens)
-  useEffect(() => { if (edit?.mode === "ink" || edit?.mode === "items") void placeAt(edit.mode === "ink" ? "zone" : "slot", -1, -1); }, [edit?.mode]);
+  useEffect(() => { if (edit?.mode === "ink" || edit?.mode === "items") void placeAt(edit.back ? "bzone" : edit.mode === "ink" ? "zone" : "slot", -1, -1); }, [edit?.mode, edit?.back]);
   const tap = async (e: ReactPointerEvent<SVGSVGElement>) => {
     const svg = ref.current;
     if (!svg || !edit?.onPick) return;
     const m = svg.getScreenCTM();
     if (!m) return;
     const pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse());
-    const part = await pickAt(pt.x, pt.y, layers, edit.mode);
+    const part = await pickAt(pt.x, pt.y, layers, edit.mode, edit.back);
     if (part) edit.onPick(part);
   };
   return (

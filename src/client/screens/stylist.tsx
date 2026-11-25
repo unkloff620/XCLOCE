@@ -71,7 +71,15 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
   const openInk = () => {
     haptic.tap();
     setInkTab(true);
-    setFocus({ mode: "ink", part: null });
+    setFocus({ mode: "ink", part: null, back: focus.back });
+  };
+  // the rotate button: the hero turns his back (the back's tattoo places) and back again; the clothes or the chair turn him round too
+  const turn = () => {
+    haptic.tap();
+    if (focus.back) return setFocus({ ...focus, part: null, back: false });
+    setInkTab(true);
+    setInkSet(null);
+    setFocus({ mode: "ink", part: null, back: true });
   };
   const owned = new Set(state.inventory.map((i) => i.id));
   // the event's sets (boss "heist", «Взлом») stay out of sight until the event starts or a piece is owned
@@ -324,7 +332,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
         // the room things on the left: the room itself is not tapped any more (the hero is edited over it)
         <div className="sty-room-tabs">
           {ROOM_SIDE.map((s) => (
-            <button key={s.id} type="button" onClick={() => { haptic.tap(); onRoom(s.id); }} aria-label={s.name} title={s.name}>
+            <button key={s.id} type="button" onClick={() => { haptic.tap(); setFocus({ ...focus, back: false }); onRoom(s.id); }} aria-label={s.name} title={s.name}>
               <img src={`/assets/home/thumb/${ROOM_THUMB[s.id]}.webp`} alt="" draggable={false} />
             </button>
           ))}
@@ -338,11 +346,12 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
         <button type="button" className={`sty-shave ${(state?.look.body.beard ?? 0) > 0 ? "" : "idle"}`} disabled={!!busy || (state?.look.body.beard ?? 0) < 1}
           onClick={async () => { const r = await act<{ days: number }>("shave", {}, (x) => `Побрился — небрит был ${x.days} дн.`); if (r) { haptic.ok(); sfx("tap"); } }}
           aria-label="Побриться" title={(state?.look.body.beard ?? 0) > 0 ? "Побриться" : "Пока нечего брить — щетина растёт сутки"}><img src="/assets/ui/razor.webp" alt="" draggable={false} /></button>
+        <button type="button" className={focus.back ? "on" : ""} onClick={turn} aria-pressed={!!focus.back} aria-label="Повернуть" title="Повернуть"><img src="/assets/ui/rotate.webp" alt="" draggable={false} /></button>
       </div>
       {/* cancel and save: over the panel, on the sides of the hero's feet */}
       <button type="button" className="sty-big x" onClick={onClose} aria-label="Отмена" title="Отмена"><img src="/assets/ui/btn-cancel.webp" alt="" draggable={false} /></button>
       {/* «Наколки»: the clothes off for a look (a preview only, nothing is taken off) */}
-      {inkTab && (
+      {inkTab && !focus.back && (
         <button type="button" className={`sty-bare ${draft.bare ? "on" : ""}`} onClick={() => { haptic.tap(); setDraft({ ...draft, bare: !draft.bare }); }}
           aria-pressed={!!draft.bare} aria-label={draft.bare ? "Показать одежду" : "Скрыть одежду"} title={draft.bare ? "Показать одежду" : "Скрыть одежду"}>
           <img src="/assets/ui/slot-shirt.webp" alt="" draggable={false} />

@@ -8,6 +8,9 @@ Inputs (tools/rig/source/tattoo/):
   _edits/<set>-hq.png         the whole body inked (an image edit of _base/in.png)
   _edits/<set>-head.png, <set>-hand.png       the head and the hand inked
 Output: <set>/full-ink.png (1000×1400 rig canvas), <set>/head-ink.png, <set>/handR-ink.png.
+  --back: the set's back (the user 2026-11-25): _back/in.png, full.png (the hero from behind, WITH his head — the back
+  rig has places on it), the edit _edits/<set>-back.png (an edit of _back/in.png with _back/skin-mask.png and the set's
+  front edit as the second image) → <set>/back-ink.png
 
 The rules (each was a bug once):
   1. the edit never lands exactly on the hero: its figure is first warped onto the hero's outline (a dense flow between
@@ -130,8 +133,8 @@ def fill_gaps(out, skin, lines, sparse=False):
     return out
 
 
-def main(sid, sparse=False):
-    base = os.path.join(T, "_base")
+def main(sid, sparse=False, back=False):
+    base = os.path.join(T, "_back" if back else "_base")
     a = prep(os.path.join(base, "in.png"))
     body = np.array(Image.open(os.path.join(base, "full.png")))[..., 3] > 128
     # rule 3: the skin that may carry ink — the body minus the shorts (their dark navy cloth), a little inside the outline
@@ -142,7 +145,7 @@ def main(sid, sparse=False):
         sz = ndimage.sum(shorts, lab, range(1, n + 1))
         shorts = ndimage.binary_dilation(lab == (np.argmax(sz) + 1), iterations=3)
     skin = body & ~shorts & (ndimage.distance_transform_edt(body) > 3)
-    b0 = prep(os.path.join(T, "_edits", f"{sid}-hq.png"))
+    b0 = prep(os.path.join(T, "_edits", f"{sid}-back.png" if back else f"{sid}-hq.png"))
     # both figures by the same rule (holes between the arms and the body filled), so the outlines compare like for like
     # the base is HEADLESS: an edit that drew a head (or squeezed the body) cannot be fitted — the ink would smear
     ta, tb = figure(a), figure(b0)
@@ -162,7 +165,12 @@ def main(sid, sparse=False):
     covered = ndimage.binary_fill_holes(ndimage.binary_closing(out[..., 3] > 30, iterations=3))
     bare = (skin & ~covered).sum() / skin.sum()
     os.makedirs(os.path.join(T, sid), exist_ok=True)
-    Image.fromarray(out).save(os.path.join(T, sid, "full-ink.png"))
+    Image.fromarray(out).save(os.path.join(T, sid, "back-ink.png" if back else "full-ink.png"))
+    if back:
+        print(sid, "back: bare skin", round(bare * 100, 1), "%")
+        if bare > MAX_BARE and not sparse:
+            raise SystemExit(f"{sid}: {bare:.1%} of the back's skin left bare (> {MAX_BARE:.0%}) — redo the edit")
+        return
     # the head and the hand: small, drawn alone — a rigid fit is enough
     geo = json.load(open(os.path.join(base, "geo.json")))
     for p, src in (("head", f"{sid}-head.png"), ("handR", f"{sid}-hand.png")):
@@ -195,4 +203,4 @@ def main(sid, sparse=False):
 if __name__ == "__main__":
     sparse = "--sparse" in sys.argv
     for s in [a for a in sys.argv[1:] if not a.startswith("--")]:
-        main(s, sparse)
+        main(s, sparse, "--back" in sys.argv)

@@ -1,7 +1,7 @@
 import type { Queryable } from "../db.ts";
 import { tattooSetsOfBoss } from "../../content/tattoos.ts";
 import { BOSSES, CASE_WINS, EVENT_FIGHTS, bossById, bossSetItems } from "../../content/bosses.ts";
-import { TATTOO_IDS, TATTOO_SETS, setBonusList } from "../../content/tattoos.ts";
+import { TATTOO_IDS, TATTOO_SETS, bonusPieces, setBonusList } from "../../content/tattoos.ts";
 import { craftBonus } from "./craft.ts";
 
 /*
@@ -31,7 +31,7 @@ export async function setBonuses(q: Queryable, pid: number): Promise<Record<stri
   }
   // tattoo sets: every piece of a set owned (inked or not) adds the set's bonus
   const ink = new Set((await q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [pid, TATTOO_IDS])).map((r) => r.item_id));
-  for (const s of TATTOO_SETS) if (s.pieces.every((p) => ink.has(p.id))) for (const b of setBonusList(s)) out[b.weapon] = (out[b.weapon] ?? 0) + b.damage;
+  for (const s of TATTOO_SETS) if (bonusPieces(s).every((p) => ink.has(p.id))) for (const b of setBonusList(s)) out[b.weapon] = (out[b.weapon] ?? 0) + b.damage;
   for (const [w, v] of Object.entries((await craftBonus(q, pid)).dmg)) out[w] = (out[w] ?? 0) + v;
   return out;
 }

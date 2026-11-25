@@ -31,7 +31,7 @@ const TATTOO_MODE_SHORT = { pacan: "Пацанский", blat: "Блатной",
 
 /** the place on the body a piece takes («chest-l»): one tattoo per place — a new one there replaces the old
  *  (the id ends with its place; a set id may hold a dash itself: «tat-zr-ball-chest-l») */
-export const tattooZone = (id: string) => ZONES.find(([z]) => id.endsWith(`-${z}`))?.[0] ?? id.split("-").slice(2).join("-");
+export const tattooZone = (id: string) => [...BACK_ZONES, ...ZONES].find(([z]) => id.endsWith(`-${z}`))?.[0] ?? id.split("-").slice(2).join("-");
 /** the inked list with one tattoo per place (the last one wins) */
 export function oneTattooPerZone(ids: string[]): string[] {
   const byZone = new Map<string, string>();
@@ -50,12 +50,31 @@ const ZONES: [string, string, string][] = [
   ["thigh-l", "левое бедро", "LEG_L"], ["thigh-r", "правое бедро", "LEG_R"], ["knee-l", "левое колено", "LEG_L"], ["knee-r", "правое колено", "LEG_R"],
   ["shin-l", "левая голень", "LEG_L"], ["shin-r", "правая голень", "LEG_R"], ["foot-l", "левая стопа", "LEG_L"], ["foot-r", "правая стопа", "LEG_R"],
 ];
+/**
+ * The back (the user 2026-11-26, the artist's back rig tools/rig/source/tattoo/_back/zones): 21 more places, seen when the
+ * hero turns round in the wardrobe. A set drawn on the back too (BACK_SETS, its back-ink.png) has 42 pieces; the set's
+ * bonus still asks only for the front 21 (nobody loses a bonus he already has).
+ */
+const BACK_ZONES: [string, string, string][] = [
+  ["b-crown", "затылок", "BACK"], ["b-nape", "загривок", "BACK"], ["b-upper", "лопатки", "BACK"], ["b-middle", "середина спины", "BACK"], ["b-lower", "поясница", "BACK"],
+  ["b-delt-l", "левая дельта", "BACK"], ["b-delt-r", "правая дельта", "BACK"], ["b-triceps-l", "левый трицепс", "BACK"], ["b-triceps-r", "правый трицепс", "BACK"],
+  ["b-elbow-l", "левый локоть", "BACK"], ["b-elbow-r", "правый локоть", "BACK"], ["b-forearm-l", "левое предплечье сзади", "BACK"], ["b-forearm-r", "правое предплечье сзади", "BACK"],
+  ["b-hip-l", "левый бок бедра", "BACK"], ["b-thigh-l", "левое бедро сзади", "BACK"], ["b-thigh-r", "правое бедро сзади", "BACK"], ["b-hip-r", "правый бок бедра", "BACK"],
+  ["b-calf-l", "левая икра", "BACK"], ["b-calf-r", "правая икра", "BACK"], ["b-foot-l", "левая пятка", "BACK"], ["b-foot-r", "правая пятка", "BACK"],
+];
+/** the sets drawn on the back too (tools/rig/source/tattoo/<set>/back-ink.png) */
+const BACK_SETS = new Set(["igla", "kuznya"]);
+/** the back's places, in the editor's order */
+export const TATTOO_BACK_ZONES = BACK_ZONES.map(([z]) => z);
+export const isBackTattoo = (id: string) => BACK_ZONES.some(([z]) => id.endsWith(`-${z}`));
 /** a tattoo place's name in words (the editor's grid): «левое плечо» */
-export const TATTOO_ZONE_NAME: Record<string, string> = Object.fromEntries(ZONES.map(([z, place]) => [z, place]));
+export const TATTOO_ZONE_NAME: Record<string, string> = Object.fromEntries([...ZONES, ...BACK_ZONES].map(([z, place]) => [z, place]));
 const solid = (id: string, name: string, boss: string, mode: TattooSet["mode"], weapon: string, damage: number): TattooSet => ({
   id, name, boss, mode, bonus: { weapon, damage },
-  pieces: ZONES.map(([z, place, part]) => ({ id: `tat-${id}-${z}`, name: `${name}: ${place}`, part })),
+  pieces: [...ZONES, ...(BACK_SETS.has(id) ? BACK_ZONES : [])].map(([z, place, part]) => ({ id: `tat-${id}-${z}`, name: `${name}: ${place}`, part })),
 });
+/** the pieces a set's bonus asks for: the front 21 */
+export const bonusPieces = (s: TattooSet) => s.pieces.filter((p) => p.part !== "BACK");
 /** sets from «Ящик ништяков» (boss "box"): a box opened for achievement points drops a piece with BOX_TATTOO_CHANCE */
 export const BOX_TATTOO_CHANCE = 0.2;
 const boxSet = (id: string, name: string, weapon: string, damage: number): TattooSet => ({ ...solid(id, name, "box", "pacan", weapon, damage) });
