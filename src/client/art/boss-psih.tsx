@@ -118,7 +118,7 @@ export function PsihRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, pu
       <g className="fk-root" style={at(rig.w / 2, rig.h - 20)}>
         {/* the legs: only the feet stay planted (the user 2026-11-22), the whole leg goes with the upper body (br-up) */}
         {P.legs && (puppet ? (
-          <image className="pp" data-pp="back" data-pp-follow="br-up" data-pp-follow-at="0.5,0.8" href={src("legs")}
+          <image className="pp" data-pp="back" data-pp-follow="br-up" data-pp-follow-at="0.25,0.74" href={src("legs")}
             x={P.legs.x} y={P.legs.y} width={P.legs.w} height={P.legs.h} preserveAspectRatio="none" />
         ) : pic("legs"))}
         <g className="br-up" style={at(WAIST[0], WAIST[1])}>

@@ -537,9 +537,10 @@ const fkCombo = (n: number, amp = 1, slow = 1): Action => {
     const k = i / (n - 1);
     // the glasses creep down, the frown deepens, the mouth grits a little more with every blow
     const f = { gl: Math.min(1, (i + 1) / (n - 2)), brw: 0.5 + 0.5 * k, sq: 0.25 + 0.45 * k, jaw: -1.1, px: right ? -0.5 : 0.5, py: 0.6 };
-    const back = fkAmp(right ? { ...FK_R_BACK, up: 2.5, x: 4, head: 2.5 } : { ...FK_L_BACK, up: -2.5, x: -4, head: -2.5 }, amp);
-    const hit = fkAmp(right ? { ...FK_R_HIT, up: -4, x: -12, head: -3.5, armL: 6, lowL: -8 } : { ...FK_L_HIT, up: 4.5, x: 12, head: 3.5, armR: 4, lowR: 6 }, amp);
-    const after = fkAmp(right ? { armR: -75, lowR: -25, handR: -5, zR: 4 } : { armL: 28, lowL: -80, handL: 5, zL: 4 }, amp);
+    // (Псих, the user 2026-11-25: the knees bend on every blow — y, the feet stay)
+    const back = fkAmp(right ? { ...FK_R_BACK, up: 2.5, x: 4, head: 2.5, y: -3 } : { ...FK_L_BACK, up: -2.5, x: -4, head: -2.5, y: -3 }, amp);
+    const hit = fkAmp(right ? { ...FK_R_HIT, up: -4, x: -12, head: -3.5, armL: 6, lowL: -8, y: 36 } : { ...FK_L_HIT, up: 4.5, x: 12, head: 3.5, armR: 4, lowR: 6, y: 40 }, amp);
+    const after = fkAmp(right ? { armR: -75, lowR: -25, handR: -5, zR: 4, y: 10 } : { armL: 28, lowL: -80, handL: 5, zL: 4, y: 10 }, amp);
     const st = amp < 1 ? 0.55 : 1;
     keys.push({ at: t, pose: { ...back, ...f }, stiff: (1 + 2.5 * k) * st });
     keys.push({ at: t + d * 0.32, pose: { ...hit, ...f }, stiff: (5 + 3 * k) * st });
@@ -547,8 +548,8 @@ const fkCombo = (n: number, amp = 1, slow = 1): Action => {
     keys.push({ at: t + d * 0.62, pose: { ...hit, ...f, ...after }, stiff: (2 + 2 * k) * st });
     t += d;
   }
-  // done: the mouth falls open, he pants, the arms drop back into the stance
-  const done = { gl: 1, brw: 0.2, sq: 0.1, jaw: 0.35, px: 0, py: 0.3 };
+  // done: the mouth falls open, he pants, the arms drop back into the stance (the knees straighten)
+  const done = { gl: 1, brw: 0.2, sq: 0.1, jaw: 0.35, px: 0, py: 0.3, y: 0 };
   keys.push({ at: t, pose: { ...done, up: -1.5, head: 3 }, stiff: 1.2 });
   // the fist off the hip → the hand with the finger, up under the glasses' bridge (the head still, to meet it)
   keys.push({ at: t + 0.7, pose: { ...done, ...FK_PUSH_LOW, fing: 1, px: 0, py: -0.4, brw: -0.3 }, stiff: 1.6 });
@@ -887,7 +888,7 @@ const POSES: Record<string, Spec> = {
   // Псих: the old Фокус's art and moves (boss-psih.tsx)
   psih: {
     springs: {
-      up: { k: 120, c: 13 }, x: { k: 110, c: 13 }, head: { k: 150, c: 12 },
+      up: { k: 120, c: 13 }, x: { k: 110, c: 13 }, y: { k: 170, c: 17 }, head: { k: 150, c: 12 },
       armR: { k: 170, c: 17 }, lowR: { k: 260, c: 19 }, handR: { k: 1100, c: 66 },
       armL: { k: 170, c: 17 }, lowL: { k: 260, c: 19 }, handL: { k: 1100, c: 66 },
       zR: { k: 300, c: 30 }, zL: { k: 300, c: 30 },
