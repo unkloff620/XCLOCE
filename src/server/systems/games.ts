@@ -3,6 +3,7 @@
  * покер и апгрейдер — одно действие. Блэкджек — общий стол, он в systems/blackjack.ts. Колоду тасует и кости кидает
  * только сервер.
  */
+import { cached, MEMO_OFF } from "../memo.ts";
 import { bump } from "./counters.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { addGameWeekly, setGameBest } from "./minigame-extras.ts";
@@ -65,6 +66,10 @@ function contPenalty(s: ZonkState) {
 
 /** the best zonk game of a Moscow day (all levels): who and how many points */
 async function zonkRecord(q: Queryable, day: string) {
+  // the same for everybody: computed at most every 30 s per server instance
+  return MEMO_OFF ? zonkRecordNow(q, day) : cached(`zonk:${day}`, 30_000, () => zonkRecordNow(q, day));
+}
+async function zonkRecordNow(q: Queryable, day: string) {
   const [r] = await q.query<{ points: number; id: number; display_name: string; photo_url: string | null }>(
     `SELECT (g.result->>'points')::int AS points, p.id, p.display_name, p.photo_url FROM games g JOIN players p ON p.id = g.player_id
      WHERE g.kind='zonk' AND g.day=$1 AND g.status='done' AND g.result->>'points' IS NOT NULL AND (g.result->>'points')::int > 0 AND g.result->>'duel' IS NULL

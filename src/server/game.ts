@@ -62,7 +62,7 @@ export async function makeCtx(q: Queryable, pid: number, opts: { now?: number; r
  * holds the GLOBAL boss row) — building the whole state (~90 queries) inside that transaction made every player's
  * hit wait for everyone else's state: the game crawled when many fought at once.
  */
-export async function inPlayerTx<T>(db: Db, pid: number, fn: (ctx: Ctx) => Promise<T>, opts: { now?: number; rng?: () => number; split?: boolean } = {}) {
+export async function inPlayerTx<T>(db: Db, pid: number, fn: (ctx: Ctx) => Promise<T>, opts: { now?: number; rng?: () => number; split?: boolean; noState?: boolean } = {}) {
   const begin = async (q: Queryable) => {
     const ctx = await makeCtx(q, pid, opts);
     const p = await lockPlayer(ctx);
@@ -77,6 +77,9 @@ export async function inPlayerTx<T>(db: Db, pid: number, fn: (ctx: Ctx) => Promi
     });
   }
   const result = await db.tx(async (q) => fn(await begin(q)));
+  // the weapon hits: the boss screen takes only the hit's result (and asks for the state itself when the fight ends),
+  // so the full state (≈100 queries) is not built for every tap
+  if (opts.noState) return { result, state: null as unknown as Awaited<ReturnType<typeof gameState>> };
   const state = await db.tx(async (q) => gameState(await begin(q)));
   return { result, state };
 }
@@ -348,13 +351,16 @@ export async function logAction(q: Queryable, pid: number, type: string, ok: boo
   await q.query("INSERT INTO action_log (player_id, type, ok, info, at) VALUES ($1,$2,$3,$4,$5)", [pid, type, ok, info, new Date(now)]);
 }
 
-export async function runAction(db: Db, pid: number, type: ActionType, body: Record<string, unknown>, opts: { now?: number; rng?: () => number } = {}) {
+/** the hits whose screens read only the result (boss.tsx, raids.tsx): no full state after them */
+const NO_STATE = new Set<string>(["attack", "raid_attack"]);
+
+export async function runAction(db: Db, pid: number, type: ActionType, body: Record<string, unknown>, opts: { now?: number; rng?: () => number; withState?: boolean } = {}) {
   try {
     const out = await inPlayerTx(db, pid, async (ctx) => {
       const r = await dispatch(ctx, type, body);
       if (!NOT_LOGGED.has(type)) await logAction(ctx.q, pid, type, true, actionText(type, body, r)?.slice(0, 500) ?? null, ctx.now);
       return r;
-    }, { ...opts, split: true });
+    }, { ...opts, split: true, noState: NO_STATE.has(type) && !opts.withState });
     // a toggle switched on: the automation does its part at once (then every 15 min by the cron), the state shows it
     if (type === "auto_set" && body.on === true) {
       await runAutos(db, pid, opts.now ?? Date.now());

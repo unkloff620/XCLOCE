@@ -87,7 +87,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
           const snd = ACTION_SFX[type];
           if (snd) sfx(snd);
         }
-        setState(r.state);
+        // the hits come back without the full state (the server skips it): keep the one we have
+        if (r.state) setState(r.state);
         const msg = typeof ok === "function" ? ok(r.result) : ok;
         if (msg) toast(msg, "ok");
         return r.result;
@@ -148,14 +149,25 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, []);
   useEffect(() => {
     if (auth !== "ok") return;
+    // the load (the user 2026-11-25: thousands online): the full state every 30 s while the player is doing something,
+    // every 90 s when he only looks (no tap for a minute); every action brings a fresh state anyway
+    let lastPoll = Date.now(), lastTouch = Date.now();
+    const touch = () => { lastTouch = Date.now(); };
     const t = setInterval(() => {
-      if (document.visibilityState === "visible") void refresh();
-    }, 15_000);
-    const onVis = () => document.visibilityState === "visible" && void refresh();
+      if (document.visibilityState !== "visible") return;
+      const now = Date.now();
+      const every = now - lastTouch < 60_000 ? 30_000 : 90_000;
+      if (now - lastPoll >= every) { lastPoll = now; void refresh(); }
+    }, 5_000);
+    const onVis = () => { if (document.visibilityState === "visible") { lastPoll = Date.now(); touch(); void refresh(); } };
     document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("pointerdown", touch, { passive: true });
+    window.addEventListener("keydown", touch);
     return () => {
       clearInterval(t);
       document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("pointerdown", touch);
+      window.removeEventListener("keydown", touch);
     };
   }, [auth, refresh]);
 

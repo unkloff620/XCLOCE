@@ -1,4 +1,5 @@
 import { talentDamageOf } from "./talent-progress.ts";
+import { every, MEMO_OFF } from "../memo.ts";
 import { fightSlots } from "../../content/fight-slots.ts";
 import { myBoost } from "./shodnyak.ts";
 import { newbieView } from "./newbie.ts";
@@ -110,9 +111,12 @@ export async function gameState(ctx: Ctx) {
     monthly: await monthlyView(ctx.q, ctx.pid, ctx.now, ctx.cfg),
     notify: await notifyView(ctx.q, ctx.pid),
     prizes: await (async () => {
-      await settleWeeks(ctx.q, ctx.now);
-      await settleGameWeeks(ctx.q, ctx.now);
-      await settleZonkDay(ctx.q, ctx.now);
+      // the global catch-ups: at most once a minute per server instance (server/memo.ts)
+      if (MEMO_OFF || every("settle", 60_000, ctx.now)) {
+        await settleWeeks(ctx.q, ctx.now);
+        await settleGameWeeks(ctx.q, ctx.now);
+        await settleZonkDay(ctx.q, ctx.now);
+      }
       return prizesView(ctx.q, ctx.pid);
     })(),
     // achievements count by themselves: the ones just reached are taken now and announced (achievementsReadyIds)
@@ -159,7 +163,8 @@ export async function gameState(ctx: Ctx) {
     // flat damage per weapon from the complete boss sets
     setBonus: await setBonuses(ctx.q, ctx.pid),
     clanBoss: await clanBossView(ctx.q, ctx.pid, ctx.now),
-    duels: await (async () => { await expireDuels(ctx); return duelsView(ctx.q, ctx.pid); })(),
+    // the stale duels of everybody: at most every 20 s per server instance
+    duels: await (async () => { if (MEMO_OFF || every("duels", 20_000, ctx.now)) await expireDuels(ctx); return duelsView(ctx.q, ctx.pid); })(),
     bjInvites: await bjInviteCount(ctx.q, ctx.pid, ctx.now),
     bjInviteList: await invitesFor(ctx.q, ctx.pid, ctx.now),
     stashWish: await stashWish(ctx.q, ctx.pid),

@@ -1,4 +1,5 @@
 import { GameError, type Queryable } from "../db.ts";
+import { cached, MEMO_OFF } from "../memo.ts";
 import { grantReward, nextWeekAt, weekKey, weekStart, type Ctx } from "../core.ts";
 import { CLAN_PRIZES, WEEKLY_PRIZES, frameOf, type Frame } from "../../content/achievements.ts";
 import { levelFromXp } from "../../content/levels.ts";
@@ -159,16 +160,23 @@ export const ONLINE_MS = 3 * 60_000;
 /** All players by authority (avatar, name, frame, online) and my own place; opening it also marks me as seen. */
 export async function topAuthority(q: Queryable, pid: number, now: number) {
   await q.query("UPDATE players SET last_seen_at=$2 WHERE id=$1", [pid, new Date(now)]);
-  const rows = await q.query<{ id: number; display_name: string; photo_url: string | null; xp: number; last_seen_at: Date }>(
-    "SELECT id, display_name, photo_url, xp, last_seen_at FROM players WHERE banned_at IS NULL ORDER BY xp DESC, id LIMIT $1",
-    [TOP_STRIP],
-  );
-  const [me] = await q.query<{ xp: number; place: number }>(
+  // the same for everybody (the top, their frames, the online count): at most every 20 s per server instance; my place —
+  // a count over the players — at most every minute (server/memo.ts)
+  const shared = async () => {
+    const rows = await q.query<{ id: number; display_name: string; photo_url: string | null; xp: number; last_seen_at: Date }>(
+      "SELECT id, display_name, photo_url, xp, last_seen_at FROM players WHERE banned_at IS NULL ORDER BY xp DESC, id LIMIT $1",
+      [TOP_STRIP],
+    );
+    const frames = await framesFor(q, rows.map((r) => r.id), now);
+    const [on] = await q.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM players WHERE banned_at IS NULL AND last_seen_at > $1", [new Date(now - ONLINE_MS)]);
+    return { rows, frames, on };
+  };
+  const { rows, frames, on } = MEMO_OFF ? await shared() : await cached("top-strip", 20_000, shared, now);
+  const place = () => q.query<{ xp: number; place: number }>(
     "SELECT p.xp, (SELECT COUNT(*)::int FROM players o WHERE o.banned_at IS NULL AND (o.xp > p.xp OR (o.xp = p.xp AND o.id < p.id))) + 1 AS place FROM players p WHERE p.id=$1",
     [pid],
   );
-  const frames = await framesFor(q, rows.map((r) => r.id), now);
-  const [on] = await q.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM players WHERE banned_at IS NULL AND last_seen_at > $1", [new Date(now - ONLINE_MS)]);
+  const [me] = MEMO_OFF ? await place() : await cached(`top-place:${pid}`, 60_000, place, now);
   return {
     top: rows.map((r, i) => ({
       id: r.id, name: r.display_name, photo: r.photo_url, xp: Number(r.xp), place: i + 1, frame: frames.get(r.id) ?? null,

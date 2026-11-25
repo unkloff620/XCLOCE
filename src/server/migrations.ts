@@ -1847,4 +1847,21 @@ CREATE INDEX IF NOT EXISTS donate_payments_player ON donate_payments (player_id,
     id: "v2-136-baul-repack",
     sql: `DELETE FROM baul_packs;`,
   },
+  {
+    // the load (the user 2026-11-25): the stale-duel check reads only the open and running duels
+    id: "v2-137-duels-live-index",
+    sql: `CREATE INDEX IF NOT EXISTS duels_live ON duels (status, created_at, accepted_at) WHERE status IN ('open', 'playing');`,
+  },
+  {
+    // the load: the authority top and a player's place in it, the online count
+    id: "v2-138-players-xp-index",
+    sql: `CREATE INDEX IF NOT EXISTS players_xp ON players (xp DESC, id) WHERE banned_at IS NULL;
+CREATE INDEX IF NOT EXISTS players_seen ON players (last_seen_at) WHERE banned_at IS NULL;`,
+  },
+  {
+    // the load: the player's state reads today's hits and the fights he has not looked at yet on every poll
+    id: "v2-139-state-indexes",
+    sql: `CREATE INDEX IF NOT EXISTS boss_hits_player_time ON boss_hits (player_id, created_at);
+CREATE INDEX IF NOT EXISTS fights_unseen ON fights (player_id, id) WHERE seen = false;`,
+  },
 ];

@@ -41,7 +41,7 @@ import type { gameState } from "../src/server/systems/state.ts";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Acted = { result: any; state: Awaited<ReturnType<typeof gameState>> };
 export const act = (db: Db, pid: number, type: ActionType, body: Record<string, unknown> = {}, now?: number, rng?: () => number) =>
-  runAction(db, pid, type, body, { now, rng }) as Promise<Acted>;
+  runAction(db, pid, type, body, { now, rng, withState: true }) as Promise<Acted>;
 export const always = (v: number) => () => v;
 export const H = 3600_000;
 export const M = 60_000;
