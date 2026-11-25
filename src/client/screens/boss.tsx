@@ -412,6 +412,8 @@ export function BossScreen({ id }: { id: string }) {
     const md = fightMode(mode);
     const r = await act<{ fightId: number }>("fight_start", { boss: id, solo, mode, combo: hasCombo(id) ? combo : null }, `${solo ? "Соло-бой" : "Бой"} с боссом ${boss?.name} · ${md.name}${md.hp > 1 ? ` (здоровье ×${md.hp}, награда ×${md.reward})` : ""}. 8 часов`);
     if (r) void loadList();
+    // «Соло» is for one fight (the user 2026-11-25): once the fight starts, the switch goes off (the mode stays «Пацанский»)
+    if (r && solo) setPick("pacan");
     return !!r;
   };
   // the door in front of the boss: closed → open (swings on its hinges) → enter (we step in, the fight starts)
