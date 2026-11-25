@@ -294,7 +294,7 @@ let entryTip: string | undefined;
 export interface LoadProgress { n: number; total: number; url: string | null }
 
 /**
- * Loading screen: the XClose logo, a ring with [loaded/total] in the middle, a joke about what is downloading now
+ * Loading screen: the XClose logo, a ring with the percent loaded in the middle, a joke about what is downloading now
  * and one game tip (picked at random each time the game opens).
  * Without `prog` (connecting to the server) the ring just spins.
  */
@@ -335,7 +335,7 @@ function Loading({ prog, overlay }: { prog?: LoadProgress; overlay?: boolean }) 
             <circle className="track" cx="60" cy="60" r={R} />
             <circle className="arc" cx="60" cy="60" r={R} strokeDasharray={C} strokeDashoffset={frac === null ? C * 0.72 : C * (1 - frac)} />
           </svg>
-          <b className="num">{prog ? `[${prog.n}/${prog.total}]` : "[…]"}</b>
+          <b className="num">{frac === null ? "0%" : `${Math.min(100, Math.floor(frac * 100))}%`}</b>
         </div>
         <div className="boot-what">{prog ? resourceLine(shownUrl, seed + (shownUrl?.length ?? 0)) : "Стучимся на сервер…"}</div>
         {tip && (
