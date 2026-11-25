@@ -744,6 +744,36 @@ const fxShift = (rate: number, a: number) => (t: number): Pose => {
   return { x: 8 * a * s, up: 1.4 * a * s, head: -1.4 * a * s, y: 3 * a * Math.abs(s) };
 };
 
+/* Дацкоу (boss-datsik.tsx, the new art): both fists up at the chest. A punch: the fist goes back up (the wind-up), then
+   comes down at the bottom of the screen and grows (zR / zL) — the knees give (y), he leans into it, the long hair flies
+   (the hair spring), the mouth opens (jaw), the brows frown (brw). Both fists by turns, sometimes both at once. */
+const DZ_R_BACK = { armR: -6, lowR: -22 };
+const DZ_R_HIT = { armR: 16, lowR: 38, zR: 42 };
+const DZ_L_BACK = { armL: 6, lowL: 22 };
+const DZ_L_HIT = { armL: -16, lowL: -38, zL: 42 };
+const dzAmp = (p: Pose, a: number): Pose => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, (v ?? 0) * (k === "jaw" || k === "brw" ? 1 : a)]));
+const dzPunch = (t: number, side: "r" | "l" | "b", keys: Key[], amp = 1, slow = 1) => {
+  const r = side !== "l", l = side !== "r";
+  const lean = side === "r" ? -1 : side === "l" ? 1 : 0;
+  keys.push({ at: t, pose: dzAmp({ ...(r ? DZ_R_BACK : {}), ...(l ? DZ_L_BACK : {}), up: -2 * lean, x: 4 * lean, y: -4, head: -2 * lean, brw: 0.4, jaw: 0.1 }, amp), stiff: 1.8 });
+  t += 0.2 * slow;
+  keys.push({ at: t, pose: dzAmp({ ...(r ? DZ_R_HIT : {}), ...(l ? DZ_L_HIT : {}), up: 4 * lean, x: -12 * lean, y: side === "b" ? 40 : 30, head: 3 * lean + 3, brw: 1, jaw: 1 }, amp), stiff: 5 });
+  t += 0.22 * slow;
+  keys.push({ at: t, pose: dzAmp({ ...(r ? { armR: 3, lowR: 6 } : {}), ...(l ? { armL: -3, lowL: -6 } : {}), y: 3, jaw: 0.2, brw: 0.4 }, amp), stiff: 2 });
+  return t + 0.16 * slow;
+};
+const dzCombo = (plan: ("r" | "l" | "b")[], amp = 1, slow = 1): Action => {
+  const keys: Key[] = [];
+  let t = 0;
+  for (const s of plan) { t = dzPunch(t, s, keys, amp, slow); t += 0.08 * slow; }
+  keys.push({ at: t, pose: { jaw: 0.12 }, stiff: 1.2 });
+  return { keys, dur: t + 0.5 };
+};
+const dzShift = (rate: number, a: number) => (t: number): Pose => {
+  const s = Math.sin(t * rate);
+  return { x: 8 * a * s, up: 1.4 * a * s, head: -1.4 * a * s, y: 3 * a * Math.abs(s) };
+};
+
 const POSES: Record<string, Spec> = {
   solntse: {
     // heavy: slow, overdamped springs; the fists a little quicker on the blow
@@ -786,6 +816,44 @@ const POSES: Record<string, Spec> = {
       "--px": a.px.toFixed(3), "--py": a.py.toFixed(3),
     }),
     stiffOwn: true,
+  },
+  datsik: {
+    springs: {
+      up: { k: 150, c: 15 }, x: { k: 140, c: 15 }, y: { k: 180, c: 17 }, head: { k: 180, c: 14 },
+      armR: { k: 240, c: 20 }, lowR: { k: 340, c: 23 }, armL: { k: 240, c: 20 }, lowL: { k: 340, c: 23 },
+      zR: { k: 340, c: 28 }, zL: { k: 340, c: 28 },
+      jaw: { k: 220, c: 19 }, brw: { k: 160, c: 16 }, px: { k: 200, c: 20 }, py: { k: 200, c: 20 },
+    },
+    drag: { lowL: ["armL", -0.05], lowR: ["armR", -0.05], head: ["up", -0.08] },
+    // never still: a boxer's bounce, the fists twitch; the eyes look about (a new spot every ~1.5 s)
+    idle: (t) => {
+      const g = Math.floor(t / 1.5);
+      const r = (n: number) => { const v = Math.sin(n * 12.9898 + g * 78.233) * 43758.5453; return v - Math.floor(v); };
+      return {
+        up: 0.8 * Math.sin(t * 1.4) + 0.3 * Math.sin(t * 3 + 1), x: 2.4 * Math.sin(t * 0.9),
+        y: 2 * (0.5 - 0.5 * Math.cos(t * 2.6)),
+        head: 1.4 * Math.sin(t * 1.2 + 1) + 0.6 * Math.sin(t * 0.5),
+        armR: 1.6 * Math.sin(t * 1.5 + 2), lowR: 2.4 * Math.sin(t * 1.9 + 1), armL: 1.6 * Math.sin(t * 1.6), lowL: 2.4 * Math.sin(t * 2.1 + 0.5),
+        jaw: 0.06 + 0.06 * (0.5 - 0.5 * Math.cos(t * 2.2)),
+        px: (r(1) - 0.5) * 1.6, py: (r(2) - 0.5) * 1,
+      };
+    },
+    actions: [
+      { a: dzCombo(["r", "l", "r"]), w: 2 }, { a: dzCombo(["l", "r", "b"]), w: 2 },
+      { a: dzCombo(["b"]), w: 1 }, { a: dzCombo(["r", "r", "l", "l", "b"]), w: 1 },
+    ],
+    rest: [1.6, 3.2],
+    hit: { head: -300, up: -90, x: -70, y: -60, armL: 100, lowL: -130, armR: -100, lowR: 130, jaw: 6 },
+    strike: dzCombo(["r", "l", "b"]),
+    dazed: { pose: { armL: 6, armR: -6, head: 3, jaw: 0.25 }, act: true, sway: dzShift(1.8, 1), actions: [{ a: dzCombo(["r", "l"], 0.7, 1.8), w: 1 }], rest: [4, 6], strike: dzCombo(["b"], 0.7, 1.8), speed: 0.65 },
+    dying: { pose: { armL: 14, armR: -14, head: 6, up: -2, jaw: 0.4 }, act: true, sway: dzShift(1.2, 1.2), actions: [{ a: dzCombo(["r"], 0.45, 2.2), w: 1 }, { a: dzCombo(["l"], 0.45, 2.2), w: 1 }], rest: [5, 8], strike: dzCombo(["b"], 0.45, 2.4), speed: 0.5 },
+    breath: (t, dazed) => { const b = 0.5 - 0.5 * Math.cos((t / (dazed ? 1.3 : 1.05)) * Math.PI * 2); return [1 + 0.012 * b, 1 + 0.026 * b, -4 * b]; },
+    shapes: { jaw: {}, brw: {}, px: {}, py: {} },
+    scale: { lowR: "zR", lowL: "zL" },
+    vars: (a) => ({ "--jaw": Math.max(0, Math.min(1, a.jaw)).toFixed(3), "--brw": a.brw.toFixed(3), "--px": a.px.toFixed(3), "--py": a.py.toFixed(3) }),
+    stiffOwn: true,
+    // the long hair lags behind the head and flies on a punch
+    hair: { sel: ".dz-hair", k: 80, c: 6.5, turn: 0.5, jerk: 0.012, flutter: (t) => 0.6 * Math.sin(t * 1.7) + 0.35 * Math.sin(t * 3.9 + 1) },
   },
   nitka: {
     // quick: stiff springs, the fists quicker still; the glasses on a loose spring (they jump and settle)
@@ -1024,20 +1092,6 @@ const POSES: Record<string, Spec> = {
     // beaten: the guard dropped, the fists hang
     dazed: { pose: { armL: 10, lowL: 22, handL: 6, armR: 18, lowR: 42, handR: 10, head: 6, up: -1.5 }, act: false },
     hem: { sel: ".bs-hem", k: 30, c: 3.2, up: 1.6, x: 0.35, flutter: (t) => 1.6 * Math.sin(t * 1.7) + 0.8 * Math.sin(t * 3.1 + 1) },
-  },
-  datsik: {
-    sel: fistSel, springs: fistSprings, scale: { armL: "sL", armR: "sR" }, cssStrike: true,
-    drag: { head: ["up", -0.08] },
-    idle: fistIdle,
-    actions: [
-      { a: dsL, w: 16 }, { a: dsR, w: 14 },
-      { a: join(dsL, shift(dsR, 0.04)), w: 22 }, // the one-two
-      { a: join(dsL, shift(dsL, 0.04), shift(dsR, 0.04)), w: 16 },
-      { a: join(dsR, shift(dsL, 0.04)), w: 14 },
-    ],
-    rest: [0.8, 2.0],
-    hit: { head: 240, up: -70, x: -60, armL: -200, armR: -200, sL: -150, sR: -150 },
-    dazed: { pose: { armL: -14, armR: -14, sL: -6, sR: -6, head: 4, up: -1 }, act: false },
   },
   bebyakyan: {
     sel: fistSel, springs: fistSprings, scale: { armL: "sL", armR: "sR" }, cssStrike: true,

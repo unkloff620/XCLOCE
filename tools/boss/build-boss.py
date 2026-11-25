@@ -23,10 +23,11 @@ HIRES_BY_BOSS = {"vodovoz": (2, {"head", "eyes", "pupils", "eyes-closed", "browL
                   "utilizator": (2, {"head", "eyes", "pupils", "eyes-closed", "browL", "browR", "throat", "teeth-up", "teeth-low", "lips", "lips-up"}),
                   "psih": (2, {"head", "eyes", "pupils", "browL", "browR", "throat", "teeth-up", "teeth-low", "lips", "lips-up", "nose", "chin", "temple", "glasses", "hair"}),
                   "solntse": (2, {"head", "eyes", "pupils", "mouthIn", "jawLow"}),
+                  "datsik": (2, {"head", "eyes", "pupils", "brows", "chin", "throat", "tongue", "teeth-up", "teeth-low"}),
                   "fokus": (2, {"head", "eyes", "pupils", "brows", "glasses", "throat", "teeth-up", "teeth-low", "chin", "hoodFront", "hoodShadow", "phone"}),
                   "nitka": (2, {"head", "eyes", "pupils", "brows", "glasses", "throat", "teeth-up", "teeth-low", "chin"}),
                   "knyaz": (2, {"head", "head-open", "eyes", "pupils", "eyes-closed", "throat", "teeth-up", "teeth-low", "lips", "mouth-closed", "mouth-sad", "gag"})}
-PARTS = ["tail", "legs", "shirtR", "shirtL", "handR-blood", "handL-blood", "legs-glow", "body", "body-glow", "apron", "chestR", "chestR-glow", "chestL", "poker", "mouthIn", "jawLow", "armR-glow", "lowR-glow", "headset", "foreL", "foreR", "armL", "lowL", "handL", "bag", "vials", "gasmask", "cover", "keyRing", "keyFob", "keyKey", "duck", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "jaw", "lips", "lips-up", "mouth-sad", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar", "gag", "fingerR", "nose", "chin", "temple", "glasses", "hair", "phone", "hoodFront", "hoodShadow", "neck", "hoodBack", "laptop", "coat", "coatBack"]
+PARTS = ["tail", "legs", "shirtR", "shirtL", "handR-blood", "handL-blood", "legs-glow", "body", "body-glow", "apron", "chestR", "chestR-glow", "chestL", "poker", "mouthIn", "jawLow", "armR-glow", "lowR-glow", "headset", "foreL", "foreR", "armL", "lowL", "handL", "bag", "vials", "gasmask", "cover", "keyRing", "keyFob", "keyKey", "duck", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "jaw", "lips", "lips-up", "mouth-sad", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar", "gag", "fingerR", "nose", "chin", "temple", "glasses", "hair", "phone", "hoodFront", "hoodShadow", "neck", "hoodBack", "laptop", "coat", "coatBack", "tongue"]
 # puppet-warped sequences (<part>@0.png, <part>@1.png …): one strip <part>.webp, frames side by side, frame 0 first
 FRAMES = ["brows", "jaw", "armRb", "armLb"]
 # which edge of the part joins the parent: (axis, side) — y/bottom for head and left forearm, x/right for the right one
@@ -60,6 +61,9 @@ PIVOT_BY_BOSS = {
     # the shoulders, the elbows, the wrists, the flip phone's hinge (the lid swings shut on it) — printed by that script
     "fokus": {"head": [395.9, 300.0], "armR": [273.8, 377.0], "lowR": [89.6, 452.1], "handR": [95.2, 381.6], "phone": [234.5, 238.2],
               "armL": [589.3, 393.3], "lowL": [656.7, 500.8], "handL": [523.9, 564.3]},
+    # Дацкоу (the new full-height art 2026-11-25, tools/boss/assemble-datsik.py, the sheet cropped at (448, 73)): the neck
+    # (under the chin), the shoulders, the elbows (the forearms carry the fists) — printed by that script
+    "datsik": {"head": [297.5, 262.0], "armR": [145.0, 339.1], "lowR": [86.1, 435.4], "armL": [408.0, 345.0], "lowL": [467.8, 442.4]},
     "solntse": {"head": [508.0, 196.0], "armR": [362.0, 268.0], "lowR": [92.0, 414.0], "armL": [578.0, 300.0], "lowL": [668.0, 505.0]},
     "bebyakyan": {"foreL": [228.0, 405.0], "foreR": [617.0, 437.0]},
     # whole arms swing at the shoulder, the hands with money turn at the wrist (inside the arm's swing)

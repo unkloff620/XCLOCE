@@ -8313,3 +8313,13 @@ button:is(.modal > .x, .fs-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x,
 /* the laptop slips down out of his fingers, tilting (--ls 1), and is tossed back up (--ls < 0 flies a little past) */
 .rig-fx { --ls: 0; }
 .rig-fx .fx-slip { transform: translate(calc(var(--ls) * 4px), calc(var(--ls) * 22px)) rotate(calc(var(--ls) * 5deg)); }
+
+/* ── Дацкоу (the new art, art/boss-datsik.tsx, boss-poses.ts POSES.datsik): the pose engine sets --jaw --brw --px --py ── */
+.rig-dz { --jaw: 0.06; --brw: 0; --px: 0; --py: 0; }
+.rig-dz .dz-jaw { transform: translateY(calc(var(--jaw) * 6.45px)); }
+.rig-dz .dz-pupils { transform: translate(calc(var(--px) * 2.6px), calc(var(--py) * 1.3px)); }
+.rig-dz .dz-brows { transform: translateY(calc(var(--brw) * 1.6px)) scaleX(calc(1 - var(--brw) * 0.03)); }
+.rig-dz .dz-lids > g { transform: scaleY(0); animation: fk-blink 3.9s linear infinite; }
+.rig-dz .dz-hair { will-change: transform; }
+@media (prefers-reduced-motion: reduce) { .rig-dz .dz-lids > g { animation: none; } }
+.rig-dz.boss-rig.dazed, .rig-dz.boss-rig.dazed :is(.br-arm-l, .br-arm-r, .br-low-l, .br-low-r, .br-head) { animation: none; }

@@ -22,6 +22,7 @@ import { usePuppet } from "./boss-puppet.ts";
 import { BOSS_RIGS } from "./boss-rig-data.ts";
 import { PsihRig } from "./boss-psih.tsx";
 import { FokusRig } from "./boss-fokus.tsx";
+import { DatsikRig } from "./boss-datsik.tsx";
 import { SunRig } from "./boss-sun.tsx";
 
 type Part = { x: number; y: number; w: number; h: number; pivot?: readonly number[]; frames?: number; v?: string };
@@ -400,6 +401,7 @@ export function BossRig({ id: asked, hpShare = 1, bust = false, outfit: wanted }
   }
   if (baseId === "psih") return <PsihRig id={id} look={look} rig={rig} bust={bust} dazed={dazed} dying={dying} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} />;
   if (baseId === "fokus") return <FokusRig id={id} look={look} rig={rig} bust={bust} dazed={dazed} dying={dying} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} />;
+  if (baseId === "datsik") return <DatsikRig id={id} look={look} rig={rig} bust={bust} dazed={dazed} dying={dying} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} />;
   if (baseId === "nitka") return <NitkaRig id={id} look={look} rig={rig} bust={bust} dazed={dazed} dying={dying} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} />;
   if (baseId === "solntse") return <SunRig id={id} look={look} rig={rig} bust={bust} dazed={dazed} dying={dying} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} />;
   if (baseId === "knyaz") return <KnyazRig id={id} rig={rig} bust={bust} dazed={dazed} svgRef={svgRef} frameCss={frameCss} strip={strip} />;
