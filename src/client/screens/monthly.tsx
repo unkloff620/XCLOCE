@@ -9,6 +9,7 @@ import { clock } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { CASE_POINTS, MONTHLY_CHEST, MONTHLY_TIERS, monthTaskOf, monthWeapon } from "../../content/monthly.ts";
 import type { Granted } from "../api.ts";
+import { NotifySwitch } from "./quests.tsx";
 
 /*
  * «Календарь»: the month's calendar (a «делюга» a day, the same for all), today's task under it,
@@ -166,6 +167,8 @@ export function MonthlyWindow({ onClose }: { onClose: () => void }) {
           })}
           <p className="tiny muted" style={{ margin: 0 }}>Награды месяца забирай до конца месяца — 1-го числа всё начинается заново.</p>
         </div>
+        {/* the Telegram reminders (they lived in «Задания дня») */}
+        <NotifySwitch />
       </div>
       {info && <ChestInfo onClose={() => setInfo(false)} />}
     </Modal>

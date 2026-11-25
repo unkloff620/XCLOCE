@@ -9,7 +9,6 @@ import { between } from "../../content/craft-drops.ts";
 import { CASE_THINGS } from "../../content/ach-box.ts";
 import { TATTOO_SETS } from "../../content/tattoos.ts";
 import type { Reward } from "../../content/rewards.ts";
-import { isAdminPlayer } from "./fortune.ts";
 
 /*
  * «Календарь» (content/monthly.ts): today's task is the same for all; the actions feed it (game.ts → monthTick).
@@ -22,8 +21,10 @@ type Closed = Record<string, "done" | "bought">;
 interface Row { progress: Record<string, number>; closed: Closed; claimed: Record<string, Granted> }
 
 /** the players see it once the admin turns it on; the admins always (to check it before) */
-export async function monthlyOn(q: Queryable, pid: number, cfg: Config) {
-  return cfg.monthly.on || (await isAdminPlayer(q, pid, cfg));
+/** «Делюги» are for everybody (the user 2026-11-25: «Задания дня» are gone; nothing is shown to the admins only — the
+ *  admin hides unreleased things with «Тех. работы») */
+export async function monthlyOn(_q: Queryable, _pid: number, _cfg: Config) {
+  return true;
 }
 
 async function row(q: Queryable, pid: number, month: string, lock = false): Promise<Row> {

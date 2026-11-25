@@ -142,10 +142,10 @@ type View =
   | { tab: "log"; sub: "actions" | "admins"; q: ActionsQuery; key: string }
   | { tab: "costs" }
   | { tab: "combo" };
-type LiveSub = "works" | "news" | "tosya" | "bosses" | "events" | "exchange" | "fortune" | "monthly" | "raids";
+type LiveSub = "works" | "news" | "tosya" | "bosses" | "events" | "exchange" | "fortune" | "raids";
 type StatsSub = "funnel" | "items" | "actions";
 const LIVE: [LiveSub, string, string][] = [
-  ["works", "🛠", "Тех. работы"], ["news", "📣", "Рассылка"], ["tosya", "🥟", "Тося"], ["bosses", "👹", "Боссы"], ["events", "🎉", "События"], ["exchange", "💱", "Обменник"], ["fortune", "🎡", "Колесо удачи"], ["monthly", "📅", "Делюги"], ["raids", "🚩", "Захват"],
+  ["works", "🛠", "Тех. работы"], ["news", "📣", "Рассылка"], ["tosya", "🥟", "Тося"], ["bosses", "👹", "Боссы"], ["events", "🎉", "События"], ["exchange", "💱", "Обменник"], ["fortune", "🎡", "Колесо удачи"], ["raids", "🚩", "Захват"],
 ];
 const STATS: [StatsSub, string, string][] = [["funnel", "🧭", "Воронка новичков"], ["items", "📦", "Предметы у игроков"], ["actions", "⚡", "Действия за 24 ч"]];
 const NAV: [View["tab"], string, string][] = [["dash", "📊", "Обзор"], ["live", "🎮", "Игра"], ["players", "👥", "Игроки"], ["stats", "📈", "Аналитика"], ["log", "📜", "Журнал"], ["costs", "💸", "Расходы"], ["combo", "🥊", "Комбо"]];
@@ -622,7 +622,6 @@ function Live({ sub }: { sub: LiveSub }) {
       {sub === "events" && <Events />}
       {sub === "exchange" && <ExchangeEvent />}
       {sub === "fortune" && <FortuneAdmin />}
-      {sub === "monthly" && <MonthlyAdmin />}
       {sub === "raids" && <RaidsAdmin />}
     </>
   );
@@ -1192,28 +1191,6 @@ function RaidsAdmin() {
   );
 }
 
-/** «Календарь»: the month's tasks for the players instead of «Задания дня», or only for the admins */
-function MonthlyAdmin() {
-  const m = useLoad(() => admin<{ on: boolean }>("monthly"), []);
-  const [busy, setBusy] = useState(false);
-  const set = async (on: boolean, ask: string) => {
-    if (!confirm(ask)) return;
-    setBusy(true);
-    try { await admin("monthly_set", { on }); m.reload(); } catch (e) { alert((e as Error).message); }
-    setBusy(false);
-  };
-  const d = m.data;
-  return (
-    <Box title={`📅 Делюги «Календарь» — ${!d ? "…" : d.on ? "у всех игроков" : "только у админов"}`}>
-      <p className="muted tiny">Делюга в день, одна для всех, на весь месяц. Пока выключено — делюги видят только админы (по Telegram id), а у игроков старые «Задания дня». Включайте 1-го числа: дни до включения в этом месяце считаются пропущенными и выкупаются за 1 SOL.</p>
-      <div className="row" style={{ gap: 8, marginTop: 8 }}>
-        {d?.on
-          ? <button className="adm-btn ghost" disabled={busy} onClick={() => set(false, "Вернуть игрокам «Задания дня»?")}>Вернуть «Задания дня»</button>
-          : <button className="adm-btn" disabled={busy || !d} onClick={() => set(true, "Включить делюги всем игрокам вместо «Заданий дня»?")}>Включить всем игрокам</button>}
-      </div>
-    </Box>
-  );
-}
 
 /** «Колесо удачи»: in the back yard for the players or only for the admins; the jackpot by hand */
 function FortuneAdmin() {

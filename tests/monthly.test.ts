@@ -112,15 +112,14 @@ describe("«От звонка до звонка»", () => {
     expect(v.month).toBe("2027-01");
   });
 
-  it("off for the players until the admin turns it on", async () => {
+  it("on for every player, whatever the old switch says (no admin-only preview)", async () => {
     await db.query("DELETE FROM config WHERE key='monthly'");
+    await db.query("INSERT INTO config (key, value) VALUES ('monthly', '{\"on\":false}')");
     resetConfigCache();
     const p = await newPlayer(db);
-    expect((await act(db, p, "notes_read", {}, at(2))).state.monthly).toBeNull();
-    await tick(p, at(2), "yard", 5);
-    await db.query("INSERT INTO config (key, value) VALUES ('monthly', '{\"on\":true}')");
+    expect((await act(db, p, "notes_read", {}, at(2))).state.monthly).not.toBeNull();
+    await db.query("DELETE FROM config WHERE key='monthly'");
     resetConfigCache();
-    expect((await view(p, at(2))).closedN).toBe(0);
   });
 
   it("an energy drink fills the energy up to the limit, not when full", async () => {

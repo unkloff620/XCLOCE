@@ -17,6 +17,12 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-25-deliugi-all",
+    date: "25 ноября",
+    title: "Делюги у всех",
+    items: [{ text: "Календарь на главной теперь у всех открывает «Делюги» — «Заданий дня» больше нет. Напоминания в Telegram включаются там же." }],
+  },
+  {
     id: "2026-11-25-fokus-new",
     date: "25 ноября",
     title: "Новый Фокус",
