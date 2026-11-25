@@ -85,6 +85,24 @@ def warp_onto(target, moving_mask, moving_img, with_mask=False):
     return (img, cur) if with_mask else img
 
 
+def match_skin(a, b, skin):
+    """scale the edit's colours so its bare skin is the hero's skin: the bare skin is the commonest colour of the edit's
+    lighter half of the skin (the ink is darker or far more saturated)"""
+    flat = ndimage.binary_erosion(skin, iterations=6) & (a.mean(2) > 150)
+    bb = b[flat]
+    lum = bb.mean(1)
+    light = bb[lum > np.percentile(lum, 50)]
+    q = (light // 8).astype(int)
+    keys, cnt = np.unique(q[:, 0] * 10000 + q[:, 1] * 100 + q[:, 2], return_counts=True)
+    k = keys[np.argmax(cnt)]
+    mode = np.array([k // 10000, k // 100 % 100, k % 100]) * 8 + 4
+    near = light[np.abs(light - mode).max(1) < 20]
+    gain = np.median(a[flat], 0) / np.maximum(np.median(near, 0), 1)
+    gain = np.clip(gain, 0.8, 1.6)
+    print("skin gain", np.round(gain, 3), "edit skin", np.median(near, 0).round(), "hero skin", np.median(a[flat], 0))
+    return np.clip(b * np.float32(gain), 0, 255)
+
+
 def unmix(a, b, inside):
     """the ink over the skin: b = (1-α)·a + α·ink, α as small as possible"""
     skin = np.maximum(a, 1)
@@ -155,6 +173,10 @@ def main(sid, sparse=False, back=False):
         raise SystemExit(f"{sid}: the edit's figure is {hb / ha:.0%} of the base's height, overlap {iou:.2f} — it drew a head or moved the body; "
                          "redo the edit of the headless _base/in.png (with the skin mask), never ask to keep a head")
     b, bm = warp_onto(ta, tb, b0, with_mask=True)
+    if sparse:
+        # a light set leaves bare skin, and the edit often draws that skin a shade darker (tanned): matched to the hero's
+        # own skin first, or the whole body gets a thin brown film of «ink» (the user 2026-11-26: the skin must show)
+        b = match_skin(a, b, skin)
     out, lines = unmix(a, b, ndimage.binary_erosion(body, iterations=3) & ~shorts)
     # the edit's own outline: where its limbs are thinner than the hero's (the flow does not always get them all the
     # way), it lands inside the body as a dark line along the edge — taken out and inpainted like the hero's own lines
