@@ -23,8 +23,9 @@ HIRES_BY_BOSS = {"vodovoz": (2, {"head", "eyes", "pupils", "eyes-closed", "browL
                   "utilizator": (2, {"head", "eyes", "pupils", "eyes-closed", "browL", "browR", "throat", "teeth-up", "teeth-low", "lips", "lips-up"}),
                   "fokus": (2, {"head", "eyes", "pupils", "browL", "browR", "throat", "teeth-up", "teeth-low", "lips", "lips-up", "nose", "chin", "temple", "glasses", "hair"}),
                   "solntse": (2, {"head", "eyes", "pupils", "mouthIn", "jawLow"}),
+                  "nitka": (2, {"head", "eyes", "pupils", "brows", "glasses", "throat", "teeth-up", "teeth-low", "chin"}),
                   "knyaz": (2, {"head", "head-open", "eyes", "pupils", "eyes-closed", "throat", "teeth-up", "teeth-low", "lips", "mouth-closed", "mouth-sad", "gag"})}
-PARTS = ["tail", "legs", "legs-glow", "body", "body-glow", "apron", "chestR", "chestR-glow", "chestL", "poker", "mouthIn", "jawLow", "armR-glow", "lowR-glow", "headset", "foreL", "foreR", "armL", "lowL", "handL", "bag", "vials", "gasmask", "cover", "keyRing", "keyFob", "keyKey", "duck", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "jaw", "lips", "lips-up", "mouth-sad", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar", "gag", "fingerR", "nose", "chin", "temple", "glasses", "hair"]
+PARTS = ["tail", "legs", "shirtR", "shirtL", "handR-blood", "handL-blood", "legs-glow", "body", "body-glow", "apron", "chestR", "chestR-glow", "chestL", "poker", "mouthIn", "jawLow", "armR-glow", "lowR-glow", "headset", "foreL", "foreR", "armL", "lowL", "handL", "bag", "vials", "gasmask", "cover", "keyRing", "keyFob", "keyKey", "duck", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "jaw", "lips", "lips-up", "mouth-sad", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar", "gag", "fingerR", "nose", "chin", "temple", "glasses", "hair"]
 # puppet-warped sequences (<part>@0.png, <part>@1.png …): one strip <part>.webp, frames side by side, frame 0 first
 FRAMES = ["brows", "jaw", "armRb", "armLb"]
 # which edge of the part joins the parent: (axis, side) — y/bottom for head and left forearm, x/right for the right one
@@ -49,6 +50,10 @@ PIVOT_BY_BOSS = {
               "armL": [470.0, 334.0], "lowL": [630.3, 487.3], "handL": [803.5, 505.3], "browR": [364.0, 117.8], "browL": [380.0, 118.5]},
     # Солнце (tools/boss/assemble-solntse.py, the 2000×3000 sheet cropped at (40, 40)): the neck, the shoulders (where
     # the upper arms meet the trunk), the elbows (the forearms' upper ends)
+    # Нитка (tools/boss/assemble-nitka.py, the 2000×3000 sheet cropped at (247, 99)): the neck, the shoulders (the upper
+    # arms over the shirt), the elbows, the wrists (the fists with the needles) — printed by that script
+    "nitka": {"head": [370.0, 240.0], "armR": [254.6, 345.4], "lowR": [124.4, 454.5], "handR": [129.3, 337.4], "handR-blood": [129.3, 337.4],
+              "armL": [528.6, 338.1], "lowL": [588.0, 456.8], "handL": [599.1, 391.8], "handL-blood": [599.1, 391.8]},
     "solntse": {"head": [508.0, 196.0], "armR": [362.0, 268.0], "lowR": [92.0, 414.0], "armL": [578.0, 300.0], "lowL": [668.0, 505.0]},
     "bebyakyan": {"foreL": [228.0, 405.0], "foreR": [617.0, 437.0]},
     # whole arms swing at the shoulder, the hands with money turn at the wrist (inside the arm's swing)

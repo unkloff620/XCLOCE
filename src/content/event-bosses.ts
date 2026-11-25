@@ -10,6 +10,7 @@ export const MENTORS = (): EventBossDef[] => EVENT_BOSSES.filter((b) => b.mentor
 export const EVENT_BOSSES: EventBossDef[] = [
   // Пепе is a mentor now (the «Менторы» tab of the bosses, always on): no admin switch, not on the home screen
   { id: "pepe", name: "Пепе", title: "Ментор", hp: 100_000, portrait: "/bosses/pepe/portrait.webp", href: "/event/pepe", mentor: true },
+  { id: "nitka", name: "Нитка", title: "Ментор", hp: 1_000_000, portrait: "/bosses/nitka/portrait.webp", href: "/bosses/nitka", mentor: true },
 ];
 
 export const eventBossById = (id: string) => EVENT_BOSSES.find((b) => b.id === id);

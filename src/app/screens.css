@@ -8232,3 +8232,19 @@ button:is(.modal > .x, .fs-x, .room-confirm-x, .bbox-x, .acx-x, .zb-res-x, .comb
 .route-loader { background: url(/assets/loading/bg.webp) center bottom / cover no-repeat, #4a3a33; overflow: hidden; }
 .route-loader .boot-tw-area { bottom: calc(var(--nav-h) + var(--safe-b) + 5%); }
 .route-loader .route-spin { position: relative; z-index: 2; }
+
+/* ── Нитка (art/boss-nitka.tsx, boss-poses.ts POSES.nitka): the pose engine sets --jaw --brw --gb --px --py ── */
+.rig-nitka { --jaw: 0.1; --brw: 0; --gb: 0; --px: 0; --py: 0; }
+/* the mouth: the chin and the lower teeth drop — fully open is the artist's «Shift + 3 × ↓» (7.2 rig px) */
+.rig-nitka .nt-jaw { transform: translateY(calc(var(--jaw) * 7.2px)); }
+/* the cross-eyed pupils look about together inside the holes */
+.rig-nitka .nt-pupils { transform: translate(calc(var(--px) * 2.6px), calc(var(--py) * 1.4px)); }
+/* the frown: the brows down and in */
+.rig-nitka .nt-brows { transform: translateY(calc(var(--brw) * 1.6px)) scaleX(calc(1 - var(--brw) * 0.03)); }
+/* the glasses jump on the nose (a loose spring: down on a stab, they bounce back) */
+.rig-nitka .nt-glasses { transform: translateY(calc(var(--gb) * 2.6px)) rotate(calc(var(--gb) * 1.2deg)); }
+/* the lids: a blink now and then */
+.rig-nitka .nt-lids > g { transform: scaleY(0); animation: fk-blink 3.7s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .rig-nitka .nt-lids > g { animation: none; } }
+/* below half HP his own shift from foot to foot (the pose engine), not the shared sway and limp */
+.rig-nitka.boss-rig.dazed, .rig-nitka.boss-rig.dazed :is(.br-arm-l, .br-arm-r, .br-low-l, .br-low-r, .br-hand-l, .br-hand-r, .br-head) { animation: none; }

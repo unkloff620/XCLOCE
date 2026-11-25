@@ -354,7 +354,8 @@ export function LocationScreen({ id }: { id: string }) {
   // stashes found: they fly out of their stop for a moment
   const [stashes, setStashes] = useState<{ key: number; i: number; id: string }[]>([]);
   const [pick, setPick] = useState<string | null>(null);
-  const [tab, setTab] = useState<LocTab>("day");
+  // «?tab=night» (the mentors' road, the bosses list): the night page right away
+  const [tab, setTab] = useState<LocTab>(() => (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("tab") === "night" ? "night" : "day"));
   // "+36" (папиросы) flying up from the tapped stop
   const [pops, setPops] = useState<{ key: number; i: number; drops: { icon: string; n: number; dx: number; dy: number }[] }[]>([]);
   if (!loc) return <Empty>Такой локации нет</Empty>;

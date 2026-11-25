@@ -108,7 +108,7 @@ async function resetFreeWeapons(q: Queryable, pid: number) {
 }
 
 /** The boss before this one: its passes are the entry to this one. */
-const prevBoss = (b: BossDef) => BOSSES.find((x) => x.order === b.order - 1);
+const prevBoss = (b: BossDef) => (b.event ? undefined : BOSSES.find((x) => x.order === b.order - 1));
 
 interface LostFight { id: number; player_id: number; boss_id: string; keys_spent: number }
 /**
@@ -143,16 +143,19 @@ async function locClears(q: Queryable, pid: number): Promise<Map<string, number>
 /** the road to the boss (BOSS_ROAD): his location cleared so many times (none set → open) */
 export function roadOf(boss: BossDef, clears: Map<string, number>) {
   const r = BOSS_ROAD[boss.id];
-  if (!r || boss.event || boss.order === 1) return null;
+  if (!r || (!boss.event && boss.order === 1)) return null;
   const loc = LOCATIONS.find((l) => l.id === r.loc);
-  return { loc: r.loc, name: loc?.name ?? r.loc, times: r.times, done: Math.min(r.times, clears.get(r.loc) ?? 0) };
+  // the night road is kept as «night:<id>» (systems/locations.ts claimKey)
+  const key = r.night ? `night:${r.loc}` : r.loc;
+  return { loc: r.loc, name: `${loc?.name ?? r.loc}${r.night ? " (ночь)" : ""}`, night: !!r.night, times: r.times, done: Math.min(r.times, clears.get(key) ?? 0) };
 }
 const roadOpen = (road: ReturnType<typeof roadOf>) => !road || road.done >= road.times;
 
 /** Boss N+1 opens after his road (the location) and KEYS keys of boss N. */
 export async function isUnlocked(q: Queryable, pid: number, boss: BossDef, defaultKeys: number): Promise<boolean> {
-  if (boss.order === 1 || boss.event) return true;
+  if (boss.order === 1 && !boss.event) return true;
   if (!roadOpen(roadOf(boss, await locClears(q, pid)))) return false;
+  if (boss.event) return true;
   if (await ringOpens(q, pid, boss)) return true;
   const prev = prevBoss(boss);
   if (!prev) return false;
@@ -187,7 +190,7 @@ export async function startFight(ctx: Ctx, bossId: string, solo = false, modeId:
   if (def.event) {
     // an event boss: only while the admin has him on, only «Пацанский», no «Соло»
     if (!def.mentor && !ctx.cfg.eventBosses[def.id]) throw new GameError("event_off", "Ивент сейчас не идёт");
-    if (modeId !== "pacan" || solo) throw new GameError("bad_mode", `С боссом ${def.name} — только «Пацанский»`);
+    if ((modeId !== "pacan" && !def.modes) || solo) throw new GameError("bad_mode", def.modes ? `С боссом ${def.name} — без «Соло»` : `С боссом ${def.name} — только «Пацанский»`);
   } else if (!bossOpen(def, ctx.cfg.bossOpen)) throw new GameError("boss_hidden", "Этот босс пока не пришёл");
   await settleMyFight(ctx);
   const [active] = await ctx.q.query<{ id: number; boss_id: string }>("SELECT id, boss_id FROM fights WHERE player_id=$1 AND status='active'", [ctx.pid]);
@@ -718,7 +721,7 @@ export async function bossList(q: Queryable, pid: number, cfg: Ctx["cfg"], now =
       const road = roadOf(b, clears);
       return {
         id: b.id,
-        unlocked: b.order === 1 || !!b.event || myFight?.boss_id === b.id || (roadOpen(road) && (keysHave >= keysNeeded(b, cfg.fight.keysToUnlock) || (ring && keyRingFits(b)))),
+        unlocked: (b.order === 1 && !b.event) || (!!b.event && roadOpen(road)) || myFight?.boss_id === b.id || (roadOpen(road) && (keysHave >= keysNeeded(b, cfg.fight.keysToUnlock) || (ring && keyRingFits(b)))),
         /** the road to him: his location cleared so many times (null — none) */
         road,
         /** «Связка ключей» opens him: no passes needed, none spent */

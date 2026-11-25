@@ -48,6 +48,8 @@ export interface BossDef {
   event?: boolean;
   /** a mentor (the «Менторы» tab): an event fight that is always on — no admin switch, «Пацанский» only */
   mentor?: boolean;
+  /** an event boss fought in every mode (Нитка: «Пацанский», «Блатной», «Авторитетный»; no «Соло») */
+  modes?: boolean;
 }
 
 /** Boss passes «Пропуск» (they used to be keys): the tier only sets the look and the name, every boss has its own card. */
@@ -229,6 +231,14 @@ export const EVENT_FIGHTS: BossDef[] = [
     theme: { a: "#173d1f", b: "#06140a", accent: "#3ddc84" }, photo: { portrait: "/bosses/pepe/portrait.webp", full: null },
     keysToUnlock: 0,
   },
+  {
+    // the 14th boss (the user 2026-11-25): a mentor in every mode; opens after a night run of «Опенспейс» (BOSS_ROAD)
+    id: "nitka", order: 14, name: "Нитка", title: "Ментор", event: true, mentor: true, modes: true,
+    story: "Мотя Нитка ушьёт так, что шва не найдёшь. А если не понравишься — заштопает иголкой прямо по живому.",
+    hp: 1_000_000, reward: { xp: 350, currencies: { TOOTH: 300 } },
+    theme: { a: "#2b3347", b: "#0e1118", accent: "#9fb3cf" }, photo: { portrait: "/bosses/nitka/portrait.webp", full: "/bosses/nitka/full.webp" },
+    keysToUnlock: 0,
+  },
 ];
 export const bossById = (id: string) => BOSSES.find((b) => b.id === id) ?? EVENT_FIGHTS.find((b) => b.id === id);
 /** the things of a boss's set (his wear list) */
@@ -297,7 +307,9 @@ export const BOTH_DROP_CHANCE = 0.05;
  * (all five tasks, the day road) so many times — the weak ones once, the stronger two or three times. Then his passes
  * (the previous boss's) let you in, as before. The first boss is always open; the event bosses need no road.
  */
-export const BOSS_ROAD: Record<string, { loc: string; times: number }> = {
+/** the road to a boss: his location cleared so many times; night — the night road of it (the mentors, the user 2026-11-25) */
+export const BOSS_ROAD: Record<string, { loc: string; times: number; night?: boolean }> = {
+  nitka: { loc: "openspace", times: 1, night: true },
   kedr: { loc: "openspace", times: 1 },
   mugo: { loc: "market", times: 1 },
   garkusha: { loc: "serverroom", times: 2 },

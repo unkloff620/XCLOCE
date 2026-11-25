@@ -16,6 +16,7 @@
  */
 import { MetalGlint } from "./glint.tsx";
 import { useEffect, useRef, type CSSProperties, type ReactNode, type RefObject } from "react";
+import { NitkaRig } from "./boss-nitka.tsx";
 import { usePoses } from "./boss-poses.ts";
 import { usePuppet } from "./boss-puppet.ts";
 import { BOSS_RIGS } from "./boss-rig-data.ts";
@@ -210,7 +211,7 @@ export function BossRig({ id: asked, hpShare = 1, bust = false, outfit: wanted }
   const dying = hpShare < DYING_BELOW;
   // Фокус below half: his legs are rigged anew (fixed at the feet only — he sways from leg to leg): the puppet and the
   // poses start over on the new look
-  const look = (baseId === "fokus" || baseId === "solntse") && dazed ? `${id}:${dying ? "dying" : "dazed"}` : id;
+  const look = (baseId === "fokus" || baseId === "solntse" || baseId === "nitka") && dazed ? `${id}:${dying ? "dying" : "dazed"}` : id;
   const svgRef = useRef<SVGSVGElement>(null);
   useDazed(svgRef, dazed);
   // the puppet warp (soft joints) for the full boss; the small busts on the list stay plain SVG
@@ -397,6 +398,7 @@ export function BossRig({ id: asked, hpShare = 1, bust = false, outfit: wanted }
     );
   }
   if (baseId === "fokus") return <FokusRig id={id} look={look} rig={rig} bust={bust} dazed={dazed} dying={dying} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} />;
+  if (baseId === "nitka") return <NitkaRig id={id} look={look} rig={rig} bust={bust} dazed={dazed} dying={dying} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} />;
   if (baseId === "solntse") return <SunRig id={id} look={look} rig={rig} bust={bust} dazed={dazed} dying={dying} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} />;
   if (baseId === "knyaz") return <KnyazRig id={id} rig={rig} bust={bust} dazed={dazed} svgRef={svgRef} frameCss={frameCss} strip={strip} />;
   if (baseId === "vadim") return <VadimRig id={id} rig={rig} bust={bust} dazed={dazed} sleepy={hpShare < DYING_BELOW} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} />;

@@ -17,6 +17,14 @@ export const todayUpdates = (now: number) => UPDATES.filter((u) => u.id.startsWi
 
 export const UPDATES: UpdateNote[] = [
   {
+    id: "2026-11-25-nitka",
+    date: "25 ноября",
+    title: "Новый ментор — Нитка",
+    items: [
+      { img: "/bosses/nitka/portrait.webp", text: "Во вкладке «Менторы» — Нитка: тыкает иголками с обеих рук и ковыряет. 1 000 000 здоровья, все три режима. Открывается после одной ночной ходки «Опенспейса»." },
+    ],
+  },
+  {
     id: "2026-11-25-loading",
     date: "25 ноября",
     title: "Новая загрузка",

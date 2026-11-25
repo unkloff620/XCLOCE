@@ -279,7 +279,7 @@ export function BossScreen({ id }: { id: string }) {
     return () => clearInterval(t);
   }, [fightId, poll]);
 
-  const row = list?.bosses.find((b) => b.id === id) ?? list?.events?.find((b) => b.id === id);
+  const row = list?.bosses.find((b) => b.id === id) ?? list?.events?.find((b) => b.id === id) ?? list?.mentors?.find((b) => b.id === id);
   const hpShown = view ? Math.max(0, view.hp - pendingDmg) : state?.fight?.bossId === id ? state.fight.hp : null;
   // the boss punches at the screen now and then while the fight is on (show only, no damage)
   // a dazed boss (below half HP) is scared: no more punches at the screen, he only waves his arms limply (screens.css)
@@ -377,8 +377,9 @@ export function BossScreen({ id }: { id: string }) {
   const setCombo = (c: ComboMode) => { setComboRaw(c); try { localStorage.setItem(`xc-combo-${id}`, c); } catch { /* storage blocked */ } };
   const setPick = (m: FightMode | "solo") => { setPickRaw(m); try { localStorage.setItem(`xc-mode-${id}`, m); } catch { /* storage blocked */ } };
   // an event boss (Пепе) is fought only in «Пацанский», never «Соло»
-  const ev = !!boss?.event;
-  const soloPick = !ev && pick === "solo";
+  // Нитка (boss.modes): a mentor fought in every mode, no «Соло»
+  const ev = !!boss?.event && !boss.modes;
+  const soloPick = !boss?.event && pick === "solo";
   const mode: FightMode = ev || pick === "solo" ? "pacan" : pick;
   // the mode pages: a swipe or the arrows go to the next / previous one (the slide comes from that side)
   const [slide, setSlide] = useState<"l" | "r" | null>(null);
@@ -534,7 +535,7 @@ export function BossScreen({ id }: { id: string }) {
   const locked = !!row && !row.unlocked;
   // already fought → keeps its colour behind the door, grey only for a never opened boss
   const grey = locked && !(row.myDamage > 0 || row.myWins > 0);
-  const prev = boss.order > 1 ? BOSSES.find((x) => x.order === boss.order - 1) : null;
+  const prev = boss.order > 1 && !boss.event ? BOSSES.find((x) => x.order === boss.order - 1) : null;
   const roadLeft = !!row?.road && row.road.done < row.road.times;
   const blocked = locked && roadLeft && row?.road ? `Сначала пройди локацию «${row.road.name}»${row.road.times > 1 ? ` ${row.road.times} раза — пройдено ${row.road.done}` : ""}` : locked ? `Нужно пропусков «${prev?.name}»: ${row!.keysNeed}. У тебя ${row!.keysHave}` : otherFight ? `Сначала закончи бой с боссом ${bossById(otherFight.bossId)?.name}` : limitLeft <= 0 ? "Лимит побед на сегодня — новые после полуночи по Москве" : null;
   const openDoor = async (solo: boolean) => {
@@ -556,7 +557,7 @@ export function BossScreen({ id }: { id: string }) {
     const ok = await start(solo);
     if (!ok) setDoor("closed");
   };
-  const doorReward = { ...boostReward(boss.reward, fightMode(mode).reward), items: [...(boss.final || ev ? [] : [{ id: `key-${boss.id}`, qty: 1 }]), ...(boss.reward.items ?? [])] };
+  const doorReward = { ...boostReward(boss.reward, fightMode(mode).reward), items: [...(boss.final || boss.event ? [] : [{ id: `key-${boss.id}`, qty: 1 }]), ...(boss.reward.items ?? [])] };
   return (
     <div className="fit-page door-page" style={{ ["--acc" as string]: boss.theme.accent }} onTouchStart={door === "closed" ? onTouchStart : undefined} onTouchEnd={door === "closed" ? onTouchEnd : undefined}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -606,7 +607,7 @@ export function BossScreen({ id }: { id: string }) {
           )}
         </div>
         {/* «Соло» (a fight alone) is only on the «Пацанский» page: a switch on the wall */}
-        {!locked && !ev && mode === "pacan" && (
+        {!locked && !boss.event && mode === "pacan" && (
           <div className="door-side">
             <button type="button" aria-pressed={soloPick} className={`door-word solo ${soloPick ? "on" : ""}`} disabled={door !== "closed"}
               onClick={() => { haptic.tap(); setPick(soloPick ? "pacan" : "solo"); }}
@@ -639,6 +640,7 @@ export function BossScreen({ id }: { id: string }) {
           {/* the name above the window, the rewards down the lower half — all on the door */}
           <b className="door-name display">{boss.name}</b>
           {ev && <span className="door-event">ИВЕНТ</span>}
+          {boss.mentor && boss.modes && <span className="door-event">МЕНТОР</span>}
           <span className="door-plate">
             <b className="door-plate-title">{boss.final ? "ФИНАЛ" : "НАГРАДА"}</b>
             <GainLine r={doorReward} size={14} />

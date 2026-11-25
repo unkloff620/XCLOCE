@@ -594,6 +594,60 @@ const fkShift = (rate: number, a: number) => (t: number): Pose => {
 };
 
 
+/* Нитка (boss-nitka.tsx): quick and nervy. Both fists hold a needle up by the face, its point out under the fist. A stab:
+   the fist goes up and back (the wind-up), then comes down at the screen hard and grows (zR / zL) — he drops into a
+   small crouch (y: the knees bend, the puppet bends the body over them) and leans in; the mouth snaps open (jaw), the
+   brows frown (brw); blood flies off the needle (nt-stab-r / nt-stab-l). A twist: the stab stays in and the fist turns
+   left and right a few times — he picks at the wound. Both fists at once too. The glasses jump on every quick move
+   (gb: a loose spring, it overshoots) and wobble (.nt-glasses-j, the hair spring). */
+const NT_R_BACK = { armR: 16, lowR: -30, handR: -10 };
+const NT_R_HIT = { armR: -22, lowR: 82, handR: 18, zR: 26 };
+const NT_L_BACK = { armL: -16, lowL: 30, handL: 10 };
+const NT_L_HIT = { armL: 22, lowL: -82, handL: -18, zL: 26 };
+const ntAmp = (p: Pose, a: number): Pose => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, (v ?? 0) * (k === "jaw" || k === "brw" || k === "gb" ? 1 : a)]));
+/** one stab at t: side r / l / both; twist — the fist picks in the wound; amp / slow — beaten */
+const ntStab = (t: number, side: "r" | "l" | "b", keys: Key[], face: Face[], twist = false, amp = 1, slow = 1) => {
+  const r = side !== "l", l = side !== "r";
+  const lean = side === "r" ? -1 : side === "l" ? 1 : 0;
+  const back = ntAmp({ ...(r ? NT_R_BACK : {}), ...(l ? NT_L_BACK : {}), up: -2.5 * lean, x: 5 * lean, y: -4, head: -2 * lean, brw: 0.4, jaw: 0.1, gb: -0.4 }, amp);
+  const hit = ntAmp({ ...(r ? NT_R_HIT : {}), ...(l ? NT_L_HIT : {}), up: 5 * lean + (side === "b" ? 4 : 0), x: -14 * lean, y: 34, head: 3 * lean + 3, brw: 1, jaw: 1, gb: 1 }, amp);
+  keys.push({ at: t, pose: back, stiff: 2.2 });
+  keys.push({ at: t + 0.16 * slow, pose: hit, stiff: 7 });
+  if (r) face.push({ cls: "nt-stab-r", at: t + 0.22 * slow, dur: 0.1 });
+  if (l) face.push({ cls: "nt-stab-l", at: t + 0.22 * slow, dur: 0.1 });
+  t += 0.34 * slow;
+  if (twist) {
+    // the needle stays in: the fist turns one way and the other, the body leans into it, the mouth grits
+    for (let k = 0; k < 4; k++) {
+      const w = k % 2 ? -1 : 1;
+      keys.push({ at: t, pose: ntAmp({ ...hit, ...(r ? { handR: 18 + 30 * w, lowR: 82 + 6 * w } : {}), ...(l ? { handL: -18 - 30 * w, lowL: -82 - 6 * w } : {}), jaw: 0.25, brw: 1, gb: 0.5 * w, head: hit.head! + 1.5 * w }, 1), stiff: 6 });
+      t += 0.11 * slow;
+    }
+    if (r) face.push({ cls: "nt-stab-r", at: t - 0.2 * slow, dur: 0.08 });
+    if (l) face.push({ cls: "nt-stab-l", at: t - 0.2 * slow, dur: 0.08 });
+  }
+  // pulled out, back up into the stance
+  keys.push({ at: t, pose: ntAmp({ ...(r ? { armR: 4, lowR: 10 } : {}), ...(l ? { armL: -4, lowL: -10 } : {}), y: 3, jaw: 0.2, brw: 0.4, gb: -0.3 }, amp), stiff: 2.5 });
+  return t + 0.22 * slow;
+};
+/** a run of stabs: r, l, a twist, both at once — quick, a short breath between */
+const ntCombo = (plan: ("r" | "l" | "b" | "R" | "L" | "B")[], amp = 1, slow = 1): Action => {
+  const keys: Key[] = [], face: Face[] = [];
+  let t = 0;
+  for (const s of plan) {
+    const tw = s === "R" || s === "L" || s === "B";
+    t = ntStab(t, s.toLowerCase() as "r" | "l" | "b", keys, face, tw, amp, slow);
+    t += 0.08 * slow;
+  }
+  keys.push({ at: t, pose: { jaw: 0.15 }, stiff: 1.2 });
+  return { keys, dur: t + 0.5, face };
+};
+/** beaten: he shifts his weight from foot to foot, the head the other way */
+const ntShift = (rate: number, a: number) => (t: number): Pose => {
+  const s = Math.sin(t * rate);
+  return { x: 8 * a * s, up: 1.4 * a * s, head: -1.4 * a * s, y: 3 * a * Math.abs(s) };
+};
+
 /* Солнце (boss-sun.tsx): huge and slow, every move heavy. He breathes hard all the time, in and out without a stop (the
    user 2026-11-25) — in: the pecs, the arms and the trunk swell (sw → screens.css --sw, swa: the arms grow from the
    shoulders, %), the arms rise, the chin goes up and the jaw drops open; out: all of it sinks back, the jaw half closes
@@ -680,6 +734,51 @@ const POSES: Record<string, Spec> = {
       "--px": a.px.toFixed(3), "--py": a.py.toFixed(3),
     }),
     stiffOwn: true,
+  },
+  nitka: {
+    // quick: stiff springs, the fists quicker still; the glasses on a loose spring (they jump and settle)
+    springs: {
+      up: { k: 170, c: 15 }, x: { k: 160, c: 15 }, y: { k: 190, c: 17 }, head: { k: 200, c: 14 },
+      armR: { k: 260, c: 20 }, lowR: { k: 380, c: 24 }, handR: { k: 900, c: 48 },
+      armL: { k: 260, c: 20 }, lowL: { k: 380, c: 24 }, handL: { k: 900, c: 48 },
+      zR: { k: 380, c: 30 }, zL: { k: 380, c: 30 },
+      jaw: { k: 260, c: 20 }, brw: { k: 160, c: 16 }, gb: { k: 320, c: 7 }, px: { k: 220, c: 20 }, py: { k: 220, c: 20 },
+    },
+    drag: { lowL: ["armL", -0.05], handL: ["lowL", -0.01], lowR: ["armR", -0.05], handR: ["lowR", -0.01], head: ["up", -0.08] },
+    // never still: a nervous little bounce, the needles twitch in the fists; the eyes (cross-eyed as drawn) dart about
+    // together — a new spot every ~1.2 s; the mouth breathes a little
+    idle: (t) => {
+      const g = Math.floor(t / 1.2);
+      const r = (n: number) => { const v = Math.sin(n * 12.9898 + g * 78.233) * 43758.5453; return v - Math.floor(v); };
+      return {
+        up: 0.9 * Math.sin(t * 1.3) + 0.4 * Math.sin(t * 2.9 + 1), x: 2.5 * Math.sin(t * 0.9),
+        y: 1.5 * (0.5 - 0.5 * Math.cos(t * 2.2)),
+        head: 1.6 * Math.sin(t * 1.4 + 1) + 0.8 * Math.sin(t * 0.6),
+        armR: 1.6 * Math.sin(t * 1.5 + 2), lowR: 2.5 * Math.sin(t * 1.9 + 1), handR: 4 * Math.sin(t * 2.7),
+        armL: 1.6 * Math.sin(t * 1.6), lowL: 2.5 * Math.sin(t * 2.1 + 0.5), handL: 4 * Math.sin(t * 3.1 + 1),
+        jaw: 0.08 + 0.08 * (0.5 - 0.5 * Math.cos(t * 2.4)),
+        px: (r(1) - 0.5) * 1.8, py: (r(2) - 0.5) * 1.1,
+      };
+    },
+    actions: [
+      { a: ntCombo(["r", "l", "r", "L"]), w: 2 }, { a: ntCombo(["l", "R", "b"]), w: 2 },
+      { a: ntCombo(["B"]), w: 1 }, { a: ntCombo(["r", "r", "l", "l", "b"]), w: 1 },
+    ],
+    rest: [1.6, 3.2],
+    hit: { head: -300, up: -90, x: -70, y: -60, armL: 110, lowL: -140, armR: -110, lowR: 140, handL: -40, handR: 40, gb: 12, jaw: 6 },
+    strike: ntCombo(["R", "b"]),
+    // below half: slower and smaller, a shift from foot to foot; below a quarter: a slow lone stab now and then
+    dazed: { pose: { armL: 6, armR: -6, head: 3, jaw: 0.25 }, act: true, sway: ntShift(1.8, 1), actions: [{ a: ntCombo(["r", "L"], 0.7, 1.5), w: 1 }, { a: ntCombo(["l", "R"], 0.7, 1.5), w: 1 }], rest: [3, 5], strike: ntCombo(["B"], 0.7, 1.5), speed: 1 },
+    dying: { pose: { armL: 14, armR: -14, head: 6, up: -2, jaw: 0.4 }, act: true, sway: ntShift(1.2, 1.2), actions: [{ a: ntCombo(["r"], 0.45, 2.2), w: 1 }, { a: ntCombo(["l"], 0.45, 2.2), w: 1 }], rest: [4, 7], strike: ntCombo(["b"], 0.45, 2.2), speed: 1 },
+    breath: (t, dazed) => { const b = 0.5 - 0.5 * Math.cos((t / (dazed ? 1.3 : 0.9)) * Math.PI * 2); return [1 + 0.008 * b, 1 + 0.014 * b, -2 * b]; },
+    shapes: { jaw: {}, brw: {}, gb: {}, px: {}, py: {} },
+    scale: { handR: "zR", handL: "zL" },
+    vars: (a) => ({
+      "--jaw": Math.max(0, Math.min(1, a.jaw)).toFixed(3), "--brw": a.brw.toFixed(3), "--gb": a.gb.toFixed(3),
+      "--px": a.px.toFixed(3), "--py": a.py.toFixed(3),
+    }),
+    stiffOwn: true,
+    hair: { sel: ".nt-glasses-j", k: 260, c: 6, turn: 0.35, jerk: 0.006, flutter: () => 0 },
   },
   fokus: {
     springs: {

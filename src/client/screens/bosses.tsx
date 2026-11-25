@@ -25,13 +25,13 @@ import { MEDAL_TIERS } from "../../content/medals.ts";
 import { BOSS_KILL_TARGETS } from "../../content/achievements.ts";
 
 export interface BossRow {
-  id: string; unlocked: boolean; /** his location to clear first (null — open) */ road?: { loc: string; name: string; times: number; done: number } | null; /** «Связка ключей» opens him: no passes spent */ ring?: boolean; keysHave: number; keysNeed: number; myKeys: number; hpMax: number;
+  id: string; unlocked: boolean; /** his location to clear first (null — open) */ road?: { loc: string; name: string; times: number; done: number; night?: boolean } | null; /** «Связка ключей» opens him: no passes spent */ ring?: boolean; keysHave: number; keysNeed: number; myKeys: number; hpMax: number;
   fightsToday: number; fightsPerDay: number; myDamage: number; myWins: number; mySoloWins?: number; fightingNow: number; totalWins: number;
   /** my medals of this boss by kind (content/medals.ts) */
   medals?: { bronze: number; silver: number; gold: number };
   lastKiller: { id: number; name: string; photo: string | null; at: number } | null;
 }
-export interface BossListData { resetAt: number; bosses: BossRow[]; /** the event bosses that are on (their own page) */ events?: BossRow[]; weapons: Tray[]; now: number; /** today's combos: «boss:mode» → progress */ combos?: Record<string, { progress: number; done: boolean; claimed: boolean }> }
+export interface BossListData { resetAt: number; bosses: BossRow[]; /** the event bosses that are on (their own page) */ events?: BossRow[]; /** the mentors (the «Менторы» tab) */ mentors?: BossRow[]; weapons: Tray[]; now: number; /** today's combos: «boss:mode» → progress */ combos?: Record<string, { progress: number; done: boolean; claimed: boolean }> }
 
 /** the last boss list: a repeat visit shows it at once while a fresh one loads */
 let lastList: BossListData | null = null;
@@ -90,10 +90,11 @@ export function BossesScreen() {
         ))}
       </div>
       {tab === "mentors" && (
-        // the mentors: always open, «Пацанский» only; the card opens his fight page
+        // the mentors: Пепе always open, «Пацанский» only; the next ones open after a night run of their location and
+        // are fought in every mode; the card opens his fight page
         <div className="col" style={{ gap: 12 }}>
-          {EVENT_FIGHTS.filter((b) => b.mentor).map((b) => (
-            <Link key={b.id} href={eventBossById(b.id)?.href ?? `/bosses/${b.id}`} className={`bcard bcard-boss-${b.id}`} style={{ ["--i" as string]: 1, ["--acc" as string]: b.theme.accent }}>
+          {EVENT_FIGHTS.filter((b) => b.mentor).map((b) => { const mrow = data?.mentors?.find((x) => x.id === b.id); const road = mrow?.road && mrow.road.done < mrow.road.times ? mrow.road : null; return (
+            <Link key={b.id} href={eventBossById(b.id)?.href ?? `/bosses/${b.id}`} className={`bcard bcard-boss-${b.id} ${road ? "locked" : ""}`} style={{ ["--i" as string]: 1, ["--acc" as string]: b.theme.accent }}>
               <span className="bcard-n display">Ментор</span>
               <div className="bcard-art" aria-hidden="true">
                 {hasBossRig(b.id) ? <BossRig id={b.id} bust hpShare={1} />
@@ -104,16 +105,25 @@ export function BossesScreen() {
                 <div className="bcard-head">
                   <div className="col" style={{ gap: 1, minWidth: 0 }}>
                     <b className="bcard-name display ellipsis">{b.name}</b>
-                    <span className="bcard-title ellipsis">Только «Пацанский»</span>
+                    <span className="bcard-title ellipsis">{b.modes ? "Все режимы" : "Только «Пацанский»"}</span>
                   </div>
                 </div>
+                {road ? (
+                  // closed by the road: «Идти» to the location's night page
+                  <div className="bcard-reward bcard-road">
+                    <span className="btn sm gold" role="link" tabIndex={0}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/locations/${road.loc}${road.night ? "?tab=night" : ""}`); }}>Идти</span>
+                    <span className="bcard-road-what">{road.name.replace(" (ночь)", "")} — ночные{"\u00a0"}({road.times - road.done})</span>
+                  </div>
+                ) : (
                 <div className="bcard-reward">
                   <span className="bcard-label">Награда:</span>
                   <GainLine r={{ ...b.reward, items: [{ id: `key-${b.id}`, qty: 1 }] }} size={16} side />
                 </div>
+                )}
               </div>
             </Link>
-          ))}
+          ); })}
         </div>
       )}
       {tab === "brigade" && (
