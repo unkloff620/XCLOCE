@@ -744,13 +744,22 @@ const fxShift = (rate: number, a: number) => (t: number): Pose => {
   return { x: 8 * a * s, up: 1.4 * a * s, head: -1.4 * a * s, y: 3 * a * Math.abs(s) };
 };
 
-/* Дацкоу (boss-datsik.tsx, the new art): both fists up at the chest. A punch: the fist goes back up (the wind-up), then
-   comes down at the bottom of the screen and grows (zR / zL) — the knees give (y), he leans into it, the long hair flies
-   (the hair spring), the mouth opens (jaw), the brows frown (brw). Both fists by turns, sometimes both at once. */
-const DZ_R_BACK = { armR: -6, lowR: -22 };
-const DZ_R_HIT = { armR: 16, lowR: 38, zR: 42 };
-const DZ_L_BACK = { armL: 6, lowL: 22 };
-const DZ_L_HIT = { armL: -16, lowL: -38, zL: 42 };
+/* Дацкоу (boss-datsik.tsx, the new art): a boxer, both fists up at the chest. A punch: the fist pulls back up to the face
+   (the wind-up), then the forearm swings at the elbow down to the belt (the artist's pose, 2026-11-25) — nothing grows;
+   the knees give (y), the body turns into it, the hair flies, the mouth opens (jaw), the brows frown (brw). Both fists
+   by turns, sometimes both at once. Standing, he flicks little guards: one fist up to the face and back, then the other
+   (dzGuard in his idle). */
+const DZ_R_BACK = { armR: -6, lowR: -16 };
+const DZ_R_HIT = { armR: 8, lowR: 62 };
+const DZ_L_BACK = { armL: 6, lowL: 16 };
+const DZ_L_HIT = { armL: -8, lowL: -62 };
+/** the little guards while he stands: right, a beat, left, a beat — each a quick lift of the fist to the face */
+const dzGuard = (t: number): Pose => {
+  const p = t % 2.4;
+  const pulse = (s: number) => (p > s && p < s + 0.42 ? Math.sin(((p - s) / 0.42) * Math.PI) : 0);
+  const r = pulse(0.2), l = pulse(1.4);
+  return { armR: -7 * r, lowR: -14 * r, armL: 7 * l, lowL: 14 * l, head: -1.5 * r + 1.5 * l };
+};
 const dzAmp = (p: Pose, a: number): Pose => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, (v ?? 0) * (k === "jaw" || k === "brw" ? 1 : a)]));
 const dzPunch = (t: number, side: "r" | "l" | "b", keys: Key[], amp = 1, slow = 1) => {
   const r = side !== "l", l = side !== "r";
@@ -821,19 +830,20 @@ const POSES: Record<string, Spec> = {
     springs: {
       up: { k: 150, c: 15 }, x: { k: 140, c: 15 }, y: { k: 180, c: 17 }, head: { k: 180, c: 14 },
       armR: { k: 240, c: 20 }, lowR: { k: 340, c: 23 }, armL: { k: 240, c: 20 }, lowL: { k: 340, c: 23 },
-      zR: { k: 340, c: 28 }, zL: { k: 340, c: 28 },
       jaw: { k: 220, c: 19 }, brw: { k: 160, c: 16 }, px: { k: 200, c: 20 }, py: { k: 200, c: 20 },
     },
     drag: { lowL: ["armL", -0.05], lowR: ["armR", -0.05], head: ["up", -0.08] },
     // never still: a boxer's bounce, the fists twitch; the eyes look about (a new spot every ~1.5 s)
     idle: (t) => {
+      const gd = dzGuard(t);
       const g = Math.floor(t / 1.5);
       const r = (n: number) => { const v = Math.sin(n * 12.9898 + g * 78.233) * 43758.5453; return v - Math.floor(v); };
       return {
         up: 0.8 * Math.sin(t * 1.4) + 0.3 * Math.sin(t * 3 + 1), x: 2.4 * Math.sin(t * 0.9),
         y: 2 * (0.5 - 0.5 * Math.cos(t * 2.6)),
-        head: 1.4 * Math.sin(t * 1.2 + 1) + 0.6 * Math.sin(t * 0.5),
-        armR: 1.6 * Math.sin(t * 1.5 + 2), lowR: 2.4 * Math.sin(t * 1.9 + 1), armL: 1.6 * Math.sin(t * 1.6), lowL: 2.4 * Math.sin(t * 2.1 + 0.5),
+        head: 1.4 * Math.sin(t * 1.2 + 1) + 0.6 * Math.sin(t * 0.5) + (gd.head ?? 0),
+        armR: 1.2 * Math.sin(t * 1.5 + 2) + (gd.armR ?? 0), lowR: 1.6 * Math.sin(t * 1.9 + 1) + (gd.lowR ?? 0),
+        armL: 1.2 * Math.sin(t * 1.6) + (gd.armL ?? 0), lowL: 1.6 * Math.sin(t * 2.1 + 0.5) + (gd.lowL ?? 0),
         jaw: 0.06 + 0.06 * (0.5 - 0.5 * Math.cos(t * 2.2)),
         px: (r(1) - 0.5) * 1.6, py: (r(2) - 0.5) * 1,
       };
@@ -849,7 +859,6 @@ const POSES: Record<string, Spec> = {
     dying: { pose: { armL: 14, armR: -14, head: 6, up: -2, jaw: 0.4 }, act: true, sway: dzShift(1.2, 1.2), actions: [{ a: dzCombo(["r"], 0.45, 2.2), w: 1 }, { a: dzCombo(["l"], 0.45, 2.2), w: 1 }], rest: [5, 8], strike: dzCombo(["b"], 0.45, 2.4), speed: 0.5 },
     breath: (t, dazed) => { const b = 0.5 - 0.5 * Math.cos((t / (dazed ? 1.3 : 1.05)) * Math.PI * 2); return [1 + 0.012 * b, 1 + 0.026 * b, -4 * b]; },
     shapes: { jaw: {}, brw: {}, px: {}, py: {} },
-    scale: { handR: "zR", handL: "zL" },
     vars: (a) => ({ "--jaw": Math.max(0, Math.min(1, a.jaw)).toFixed(3), "--brw": a.brw.toFixed(3), "--px": a.px.toFixed(3), "--py": a.py.toFixed(3) }),
     stiffOwn: true,
     // the long hair lags behind the head and flies on a punch

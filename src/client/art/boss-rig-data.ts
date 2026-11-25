@@ -130,8 +130,8 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "w": 218,
         "h": 182,
         "pivot": [
-          467.8,
-          442.4
+          519.6,
+          488.0
         ],
         "v": "5f508d2e"
       },
@@ -152,8 +152,8 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "w": 218,
         "h": 183,
         "pivot": [
-          86.1,
-          435.4
+          39.4,
+          477.0
         ],
         "v": "ce7e6443"
       },

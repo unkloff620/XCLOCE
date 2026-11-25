@@ -16,9 +16,6 @@ type Rig = { w: number; h: number; parts: Record<string, Part> };
 /** the eye holes of the head (rig units) and the skin over each (the lids) */
 const HOLES = [{ x: 256.5, y: 161, w: 22, h: 8.5, skin: "#fc9571" }, { x: 316, y: 160.5, w: 23, h: 8, skin: "#f88a67" }];
 const LID_LINE = "#5a2a18";
-/** the wrists (rig units): the fists grow from here on a punch */
-const WRIST_R = [182.2, 371] as const;
-const WRIST_L = [377.8, 381] as const;
 /** the waist: the upper body leans and bends round it */
 const WAIST = [280, 600] as const;
 
@@ -41,7 +38,6 @@ export function DatsikRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, 
   const bone = (cls: string, p: string, kids: ReactNode, size?: number) => (
     <g className={cls} data-pivot={P[p]?.pivot ? `${P[p].pivot![0]},${P[p].pivot![1]}` : undefined} data-pp-size={size} style={origin(p)}>{kids}</g>
   );
-  const wrist = (cls: string, p: readonly number[]) => <g className={cls} data-pivot={`${p[0]},${p[1]}`} data-pp-size={60} style={at(p[0], p[1])} />;
   const svgEl = (
     <svg key={look} ref={svgRef} className={`boss-rig rig-dz ${dazed ? "dazed" : ""} ${dying ? "dying" : ""}`} viewBox={viewBox} width="100%" height="100%"
       preserveAspectRatio={bust ? "xMidYMin slice" : "xMidYMax meet"} aria-hidden="true">
@@ -79,16 +75,10 @@ export function DatsikRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, 
             {pic("hair", "front", ["dz-hairtip", "0.85,0.42"])}
           </>, 150)}
           {/* the arms with the fists in front (over the hair): soft shoulders and elbows */}
-          {/* the forearms are whole pictures (nothing cut): only the fist grows on a punch — the puppet bends the forearm's
-              fist end after an empty wrist bone (scaled zR / zL), the elbow stays with the forearm */}
-          {bone("br-arm br-arm-r", "armR", <>{pic("armR", "front")}{bone("br-low br-low-r", "lowR", <>
-            {wrist("dz-fist-r br-hand br-hand-r", WRIST_R)}
-            {pic("lowR", "front", ["dz-fist-r", "0.3,0.5"])}
-          </>, 120)}</>, 130)}
-          {bone("br-arm br-arm-l", "armL", bone("br-low br-low-l", "lowL", <>
-            {wrist("dz-fist-l br-hand br-hand-l", WRIST_L)}
-            {pic("lowL", "front", ["dz-fist-l", "0.3,0.5"])}
-          </>, 120), 130)}
+          {/* the forearms, whole (nothing cut, nothing grows): they turn at the elbow's outer point — a punch swings the
+              fist down to the belt, the guard brings it up to the face */}
+          {bone("br-arm br-arm-r", "armR", <>{pic("armR", "front")}{bone("br-low br-low-r", "lowR", pic("lowR", "front"), 120)}</>, 130)}
+          {bone("br-arm br-arm-l", "armL", bone("br-low br-low-l", "lowL", pic("lowL", "front"), 120), 130)}
         </g>
       </g>
     </svg>
