@@ -56,28 +56,26 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
   const { state, act, busy } = useGame();
   const [saving, setSaving] = useState(false);
   // «Наколки»: the tattoos tab (the hero is picked by body parts there too; no part — every tattoo)
-  const [inkTab, setInkTab] = useState(false);
   const [inkSet, setInkSet] = useState<string | null>(null);
   // a thing not owned yet, tapped once: tried on (not saved) — the second tap buys it
   const [trying, setTrying] = useState<string | null>(null);
   if (!state) return null;
   const mode = focus.mode;
+  // the tab follows the focus (kept in home.tsx): the editor opened again, or back from the room editor, is on the same tab
+  const inkTab = mode === "ink";
   const part = focus.part;
   const setMode = (m: "items" | "body") => {
     haptic.tap();
-    setInkTab(false);
     setFocus({ mode: m, part: m === "items" ? "SHIRT" : "HEAD" });
   };
   const openInk = () => {
     haptic.tap();
-    setInkTab(true);
     setFocus({ mode: "ink", part: null, back: focus.back });
   };
   // the rotate button: the hero turns his back (the back's tattoo places) and back again; the clothes or the chair turn him round too
   const turn = () => {
     haptic.tap();
     if (focus.back) return setFocus({ ...focus, part: null, back: false });
-    setInkTab(true);
     setInkSet(null);
     setFocus({ mode: "ink", part: null, back: true });
   };

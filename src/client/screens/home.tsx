@@ -155,6 +155,8 @@ export function HomeScreen() {
   const openWardrobe = () => {
     setDecorating(null);
     setStyling({ look: { ...state.look.body }, worn: { ...state.look.equipped } });
+    // the wardrobe always opens with the hero facing us
+    setEditFocus((f) => ({ ...f, back: false }));
   };
   const openRoomEditor = (tab: RoomTab) => {
     // from the hero editor: «назад» in the room editor brings the hero editor back as it was
