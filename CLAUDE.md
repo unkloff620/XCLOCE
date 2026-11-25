@@ -49,8 +49,8 @@ Never commit, print, expose, or place secret values in browser code.
 
 ## Update notes for players
 
-After every release that changes something players see, add an entry at the top of `src/content/updates.ts`
-(«Что нового»: shown once on the home screen, mostly pictures in `public/assets/updates/<date>-*.webp` with a short line each).
+Do NOT add entries to `src/content/updates.ts` («Что нового») on your own: the owner says when a note goes out and
+what it says (2026-11-25). When asked, add it at the top (mostly pictures in `public/assets/updates/<date>-*.webp` with a short line each).
 
 ## Boss rooms
 
