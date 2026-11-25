@@ -111,13 +111,16 @@ function Arena({ boss, hp, hpMax, endsAt, fx, hit, ouch, rug, feed, full: fullSc
       {talk && <div key={talk.id} className={`boss-say ${dazed ? "scared" : ""}`}>{talk.text}</div>}
       <div className="arena-top">
         {corner && <div className="arena-corner">{corner}</div>}
-        {hp !== null ? <Bar value={hp} max={hpMax} tone="health" height={24} label={`${full(hp)} / ${full(hpMax)}`} /> : <Bar value={hpMax} max={hpMax} tone="health" height={24} label={`${full(hpMax)} HP`} />}
+        {/* the HP and the time: short bars in the upper left (the user 2026-11-25); a big max is written short — «1 000 000 / 1M» */}
+        <div className="arena-bars">
+        {hp !== null ? <Bar value={hp} max={hpMax} tone="health" height={22} label={`${full(hp)} / ${hpMax >= 1e6 ? short(hpMax) : full(hpMax)}`} /> : <Bar value={hpMax} max={hpMax} tone="health" height={22} label={`${hpMax >= 1e6 ? short(hpMax) : full(hpMax)} HP`} />}
         {/* the fight's time runs down like the HP: the bar shortens as the 8 hours pass */}
         {endsAt && (
           <div className="arena-time">
-            <Bar value={Math.max(0, endsAt - now)} max={FIGHT_HOURS * 3600_000} tone="health" height={18} label={<><Icon name="clock" size={12} /> {clock(Math.max(0, endsAt - now))}</>} />
+            <Bar value={Math.max(0, endsAt - now)} max={FIGHT_HOURS * 3600_000} tone="health" height={16} label={<><Icon name="clock" size={12} /> {clock(Math.max(0, endsAt - now))}</>} />
           </div>
         )}
+        </div>
         <div className="arena-sub">
           <div className="col" style={{ gap: 4, alignItems: "flex-start" }}>
             {phase && <span className="chip" style={{ background: "rgba(0,0,0,0.55)" }}>{phase.name}</span>}

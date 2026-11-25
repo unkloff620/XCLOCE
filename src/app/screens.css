@@ -8265,3 +8265,7 @@ button:is(.modal > .x, .fs-x, .room-confirm-x, .bbox-x, .acx-x, .zb-res-x, .comb
   86% { transform: translate(1.5px, -0.9px); } 88% { transform: translate(-1.8px, 1.2px); } 90% { transform: translate(1.2px, -1.5px); } 92% { transform: translate(0, 0); }
 }
 @media (prefers-reduced-motion: reduce) { .ntr-trees, .ntr-lamp, .ntr-light, .ntr-desk, .ntr-machine { animation: none; } }
+
+/* the fight: the HP and the time bars short, in the upper left (the user 2026-11-25) */
+.arena.full .arena-bars { width: min(46%, 210px); }
+.arena.full .arena-bars .bar > span { font-size: 11px; white-space: nowrap; }
