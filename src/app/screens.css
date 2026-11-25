@@ -8310,3 +8310,6 @@ button:is(.modal > .x, .fs-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x,
 /* the hood's rim and its shadow lift on a blow (they stretch up a little from the neck) */
 .rig-fx { --hl: 0; }
 .rig-fx .fx-hoodlift { transform: translateY(calc(var(--hl) * -8px)) scaleY(calc(1 + var(--hl) * 0.05)); }
+/* the laptop slips down out of his fingers, tilting (--ls 1), and is tossed back up (--ls < 0 flies a little past) */
+.rig-fx { --ls: 0; }
+.rig-fx .fx-slip { transform: translate(calc(var(--ls) * 4px), calc(var(--ls) * 22px)) rotate(calc(var(--ls) * 5deg)); }

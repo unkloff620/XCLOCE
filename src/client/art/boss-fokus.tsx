@@ -76,7 +76,8 @@ export function FokusRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
           {/* the long coat: its tails below the chest swing with fx-hem */}
           {pic("coat", "back", ["fx-hem", "0.98,0.45"])}
           {/* the laptop under the left arm, held by the forearm */}
-          {bone("br-arm br-arm-l", "armL", bone("br-low br-low-l", "lowL", pic("laptop", "back"), 120), 130)}
+          {/* (it slips out of the fingers now and then and he jerks it back up: --ls, boss-poses.ts fxSlip) */}
+          {bone("br-arm br-arm-l", "armL", bone("br-low br-low-l", "lowL", <g className="fx-slip" style={box("handL", 0.5, 0.5)}>{pic("laptop", "back")}</g>, 120), 130)}
           {bone("br-arm br-arm-l", "armL", <>{pic("armL", "back")}{bone("br-low br-low-l", "lowL", <>{pic("lowL", "back")}{bone("br-hand br-hand-l", "handL", pic("handL", "back"), 80)}</>, 120)}</>, 130)}
           {/* the head in its hood: the hood's back, the neck, the face (the mouth inside, the teeth, the chin that drops,
               the whites and the pupils under the eye holes, the lids, the head, the brows, the glasses), the shadow of

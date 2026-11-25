@@ -723,6 +723,18 @@ const fxCombo = (plan: ("r" | "R")[], amp = 1, slow = 1): Action => {
   keys.push({ at: t, pose: { jaw: 0.12 }, stiff: 1.2 });
   return { keys, dur: t + 0.5 };
 };
+/** the laptop slips out of his fingers (ls: down and tilting) — he looks, then jerks the arm up and tosses it back into
+ *  place (it flies a little past and settles) */
+const fxSlip = (slow = 1): Action => ({
+  keys: [
+    { at: 0, pose: { ls: 1, armL: 3, lowL: 2 }, stiff: 0.7 },
+    { at: 0.55 * slow, pose: { ls: 1.1, armL: 4, lowL: 3, head: 2.5, py: 0.6, brw: 0.6 }, stiff: 1.2 },
+    { at: 0.85 * slow, pose: { ls: -0.55, armL: -9, lowL: -12, handL: -6, up: -1.5, head: 1, brw: 0.8, gb: 0.8 }, stiff: 6 },
+    { at: 1.02 * slow, pose: { ls: 0.12, armL: 2, lowL: 2, handL: 0, gb: -0.3 }, stiff: 3 },
+    { at: 1.3 * slow, pose: { ls: 0 }, stiff: 2 },
+  ],
+  dur: 1.7 * slow,
+});
 /** beaten: the weight from foot to foot, the head the other way */
 const fxShift = (rate: number, a: number) => (t: number): Pose => {
   const s = Math.sin(t * rate);
@@ -827,7 +839,7 @@ const POSES: Record<string, Spec> = {
       armR: { k: 250, c: 20 }, lowR: { k: 360, c: 24 }, handR: { k: 800, c: 44 },
       armL: { k: 140, c: 16 }, lowL: { k: 160, c: 17 }, handL: { k: 400, c: 30 },
       zR: { k: 360, c: 30 },
-      jaw: { k: 240, c: 20 }, brw: { k: 160, c: 16 }, gb: { k: 320, c: 7 }, ph: { k: 260, c: 9 }, hl: { k: 160, c: 13 }, px: { k: 200, c: 20 }, py: { k: 200, c: 20 },
+      jaw: { k: 240, c: 20 }, brw: { k: 160, c: 16 }, gb: { k: 320, c: 7 }, ph: { k: 260, c: 9 }, hl: { k: 160, c: 13 }, ls: { k: 220, c: 11 }, px: { k: 200, c: 20 }, py: { k: 200, c: 20 },
     },
     drag: { lowL: ["armL", -0.04], handL: ["lowL", -0.01], lowR: ["armR", -0.05], handR: ["lowR", -0.01], head: ["up", -0.08] },
     // never still: a small nervous bounce, the phone twitches in the fist, the laptop arm breathes; the eyes look about
@@ -847,23 +859,23 @@ const POSES: Record<string, Spec> = {
     },
     actions: [
       { a: fxCombo(["r", "r", "R"]), w: 2 }, { a: fxCombo(["r", "R"]), w: 2 },
-      { a: fxCombo(["R"]), w: 1 }, { a: fxCombo(["r", "r", "r", "R"]), w: 1 },
+      { a: fxCombo(["R"]), w: 1 }, { a: fxCombo(["r", "r", "r", "R"]), w: 1 }, { a: fxSlip(), w: 2 },
     ],
     rest: [1.6, 3.2],
     hit: { head: -300, up: -90, x: -70, y: -60, armL: 60, lowL: -60, armR: -110, lowR: 140, handR: 40, gb: 12, jaw: 6, ph: 10, hl: 8 },
     strike: fxCombo(["R", "r"]),
     // below half: slower and smaller, from foot to foot; below a quarter: a slow lone blow now and then
-    dazed: { pose: { armL: 4, armR: -6, head: 3, jaw: 0.25 }, act: true, sway: fxShift(1.8, 1), actions: [{ a: fxCombo(["r", "R"], 0.7, 1.8), w: 1 }], rest: [4, 6], strike: fxCombo(["R"], 0.7, 1.8), speed: 0.65 },
+    dazed: { pose: { armL: 4, armR: -6, head: 3, jaw: 0.25 }, act: true, sway: fxShift(1.8, 1), actions: [{ a: fxCombo(["r", "R"], 0.7, 1.8), w: 1 }, { a: fxSlip(1.5), w: 1 }], rest: [4, 6], strike: fxCombo(["R"], 0.7, 1.8), speed: 0.65 },
     dying: { pose: { armL: 10, armR: -14, head: 6, up: -2, jaw: 0.4 }, act: true, sway: fxShift(1.2, 1.2), actions: [{ a: fxCombo(["r"], 0.45, 2.2), w: 1 }], rest: [5, 8], strike: fxCombo(["R"], 0.45, 2.4), speed: 0.5 },
     breath: (t, dazed) => { const b = 0.5 - 0.5 * Math.cos((t / (dazed ? 1.4 : 1.1)) * Math.PI * 2); return [1 + 0.012 * b, 1 + 0.026 * b, -4 * b]; },
     // the coat's tails lag behind his moves and flutter a little
     hem: { sel: ".fx-hem", k: 40, c: 4, up: 0.9, x: 0.25, flutter: (t) => 0.8 * Math.sin(t * 1.7) + 0.4 * Math.sin(t * 3.1 + 1) },
-    shapes: { jaw: {}, brw: {}, gb: {}, ph: {}, hl: {}, px: {}, py: {} },
+    shapes: { jaw: {}, brw: {}, gb: {}, ph: {}, hl: {}, ls: {}, px: {}, py: {} },
     scale: { handR: "zR" },
     vars: (a) => ({
       "--jaw": Math.max(0, Math.min(1, a.jaw)).toFixed(3), "--brw": a.brw.toFixed(3), "--gb": a.gb.toFixed(3),
       // the lid only goes towards shut (0 open as drawn … 1 nearly shut)
-      "--ph": Math.max(0, Math.min(1, a.ph)).toFixed(3), "--hl": Math.max(-0.3, Math.min(1.2, a.hl)).toFixed(3),
+      "--ph": Math.max(0, Math.min(1, a.ph)).toFixed(3), "--hl": Math.max(-0.3, Math.min(1.2, a.hl)).toFixed(3), "--ls": Math.max(-0.8, Math.min(1.3, a.ls)).toFixed(3),
       "--px": a.px.toFixed(3), "--py": a.py.toFixed(3),
     }),
     stiffOwn: true,
