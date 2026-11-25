@@ -68,15 +68,16 @@ export async function friendRemove(ctx: Ctx, id: number) {
 
 /** the requests waiting for me (the state: «Сообщения»): who, his avatar, his talents and achievements (points, as in his dossier) */
 export async function friendRequestsIn(q: Queryable, pid: number, now: number) {
-  const rows = await q.query<{ from_id: number; display_name: string; photo_url: string | null; created_at: Date; ach: number }>(
-    `SELECT r.from_id, p.display_name, p.photo_url, r.created_at, p.ach_points AS ach
+  const rows = await q.query<{ from_id: number; display_name: string; photo_url: string | null; created_at: Date; ach: number; free: number }>(
+    `SELECT r.from_id, p.display_name, p.photo_url, r.created_at, p.ach_points AS ach, p.talents AS free
      FROM friend_requests r JOIN players p ON p.id = r.from_id
      WHERE r.to_id=$1 AND p.banned_at IS NULL ORDER BY r.created_at DESC LIMIT 50`, [pid]);
   if (!rows.length) return [];
   const frames = await framesFor(q, rows.map((r) => r.from_id), now);
   return Promise.all(rows.map(async (r) => ({
     id: r.from_id, name: r.display_name, photo: r.photo_url, frame: frames.get(r.from_id) ?? null, at: new Date(r.created_at).getTime(),
-    talents: talentsSpent(await weaponTalents(q, r.from_id)), achievements: Number(r.ach),
+    // all his talents: put in and still lying unspent
+    talents: talentsSpent(await weaponTalents(q, r.from_id)) + Number(r.free ?? 0), achievements: Number(r.ach),
   })));
 }
 

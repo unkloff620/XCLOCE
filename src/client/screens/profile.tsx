@@ -592,7 +592,7 @@ function Dossier({ p, onClose, reload }: { p: Profile; onClose: () => void; relo
           {/* on every page: achievement points and the talents put in */}
           {tab === "cases" && <div className="dos-stats">
             <span className="dos-stat" title="Очки достижений"><small>Достижения:</small><Icon name="sun" size={20} /><b className="num">{full(p.achPoints ?? 0)}</b></span>
-            <span className="dos-stat" title="Вложено талантов"><small>Таланты:</small><Icon name="talent" size={20} /><b className="num">{full(p.talentsIn ?? 0)}</b></span>
+            <span className="dos-stat" title="Все таланты"><small>Таланты:</small><Icon name="talent" size={20} /><b className="num">{full(p.talentsIn ?? 0)}</b></span>
           </div>}
           {tab === "sum" && (
             <div className="col" style={{ gap: 10 }}>
@@ -782,7 +782,7 @@ export function ProfileScreen() {
             </Link>
           )}
           {/* his talents put in — seen without opening the dossier */}
-          <button type="button" className="pr-btn pr-tal" onClick={() => { haptic.tap(); setDossier(true); }} aria-label={`Таланты: ${p.talentsIn ?? 0}`} title="Вложено талантов">
+          <button type="button" className="pr-btn pr-tal" onClick={() => { haptic.tap(); setDossier(true); }} aria-label={`Таланты: ${p.talentsIn ?? 0}`} title="Все таланты">
             <Icon name="talent" size={38} /><small className="num">{full(p.talentsIn ?? 0)}</small>
           </button>
         </div>

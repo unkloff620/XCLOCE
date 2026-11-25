@@ -273,8 +273,8 @@ export async function profileView(q: Queryable, viewer: number, pid: number, cfg
       const [w] = await q.query<{ damage: number }>("SELECT damage FROM weekly_stats WHERE week=$1 AND player_id=$2", [weekKey(now), pid]);
       return Number(w?.damage ?? 0);
     })(),
-    // talents put in on the path (what counts in the dossier)
-    talentsIn: talentsSpent(await weaponTalents(q, pid)),
+    // all the talents he got: put in on the path and the ones still lying unspent (the user 2026-11-25)
+    talentsIn: talentsSpent(await weaponTalents(q, pid)) + Number((p as { talents?: number }).talents ?? 0),
     // нычки the player asks for; a visitor also sees how many of them he has himself and his gifts left today
     stashWish: await stashWish(q, pid),
     stashGive: self ? null : await (async () => {
