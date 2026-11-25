@@ -10,7 +10,7 @@
  * nose with a quick move (--gb, a loose spring) and wobble (.nt-glasses-j). Every stab splashes blood off the needle's
  * point (the classes nt-stab-r / nt-stab-l, useNeedleBlood). Below half HP the needles are bloody (the artist's copies),
  * he is beaten — blood, cuts, the shirt torn (tools/boss/nitka-blood.py) — and six needles stick in him (the user's
- * bloody needle): in his head, his chest, both forearms and both legs.
+ * bloody needle): in his head, his chest, both shoulders and both legs.
  */
 import { useEffect, useRef, type CSSProperties, type ReactNode, type RefObject } from "react";
 
@@ -37,11 +37,11 @@ const NEEDLE = { w: 148, h: 172, end: [141, 4], entry: [33, 151] } as const;
  *  picture flipped, for those leaning to the left) */
 const STUCK = {
   head: { entry: [409, 62], end: [466, 4], mirror: false },
-  chest: { entry: [352, 545], end: [280, 484], mirror: true },
-  foreR: { entry: [116, 412], end: [28, 377], mirror: true },
-  foreL: { entry: [596, 432], end: [679, 386], mirror: false },
-  thigh: { entry: [232, 925], end: [158, 865], mirror: true },
-  shin: { entry: [560, 1092], end: [635, 1033], mirror: false },
+  chest: { entry: [254, 564], end: [182, 503], mirror: true },
+  shoulderR: { entry: [260, 285], end: [232, 195], mirror: true },
+  shoulderL: { entry: [550, 270], end: [583, 181], mirror: false },
+  thigh: { entry: [196, 822], end: [122, 762], mirror: true },
+  hip: { entry: [523, 829], end: [598, 770], mirror: false },
 } as const;
 
 export function NitkaRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, puppet, viewBox }: {
@@ -120,9 +120,11 @@ export function NitkaRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
           {shirt("shirtR")}
           {shirt("shirtL")}
           {/* beaten: needles in his chest and his legs (the legs go with the upper body: only the feet are fixed) */}
-          {needle("chest")}{needle("thigh")}{needle("shin")}
+          {needle("chest")}{needle("thigh")}{needle("hip")}
+          {/* the one in his right shoulder: over the shirt, with the arm */}
+          {bone("br-arm br-arm-r", "armR", needle("shoulderR"), 130)}
           {/* his left upper arm over the shirt, an empty elbow in it */}
-          {bone("br-arm br-arm-l", "armL", <>{pic("armL", "back")}{bone("br-low br-low-l", "lowL", null, 120)}</>, 130)}
+          {bone("br-arm br-arm-l", "armL", <>{pic("armL", "back")}{needle("shoulderL")}{bone("br-low br-low-l", "lowL", null, 120)}</>, 130)}
           {/* the face: the mouth inside (the throat, the teeth, the chin that drops), the whites and the pupils under the
               head's eye holes, the lids, the head, the brows, the glasses */}
           {bone("br-head", "head", <>
@@ -141,12 +143,10 @@ export function NitkaRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
           {/* the forearms and the fists with the needles, in front */}
           {bone("br-arm br-arm-r", "armR", bone("br-low br-low-r", "lowR", <>
             {pic("lowR", "front")}
-            {needle("foreR", "front")}
             {bone("br-hand br-hand-r", "handR", pic(hand("handR"), "front"), 80, handR)}
           </>, 120), 130)}
           {bone("br-arm br-arm-l", "armL", bone("br-low br-low-l", "lowL", <>
             {pic("lowL", "front")}
-            {needle("foreL", "front")}
             {bone("br-hand br-hand-l", "handL", pic(hand("handL"), "front"), 80, handL)}
           </>, 120), 130)}
         </g>
