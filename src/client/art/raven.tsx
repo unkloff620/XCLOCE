@@ -15,7 +15,7 @@ const V = "?v=1";
 /** where his feet hold (his canvas) and where they go on the hero (the top of his right shoulder — the left of the
  *  picture, the rig's units); he faces the head as drawn, his wings go behind it when spread */
 const FEET = [552, 478] as const;
-const AT = { x: 262, y: 356, k: 0.44 };
+const AT = { x: 292, y: 374, k: 0.44 };
 /** the timeline of one loop (s): he sits, looks left a while, opens, flaps, folds */
 const T = { loop: 9.5, lookL: [1.4, 3.1], open: 4.4, flaps: 4, flap: 0.52, fold: 0.3 };
 const FW = R.w * 0.5, FH = (R.h + 2 * R.pad) * 0.5;
