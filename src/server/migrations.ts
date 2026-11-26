@@ -1916,4 +1916,9 @@ CREATE TABLE IF NOT EXISTS friends (
   won BIGINT NOT NULL DEFAULT 0
 );`,
   },
+  {
+    // «Бандитский фарт»: the machine's experience (1 per rouble bet)
+    id: "v2-144-bandit-xp",
+    sql: `ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS xp BIGINT NOT NULL DEFAULT 0;`,
+  },
 ];

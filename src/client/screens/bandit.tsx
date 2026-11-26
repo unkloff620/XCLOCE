@@ -29,8 +29,8 @@ const LOOP = 12, LOOP_MS = 380;
 const TAIL = 8, STOP_MS = 520, MIN_RUN = 650, STOP_GAP = 230;
 const fmt = (n: number) => n.toLocaleString("ru-RU");
 
-interface View { free: number; freeBet: number; spins: number; won: number; rub: number }
-type SpinRes = BanditSpin & View & { bet: number; paid: number; wasFree: boolean; freeLeft: number };
+interface View { free: number; freeBet: number; spins: number; won: number; rub: number; xp: number; lvl: { level: number; into: number; need: number } }
+type SpinRes = BanditSpin & View & { bet: number; paid: number; wasFree: boolean; freeLeft: number; levelBefore: number };
 
 export function BanditScreen() {
   const { act } = useGame();
@@ -48,6 +48,7 @@ export function BanditScreen() {
   const [auto, setAuto] = useState(false);
   const autoRef = useRef(false);
   const [table, setTable] = useState(false);
+  const [lvlUp, setLvlUp] = useState<number | null>(null);
   const timers = useRef<number[]>([]);
 
   const load = useCallback(() => api.get<View>("/api/bandit").then(setV).catch(() => {}), []);
@@ -79,7 +80,8 @@ export function BanditScreen() {
     const end = wait + (BANDIT_REELS - 1) * STOP_GAP + STOP_MS + 250;
     later(() => {
       setRes(r); setShown(true);
-      setV({ free: r.free > 0 ? r.freeLeft : r.freeLeft, freeBet: r.freeBet, spins: r.spins, won: r.won, rub: r.rub });
+      setV({ free: r.freeLeft, freeBet: r.freeBet, spins: r.spins, won: r.won, rub: r.rub, xp: r.xp, lvl: r.lvl });
+      if (r.lvl.level > r.levelBefore) { sfx("levelup"); setLvlUp(r.lvl.level); later(() => setLvlUp(null), 2600); }
       if (r.win > 0) {
         sfx(r.win >= r.bet * 20 ? "bigwin" : "coin");
         // the win counts up
@@ -106,7 +108,7 @@ export function BanditScreen() {
     if (!shown || !res) return false;
     const c = res.reels[r][row];
     if (c === "bell") return res.bells > 0;
-    return res.wins.some((w) => r < w.n && (c === w.sym || c === "W"));
+    return res.wins.some((w) => w.row === row && r < w.n);
   };
   const anyWin = shown && !!res && (res.wins.length > 0 || res.bells > 0);
   const shownBet = free > 0 ? v?.freeBet ?? bet : bet;
@@ -123,6 +125,15 @@ export function BanditScreen() {
         <img className="bd-l" style={u(UI.boxes.title)} src={art("title")} alt="Бандитский фарт" draggable={false} />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="bd-l" style={u(UI.boxes.frame)} src={art("frame")} alt="" draggable={false} />
+        {/* the machine's level: 1 experience per rouble bet */}
+        {v && (
+          <div className="bd-lvl" style={u({ x: 520, y: 640, w: 960, h: 92 })} title={`Опыт: ${fmt(v.xp)}`}>
+            <b className="num">Ур. {v.lvl.level}</b>
+            <span className="bd-lvl-bar"><i style={{ width: `${v.lvl.need ? (v.lvl.into / v.lvl.need) * 100 : 100}%` }} /></span>
+            <small className="num">{v.lvl.need ? `${fmt(v.lvl.into)} / ${fmt(v.lvl.need)}` : "макс."}</small>
+          </div>
+        )}
+        {lvlUp !== null && <div className="bd-lvlup">Новый уровень автомата: <b className="num">{lvlUp}</b></div>}
         <div className={`bd-reels ${anyWin ? "won" : ""}`}>
           {UI.cellX.map((x, r) => (
             <div key={r} className="bd-reel" style={u({ x, y: reelTop, w: UI.boxes.cell.w, h: reelH })}>
@@ -227,30 +238,42 @@ function Cell({ c, lit, dim }: { c: BanditCell; lit?: boolean; dim?: boolean }) 
   );
 }
 
+/** the rules and prices in the old machine's manner: the special symbols with their words on the left, the prices on the right */
 function PayTable({ bet, onClose }: { bet: number; onClose: () => void }) {
   const mults = BANDIT_WILD.mult.map(([m]) => `×${m}`).join(", ");
+  const money = BANDIT_SYMS.find((s) => s.id === "money")!;
+  const bell = BANDIT_SYMS.find((s) => s.id === "bell")!;
+  const box = (n: number) => <span className="num bd-pay-n">{fmt(n * bet)}<img src={pic("matchbox" as BanditSym)} alt="коробков" /></span>;
   return (
-    <Modal title="Таблица выплат" onClose={onClose}>
-      <p className="small" style={{ marginTop: 0 }}>
-        Одинаковые символы на соседних барабанах слева направо, в любом месте барабана. Выплата в коробках при ставке <b className="num">{bet}</b>.
-      </p>
-      <div className="bd-pay">
-        {BANDIT_SYMS.filter((s) => s.id !== "bell").map((s) => (
+    <Modal title="Таблица выплат" onClose={onClose} wide className="bd-paywin">
+      <ul className="bd-rules small">
+        <li>Выигрыш считается от левого края.</li>
+        <li>Игра идёт по 4 линиям — по каждому ряду.</li>
+        <li>Выигрыш каждой линии умножается на ставку ({bet}). 1 коробок = 1 рубль.</li>
+        <li>Каждый поставленный рубль — 1 опыт автомата.</li>
+      </ul>
+      <div className="bd-paygrid">
+        <div className="bd-pay-big">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={pic("money")} alt="" />
+          <div><b>Куш</b><span className="small">Собери пять пачек денег на линии и сорви куш!</span><span>5 — {box(money.pay[2])}</span></div>
+        </div>
+        <div className="bd-pay-big">
+          <span className="bd-pay-wild">WILD</span>
+          <div><b>Бандит</b><span className="small">Падает на 2–4 барабан во всю высоту и заменяет любой символ, кроме колокола. Его множитель ({mults}) умножает весь выигрыш спина.</span></div>
+        </div>
+        <div className="bd-pay-big">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={pic("bell")} alt="" />
+          <div><b>Колокол</b><span className="small">3, 4 или 5 колоколов в любом месте — {BANDIT_FREE[3]}, {BANDIT_FREE[4]} или {BANDIT_FREE[5]} бесплатных спинов по текущей ставке и {fmt(bell.pay[0] * bet)} / {fmt(bell.pay[1] * bet)} / {fmt(bell.pay[2] * bet)} коробков.</span></div>
+        </div>
+        {BANDIT_SYMS.filter((s) => s.id !== "bell" && s.id !== "money").map((s) => (
           <div key={s.id} className="bd-pay-row">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={pic(s.id)} alt="" />
-            <span className="num">5 — {s.pay[2] * bet}<br />4 — {s.pay[1] * bet}<br />3 — {s.pay[0] * bet}</span>
+            <img src={pic(s.id)} alt={s.name} />
+            <span><i>5</i> — {box(s.pay[2])}<br /><i>4</i> — {box(s.pay[1])}<br /><i>3</i> — {box(s.pay[0])}</span>
           </div>
         ))}
-      </div>
-      <div className="bd-pay-rule">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={pic("bell")} alt="" />
-        <span className="small">Колокол: 3, 4 или 5 в любом месте — {BANDIT_FREE[3]}, {BANDIT_FREE[4]} или {BANDIT_FREE[5]} бесплатных спинов по той же ставке.</span>
-      </div>
-      <div className="bd-pay-rule">
-        <span className="bd-pay-wild">WILD</span>
-        <span className="small">Дикий барабан на 2–4 барабане: заменяет любой символ, кроме колокола. Его множитель ({mults}) умножает весь выигрыш спина; множители на экране складываются.</span>
       </div>
     </Modal>
   );
