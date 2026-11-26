@@ -8524,6 +8524,15 @@ body:has(.bd-screen) .hud { background: none; border-bottom: 0; box-shadow: none
 /* below half HP: sad — the inner ends of the brows up (each turns round its outer end) */
 .rig-hm .hm-brow-l, .rig-hm .hm-brow-r { transition: transform 0.6s ease; }
 .rig-hm.dazed .hm-brow-l { transform: rotate(-11deg); }
+/* below half HP the jaw trembles: quick small shakes, a still moment now and then */
+.rig-hm.dazed .hm-jaw-t { animation: hm-jaw-shiver 1.9s linear infinite; }
+@keyframes hm-jaw-shiver {
+  0%, 4%, 8%, 12%, 16%, 20%, 24%, 28%, 32%, 36%, 40%, 44%, 48%, 52%, 56%, 60%, 64% { transform: translate(0, 0); }
+  2%, 10%, 18%, 26%, 34%, 42%, 50%, 58% { transform: translate(0.35px, 1.5px); }
+  6%, 14%, 22%, 30%, 38%, 46%, 54%, 62% { transform: translate(-0.35px, 0.9px); }
+  65%, 100% { transform: translate(0, 0.4px); }
+}
+@media (prefers-reduced-motion: reduce) { .rig-hm.dazed .hm-jaw-t { animation: none; } }
 .rig-hm.dazed .hm-brow-r { transform: rotate(11deg); }
 .rig-hm .hm-lids > g { transform: scaleY(0); animation: fk-blink 4s linear infinite; }
 .rig-hm .hm-mask { transform: translateY(calc(var(--jaw) * 1.6px)) scaleY(calc(1 + var(--jaw) * 0.03)); }

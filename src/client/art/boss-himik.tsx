@@ -140,7 +140,7 @@ export function HimikRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
             {pic("head")}
             {/* the lower teeth over the head, the lower lip and the little tuft under it («mustache», the soul patch): all
                 drop with the jaw */}
-            <g className="hm-jaw">{pic("teeth-low")}{pic("chin")}{pic("mustache")}</g>
+            <g className="hm-jaw"><g className="hm-jaw-t">{pic("teeth-low")}{pic("chin")}{pic("mustache")}</g></g>
             <g className="hm-beard" style={box("beard", 0.5, 0.15)}>{pic("beard")}</g>
             {/* the brows, each on its own (the picture twice, clipped at the gap between them): below half HP their inner
                 ends go up — he looks sad — each turning round its outer end */}
