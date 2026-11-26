@@ -8582,10 +8582,13 @@ body:has(.bd-screen) .hud { background: none; border-bottom: 0; box-shadow: none
 [data-phase="rise"] .bd-roul-gun, [data-phase="open"] .bd-roul-gun, [data-phase="load"] .bd-roul-gun, [data-phase="close"] .bd-roul-gun,
 [data-phase="spin"] .bd-roul-gun, [data-phase="fire"] .bd-roul-gun { transform: none; opacity: 1; }
 [data-phase="lower"] .bd-roul-gun { transition-duration: 0.6s; }
-/* the drum: hidden in the gun's frame; it swings out up to its place (the artist's), back in for the spin */
+/* the drum: hidden in the gun's frame; it swings out to its place (where the artist put it) and stays there — loaded,
+   shut with a jolt, spun, fired — until the revolver goes down */
 .bd-roul-drum-w { position: absolute; inset: 0; transform: translate(0, 14%) scale(0.45); opacity: 0; transition: transform 0.4s cubic-bezier(0.3, 1.3, 0.5, 1), opacity 0.25s; }
-[data-phase="open"] .bd-roul-drum-w, [data-phase="load"] .bd-roul-drum-w { transform: none; opacity: 1; }
-[data-phase="close"] .bd-roul-drum-w, [data-phase="spin"] .bd-roul-drum-w { transform: translate(0, 14%) scale(0.45); opacity: 1; }
+[data-phase="open"] .bd-roul-drum-w, [data-phase="load"] .bd-roul-drum-w, [data-phase="close"] .bd-roul-drum-w,
+[data-phase="spin"] .bd-roul-drum-w, [data-phase="fire"] .bd-roul-drum-w { transform: none; opacity: 1; }
+[data-phase="close"] .bd-roul-drum-w { animation: bd-roul-shut 0.3s ease-out; }
+@keyframes bd-roul-shut { 40% { transform: translate(1.5%, 1%) scale(0.97); } }
 .bd-roul-drum { position: absolute; inset: 0; transform-origin: 49.7% 24.8%; transform: rotate(var(--turn)); }
 [data-phase="spin"] .bd-roul-drum { transition: transform 2s cubic-bezier(0.15, 0.5, 0.25, 1); }
 /* the bullet flies into the top-left chamber */
