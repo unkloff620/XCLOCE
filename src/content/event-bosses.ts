@@ -11,6 +11,7 @@ export const EVENT_BOSSES: EventBossDef[] = [
   // Пепе is a mentor now (the «Менторы» tab of the bosses, always on): no admin switch, not on the home screen
   { id: "pepe", name: "Пепе", title: "Ментор", hp: 100_000, portrait: "/bosses/pepe/portrait.webp", href: "/event/pepe", mentor: true },
   { id: "nitka", name: "Нитка", title: "Ментор", hp: 1_000_000, portrait: "/bosses/nitka/portrait.webp", href: "/bosses/nitka", mentor: true },
+  { id: "himik", name: "Химик", title: "Ментор", hp: 30_000_000, portrait: "/bosses/himik/portrait.webp", href: "/bosses/himik", mentor: true },
   { id: "psih", name: "Псих", title: "Ментор", hp: 100_000_000, portrait: "/bosses/psih/portrait.webp", href: "/bosses/psih", mentor: true },
 ];
 

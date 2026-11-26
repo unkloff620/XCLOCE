@@ -315,7 +315,7 @@ describe("boss fights: personal fights, shared damage", () => {
     expect((await act(db, q, "fight_start", { boss: "knyaz" }, T0)).state.fight?.bossId).toBe("knyaz");
   });
 
-  it("Фокус and Солнце open with a single key; «Псих» (a mentor) with one of Нитка after a night run", async () => {
+  it("Фокус and Солнце open with a single key; «Псих» (a mentor) with one of Химик", async () => {
     const p = await newPlayer(db);
     await openRoads(db, p);
     await expect(act(db, p, "fight_start", { boss: "fokus" }, T0)).rejects.toMatchObject({ code: "boss_locked" });
@@ -326,7 +326,7 @@ describe("boss fights: personal fights, shared damage", () => {
     const q = await newPlayer(db);
     await db.query("INSERT INTO location_claims (player_id, location_id, claimed_at) VALUES ($1,'night:moonbase',now())", [q]);
     await expect(act(db, q, "fight_start", { boss: "psih", mode: "blat" }, T0)).rejects.toMatchObject({ code: "boss_locked" });
-    await give(db, q, "key-nitka", 1);
+    await give(db, q, "key-himik", 1);
     const f = await act(db, q, "fight_start", { boss: "psih", mode: "blat" }, T0);
     expect(f.state.fight?.bossId).toBe("psih");
     expect(f.state.fight?.hpMax).toBe(300_000_000);
@@ -1312,7 +1312,7 @@ describe("admin", () => {
 describe("action log texts", () => {
   it("says what was found in the yard and what the 777 paid", async () => {
     const { actionText } = await import("../src/server/action-text.ts");
-    expect(actionText("yard_pick", { itemId: 311 }, { name: "Ржавый ключ", reward: { xp: 5, currencies: { RUB: 120 }, items: [], energy: 0 } })).toBe("нашёл «Ржавый ключ» · +120 RUB, +5 авторитета");
+    expect(actionText("yard_pick", { itemId: 311 }, { name: "Ржавый ключ", reward: { xp: 5, currencies: { RUB: 120 }, items: [], energy: 0 } })).toBe("нашёл «Ржавый ключ» · +120 Рубли, +5 авторитета");
     expect(actionText("slots_spin", {}, { title: "Три биткоина", reels: ["btc", "btc", "btc"], reward: { xp: 0, currencies: { BTC: 10 }, items: [], energy: 0 } })).toBe("Три биткоина [BTC BTC BTC] · +10 BTC");
     expect(actionText("slots_spin", {}, { title: "Мимо", reels: ["btc", "sol", "rub"], reward: null })).toBe("Мимо [BTC SOL RUB] · без выигрыша");
   });

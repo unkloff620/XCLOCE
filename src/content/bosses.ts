@@ -241,10 +241,19 @@ export const EVENT_FIGHTS: BossDef[] = [
     // the mentors are a class of bosses like the chain (the user 2026-11-25): Пепе's passes open him
   },
   {
+    // «Химик» (the user 2026-11-26): the third «Отморозок» — 30 000 000 HP, every mode, no «Соло» (boss-himik.tsx); between
+    // Нитка (1 000 000) and Псих (100 000 000): Нитка's pass opens him, his pass opens Псих
+    id: "himik", order: 15, card: "platinum", name: "Химик", title: "Ментор", event: true, mentor: true, modes: true,
+    story: "Сорок лет в подвальной лаборатории. Маску носит не от заразы — чтобы не узнали. Колбы не роняет никогда.",
+    hp: 30_000_000, reward: { xp: 4_500, currencies: { TOOTH: 3_500, PAP: 3_500 } },
+    theme: { a: "#16351f", b: "#06120a", accent: "#7dff4a" }, photo: photo("himik", true),
+    keysToUnlock: 1,
+  },
+  {
     // «Псих» (the user 2026-11-25): the old Фокус art (boss-psih.tsx, public/bosses/psih) as a mentor, 100 000 000 HP;
     // every mode, no «Соло»; Нитка's pass opens him, after a night run of «Лунная база» (BOSS_ROAD). Фокус's card,
     // room and set stay with Фокус
-    id: "psih", order: 15, card: "diamond", name: "Псих", title: "Ментор", event: true, mentor: true, modes: true,
+    id: "psih", order: 16, card: "diamond", name: "Псих", title: "Ментор", event: true, mentor: true, modes: true,
     story: "Сорвался с катушек прямо за клавиатурой. Теперь у него в руке нож, а не мышка.",
     hp: 100_000_000, reward: { xp: xp(11), currencies: { TOOTH: 12_000, PAP: 12_000 } },
     theme: { a: "#401624", b: "#16060c", accent: "#ff6b9a" }, photo: photo("psih", true),

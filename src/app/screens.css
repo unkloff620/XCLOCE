@@ -8426,3 +8426,30 @@ body:has(.bd-screen) .hud { background: none; border-bottom: 0; box-shadow: none
 .bd-chest-in .bd-lvl-bar { width: 100%; flex: none; height: 12px; border-radius: 6px; }
 .bd-lvlup { position: absolute; left: 50%; top: 24%; transform: translateX(-50%); padding: 2cqw 4cqw; border-radius: 3cqw; background: rgba(20, 12, 6, 0.9); border: 0.5cqw solid var(--bd-gold); color: #fff; font: 700 4cqw/1.2 system-ui; white-space: nowrap; z-index: 4; animation: bd-x 0.4s ease; }
 .bd-lvlup b { color: var(--bd-gold); }
+
+/* Химик (boss-himik.tsx, POSES.himik): the jaw, the eyes, the brows, the mask (on the face above half HP, off on the ear
+   below it), the beard stretching with the jaw; the poison in the glasses — level whatever the hand's turn (it lags a
+   little: a slosh), its surface sliding, bubbles going up */
+.rig-hm { --jaw: 0.08; --brw: 0; --px: 0; --py: 0; --tR: 0; --tL: 0; }
+.rig-hm .hm-jaw { transform: translateY(calc(var(--jaw) * 7px)); }
+.rig-hm .hm-beard { transform: scaleY(calc(1 + var(--jaw) * 0.045)); }
+.rig-hm .hm-pupils { transform: translate(calc(var(--px) * 2.6px), calc(var(--py) * 1.4px)); }
+.rig-hm .hm-brows { transform: translateY(calc(var(--brw) * 1.8px)) scaleX(calc(1 - var(--brw) * 0.03)); }
+.rig-hm .hm-lids > g { transform: scaleY(0); animation: fk-blink 4s linear infinite; }
+.rig-hm .hm-mask { transform: translateY(calc(var(--jaw) * 1.6px)) scaleY(calc(1 + var(--jaw) * 0.03)); }
+.rig-hm .hm-mask-ear { display: none; }
+.rig-hm.dazed .hm-mask { display: none; }
+.rig-hm.dazed .hm-mask-ear { display: inline; animation: hm-mask-swing 3.2s ease-in-out infinite; }
+@keyframes hm-mask-swing { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(3deg); } }
+.rig-hm .hm-glass { opacity: 0.62; }
+.rig-hm .hm-liq-r { transform: rotate(calc(var(--tR) * 1deg)); transition: transform 0.22s ease-out; }
+.rig-hm .hm-liq-l { transform: rotate(calc(var(--tL) * 1deg)); transition: transform 0.22s ease-out; }
+.rig-hm.hm-splash .hm-liq-r { transform: rotate(calc(var(--tR) * 1deg)) translateY(9px); }
+.rig-hm .hm-wave-front { animation: hm-wave-f 1.15s linear infinite; }
+.rig-hm .hm-wave-back { animation: hm-wave-b 1.7s linear infinite; }
+@keyframes hm-wave-f { from { transform: translateX(0); } to { transform: translateX(-18px); } }
+@keyframes hm-wave-b { from { transform: translateX(-22px); } to { transform: translateX(0); } }
+.rig-hm .hm-bub { animation: hm-bub 2.4s ease-in infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes hm-bub { 0% { transform: translateY(0) scale(0.6); opacity: 0; } 15% { opacity: 1; } 85% { opacity: 0.9; } 100% { transform: translateY(calc(var(--rise) * -1)) scale(1.1); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .rig-hm :is(.hm-lids > g, .hm-wave-front, .hm-wave-back, .hm-bub, .hm-mask-ear) { animation: none; } }
+.rig-hm.boss-rig.dazed, .rig-hm.boss-rig.dazed :is(.br-arm-l, .br-arm-r, .br-low-l, .br-low-r, .br-hand-r, .br-head) { animation: none; }

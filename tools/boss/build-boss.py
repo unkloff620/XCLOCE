@@ -23,11 +23,14 @@ HIRES_BY_BOSS = {"vodovoz": (2, {"head", "eyes", "pupils", "eyes-closed", "browL
                   "utilizator": (2, {"head", "eyes", "pupils", "eyes-closed", "browL", "browR", "throat", "teeth-up", "teeth-low", "lips", "lips-up"}),
                   "psih": (2, {"head", "eyes", "pupils", "browL", "browR", "throat", "teeth-up", "teeth-low", "lips", "lips-up", "nose", "chin", "temple", "glasses", "hair"}),
                   "solntse": (2, {"head", "eyes", "pupils", "mouthIn", "jawLow"}),
+                  "himik": (2, {"head", "eyes", "pupils", "brows", "chin", "throat", "teeth-up", "teeth-low", "beard", "mustache", "mask", "maskEar"}),
                   "datsik": (2, {"head", "eyes", "pupils", "brows", "chin", "throat", "tongue", "teeth-up", "teeth-low"}),
                   "fokus": (2, {"head", "eyes", "pupils", "brows", "glasses", "throat", "teeth-up", "teeth-low", "chin", "hoodFront", "hoodShadow", "phone"}),
                   "nitka": (2, {"head", "eyes", "pupils", "brows", "glasses", "throat", "teeth-up", "teeth-low", "chin"}),
                   "knyaz": (2, {"head", "head-open", "eyes", "pupils", "eyes-closed", "throat", "teeth-up", "teeth-low", "lips", "mouth-closed", "mouth-sad", "gag"})}
-PARTS = ["tail", "legs", "shirtR", "shirtL", "handR-blood", "handL-blood", "legs-glow", "body", "body-glow", "apron", "chestR", "chestR-glow", "chestL", "poker", "mouthIn", "jawLow", "armR-glow", "lowR-glow", "headset", "foreL", "foreR", "armL", "lowL", "handL", "bag", "vials", "gasmask", "cover", "keyRing", "keyFob", "keyKey", "duck", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "jaw", "lips", "lips-up", "mouth-sad", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar", "gag", "fingerR", "nose", "chin", "temple", "glasses", "hair", "phone", "hoodFront", "hoodShadow", "neck", "hoodBack", "laptop", "coat", "coatBack", "tongue"]
+PARTS = ["tail", "legs", "shirtR", "shirtL", "handR-blood", "handL-blood", "legs-glow", "body", "body-glow", "apron", "chestR", "chestR-glow", "chestL", "poker", "mouthIn", "jawLow", "armR-glow", "lowR-glow", "headset", "foreL", "foreR", "armL", "lowL", "handL", "bag", "vials", "gasmask", "cover", "keyRing", "keyFob", "keyKey", "duck", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "jaw", "lips", "lips-up", "mouth-sad", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar", "gag", "fingerR", "nose", "chin", "temple", "glasses", "hair", "phone", "hoodFront", "hoodShadow", "neck", "hoodBack", "laptop", "coat", "coatBack", "tongue",
+         "coatR", "coatL", "fingersR", "thumbR", "flaskR", "flaskR-glass", "tube", "tube-glass", "beard", "mustache", "mask", "maskEar",
+         "poisonR-mask", "poisonL-mask"]
 # puppet-warped sequences (<part>@0.png, <part>@1.png …): one strip <part>.webp, frames side by side, frame 0 first
 FRAMES = ["brows", "jaw", "armRb", "armLb"]
 # which edge of the part joins the parent: (axis, side) — y/bottom for head and left forearm, x/right for the right one
@@ -65,6 +68,10 @@ PIVOT_BY_BOSS = {
     # (under the chin), the shoulders, the elbows (the forearms carry the fists) — printed by that script
     "datsik": {"head": [297.5, 262.0], "armR": [145.0, 339.1], "lowR": [39.4, 477.0], "armL": [408.0, 345.0], "lowL": [519.6, 488.0]},  # the elbows: the
                # outer point of the elbow — where the artist turned the forearm in Photoshop (the user 2026-11-25)
+    # Химик (tools/boss/assemble-himik.py, the 2000×3000 sheet cropped at (253, 45)): the neck under the jaw, the shoulders,
+    # the elbows, the right wrist (the glove with the round flask) — printed by that script
+    "himik": {"head": [399.5, 252.5], "armR": [282.0, 398.0], "lowR": [194.4, 576.2], "handR": [154.8, 634.8],
+              "armL": [548.0, 382.0], "lowL": [649.8, 537.6]},
     "solntse": {"head": [508.0, 196.0], "armR": [362.0, 268.0], "lowR": [92.0, 414.0], "armL": [578.0, 300.0], "lowL": [668.0, 505.0]},
     "bebyakyan": {"foreL": [228.0, 405.0], "foreR": [617.0, 437.0]},
     # whole arms swing at the shoulder, the hands with money turn at the wrist (inside the arm's swing)
