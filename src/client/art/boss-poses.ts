@@ -868,13 +868,15 @@ const kdBreath = (t: number) => 0.5 - 0.5 * Math.cos((t / 1.8) * Math.PI);
 const KD_CLENCH = { lowL: 30, armL: -3, handL: -6 };
 const kdAmp = (p: Pose, a: number): Pose => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, (v ?? 0) * (k === "jaw" || k === "brw" || k === "bru" ? 1 : a)]));
 const kdHammer = (amp = 1, slow = 1): Action => {
-  const keys: Key[] = [];
+  const keys: Key[] = [], face: Face[] = [];
   const UP = kdAmp({ armR: 12, lowR: 52, handR: 34, up: 2, x: 4, y: -2, head: 1.5, brw: 0.5, jaw: 0.15, ...KD_CLENCH }, amp);
   const HIT = kdAmp({ armR: -4, lowR: -6, handR: -46, up: -4, x: -8, y: 22, head: -2.5, brw: 1, jaw: 1, ...KD_CLENCH, lowL: 36 }, amp);
   let t = 0;
   for (let i = 0; i < 3; i++) {
     keys.push({ at: t, pose: UP, stiff: 2.6 / slow });
     keys.push({ at: t + 0.15 * slow, pose: HIT, stiff: 7 / slow });
+    // the blow lands: blood off the hammer's face (boss-kedr.tsx useHammerBlood)
+    face.push({ cls: "kd-hit", at: t + 0.2 * slow, dur: 0.08 });
     t += 0.31 * slow;
   }
   // the third sticks: the fist stays put, he tugs at it twice (the body pulls back, the arm strains), then yanks it out
@@ -890,7 +892,7 @@ const kdHammer = (amp = 1, slow = 1): Action => {
   t += 0.2 * slow;
   // back in its place, smoothly (soft springs), the left hand opens
   keys.push({ at: t, pose: {}, stiff: 0.45 / slow });
-  return { keys, dur: t + 0.9 * slow };
+  return { keys, face, dur: t + 0.9 * slow };
 };
 /** a sneer: the brows go up, the mouth opens a little, the head tips back — then a frown */
 const kdSneer = (slow = 1): Action => ({
