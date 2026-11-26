@@ -8025,8 +8025,10 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .rd-fort-p { display: inline-flex; align-items: center; gap: 1px; }
 
 /* «Донат» (screens/donate.tsx): the artist's board, the tabs on top (the open one lifted), 3×3 wooden cells */
-.dn-back { display: grid; place-items: center; padding: 12px; }
-.dn-win { position: relative; width: min(94vw, 420px); padding-top: 52px; }
+.dn-back { display: grid; place-items: center; container-type: size; }
+/* as wide as the room between the HUD and the bar lets it, but never taller: the board is 900×1307 under 52px of tabs (a phone's short screen) */
+@property --dnw { syntax: "<length>"; inherits: true; initial-value: 400px; }
+.dn-win { position: relative; --dnw: min(94cqw, 420px, calc((100cqh - 16px - 52px) * 900 / 1307)); width: var(--dnw); padding-top: 52px; }
 .dn-tabs { position: absolute; left: 7%; right: 7%; top: 0; display: flex; justify-content: space-between; z-index: 0; }
 .dn-tab { width: 18%; aspect-ratio: 180 / 264; padding: 0; border: 0; background: center top / 100% 100% no-repeat; cursor: pointer; display: flex; justify-content: center; align-items: flex-start;
   padding-top: 9%; transform: translateY(12px); transition: transform 0.18s ease, filter 0.18s; filter: brightness(0.8); -webkit-tap-highlight-color: transparent; }
@@ -8040,8 +8042,10 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .dn-pic { flex: 1; min-height: 0; width: 82%; object-fit: contain; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.45)); }
 .dn-amount { display: inline-flex; align-items: center; gap: 3px; margin: 3% 0; font-size: 12cqi; font-weight: 900; color: #3b2410; white-space: nowrap; }
 /* the game's own gold plate (globals.css .btn), as wide as the tag */
-.dn-cell .dn-buy { width: 100%; min-width: 0; gap: 4px; padding: 0 4px; }
-.dn-cell .dn-buy .num { font-size: 13px; }
+/* the plate's words shrink with the board (--dnw: the board's width, 13px on a 393px phone) */
+.dn-cell .dn-buy { width: 100%; min-width: 0; gap: min(4px, calc(var(--dnw) * 0.01)); padding: 0 min(4px, calc(var(--dnw) * 0.01)); }
+.dn-cell .dn-buy .num { font-size: min(13px, calc(var(--dnw) * 0.044)); }
+.dn-cell .dn-buy svg { width: min(15px, calc(var(--dnw) * 0.05)) !important; height: min(15px, calc(var(--dnw) * 0.05)) !important; flex: none; }
 .dn-buy:disabled { filter: saturate(0.5) brightness(0.85); }
 
 /* «Строительный ящик» (screens/toolbox.tsx): the CS2-style roulette */
