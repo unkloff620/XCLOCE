@@ -1,7 +1,7 @@
 """
-The matchbox of «Бандитский фарт» (the machine's win): the 90s box — white with a blue stripe (the user 2026-11-26), a
-low-quality image edit of the old red one on flat magenta (tools/bandit/source/extra/matchbox-90s.png) → the magenta
-keyed out → public/assets/bandit/matchbox.webp, 256×256 (the old red box: extra/matchbox-red.png).
+The blue matchbox of «Бандитский фарт» (the roulette's win; the spins give the red one, source/matchbox.png): the 90s
+box — white with a blue stripe (the user 2026-11-26), a low-quality image edit of the red one on flat magenta
+(tools/bandit/source/extra/matchbox-90s.png) → the magenta keyed out → public/assets/bandit/matchbox-blue.webp, 256×256.
 """
 import numpy as np
 from PIL import Image
@@ -23,5 +23,5 @@ im = im.crop(im.getbbox())
 side = round(max(im.size) * 1.04)
 sq = Image.new("RGBA", (side, side), (0, 0, 0, 0))
 sq.alpha_composite(im, ((side - im.width) // 2, (side - im.height) // 2))
-sq.resize((256, 256), Image.LANCZOS).save("public/assets/bandit/matchbox.webp", quality=90, method=6)
+sq.resize((256, 256), Image.LANCZOS).save("public/assets/bandit/matchbox-blue.webp", quality=90, method=6)
 print("ok")

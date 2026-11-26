@@ -15,37 +15,41 @@ export type BanditSym = "money" | "ring" | "chain" | "raven" | "cap" | "revolver
 /** a cell of the screen: a symbol, or «W» — a part of a wild reel */
 export type BanditCell = BanditSym | "W";
 
-export interface BanditSymDef { id: BanditSym; name: string; weight: number; pay: [number, number, number, number] }
-/** the price of 2 / 3 / 4 / 5 in a row, × the bet; the weight — how often it falls in a cell. The bell and the revolver
- *  are scatters (anywhere on the screen): the bell's 3 / 4 / 5 price, the revolver pays nothing itself (the bonus game) */
+export interface BanditSymDef { id: BanditSym; name: string; weight: number; pay: [number, number, number, number]; xp?: [number, number, number, number] }
+/** the price of 2 / 3 / 4 / 5 in a row in whole matchboxes, × the bet; the weight — how often it falls in a cell. The
+ *  horseshoe gives the machine's experience instead (`xp`, not × the bet). The bell and the revolver are scatters
+ *  (anywhere on the screen): the bell's 3 / 4 / 5 price, the revolver pays nothing itself (the bonus game) */
 export const BANDIT_SYMS: BanditSymDef[] = [
   { id: "money", name: "Пачка денег", weight: 3, pay: [5, 75, 250, 1000] },
   { id: "ring", name: "Печатка", weight: 4, pay: [4, 60, 200, 500] },
   { id: "chain", name: "Цепь", weight: 5, pay: [3, 50, 150, 300] },
   { id: "raven", name: "Ворон", weight: 6, pay: [2, 40, 100, 250] },
   { id: "cap", name: "Кепка", weight: 7, pay: [2, 30, 80, 200] },
-  { id: "dice", name: "Кости", weight: 12, pay: [1, 15, 40, 100] },
-  { id: "horseshoe", name: "Подкова", weight: 12, pay: [1, 15, 40, 100] },
-  { id: "a", name: "Туз", weight: 20, pay: [0.5, 8, 25, 75] },
-  { id: "k", name: "Король", weight: 20, pay: [0.5, 8, 25, 75] },
-  { id: "q", name: "Дама", weight: 24, pay: [0.5, 5, 20, 50] },
-  { id: "j", name: "Валет", weight: 24, pay: [0.5, 5, 20, 50] },
-  { id: "ten", name: "Десятка", weight: 24, pay: [0.5, 5, 20, 50] },
+  { id: "dice", name: "Кости", weight: 12, pay: [1, 12, 30, 80] },
+  { id: "horseshoe", name: "Подкова", weight: 12, pay: [0, 0, 0, 0], xp: [0, 200, 300, 500] },
+  { id: "a", name: "Туз", weight: 20, pay: [1, 7, 20, 60] },
+  { id: "k", name: "Король", weight: 20, pay: [1, 7, 20, 60] },
+  { id: "q", name: "Дама", weight: 24, pay: [1, 4, 15, 40] },
+  { id: "j", name: "Валет", weight: 24, pay: [1, 4, 15, 40] },
+  { id: "ten", name: "Десятка", weight: 24, pay: [1, 4, 15, 40] },
   { id: "bell", name: "Колокол", weight: 3.3, pay: [0, 5, 20, 100] },
   { id: "revolver", name: "Револьвер", weight: 3.5, pay: [0, 0, 0, 0] },
 ];
 /** the scatters: they pay or give something anywhere on the screen, never on a line, a wild does not stand in for them */
 export const BANDIT_SCATTER: BanditSym[] = ["bell", "revolver"];
 /**
- * «Русская рулетка» (3+ revolvers anywhere): one round in the six chambers, the player pulls the trigger up to 5 times;
- * every click — ROULETTE_PAY × the bet matchboxes, the shot ends the game (the clicks before it are kept).
+ * «Русская рулетка» (3+ revolvers anywhere; the user 2026-11-26): ROULETTE_PULLS rounds (the bullets top left of the
+ * window); each pull one round goes into the six chambers and the drum is spun — the shot 1 in 6. Every click —
+ * ROULETTE_PAY × the bet matchboxes, the shot ends the game (the clicks before it are kept).
  */
 export const ROULETTE_PAY = 25;
-export const ROULETTE_PULLS = 5;
-/** the bonus game's mean win × the bet: the round in chamber 1…6 alike, so 0…5 clicks before the shot (5 at most) */
-export const ROULETTE_MEAN = (ROULETTE_PAY * [0, 1, 2, 3, 4, 5].reduce((a, b) => a + b, 0)) / 6;
-/** all the line prices × this: tuned so the machine gives back about BANDIT_RTP of what is bet (tests/bandit.test.ts) */
-export const BANDIT_SCALE = 0.828;
+export const ROULETTE_PULLS = 4;
+/** the chance of the shot on a pull */
+export const ROULETTE_SHOT = 1 / 6;
+/** the bonus game's mean win × the bet: a click on pull k needs all k pulls to click */
+export const ROULETTE_MEAN = ROULETTE_PAY * Array.from({ length: ROULETTE_PULLS }, (_, k) => (1 - ROULETTE_SHOT) ** (k + 1)).reduce((a, b) => a + b, 0);
+/** the line prices are tuned so the machine gives back about BANDIT_RTP of what is bet in red matchboxes (the
+ *  roulette pays its own blue ones; tests/bandit.test.ts) */
 export const BANDIT_RTP = 0.94;
 /** the wild reel: the chance per reel 2–4 (in the free spins higher), its multiplier by weight */
 export const BANDIT_WILD = { reels: [1, 2, 3], chance: 0.01, freeChance: 0.04, mult: [[2, 60], [3, 25], [5, 10], [10, 4], [25, 1]] as [number, number][] };
@@ -81,7 +85,7 @@ export interface BanditSpin {
   /** the wild reels: reel index → multiplier */
   wilds: Record<number, number>;
   /** the wins by lines (the rows): the symbol, how many reels in a row from the left, the row, the boxes before the multiplier */
-  wins: { sym: BanditSym; n: number; row: number; pay: number }[];
+  wins: { sym: BanditSym; n: number; row: number; pay: number; xp?: number }[];
   /** the bells' own pay (× the bet already), not multiplied */
   bells: number;
   mult: number;
@@ -91,6 +95,8 @@ export interface BanditSpin {
   win: number;
   /** free spins this spin gives */
   free: number;
+  /** the machine's experience the horseshoes gave */
+  xp: number;
   /** 3+ revolvers: the bonus game «Русская рулетка» */
   roulette: boolean;
 }
@@ -135,14 +141,14 @@ export function banditPay(reels: BanditCell[][], wilds: Record<number, number>, 
     let n = 1;
     while (n < BANDIT_REELS && (reels[n][row] === sym || reels[n][row] === "W")) n++;
     const def = banditSym(sym)!;
-    if (n >= 2) wins.push({ sym, n, row, pay: def.pay[n - 2] * BANDIT_SCALE * bet });
+    if (n >= 2 && (def.pay[n - 2] > 0 || (def.xp?.[n - 2] ?? 0) > 0)) wins.push({ sym, n, row, pay: def.pay[n - 2] * bet, ...(def.xp ? { xp: def.xp[n - 2] } : {}) });
   }
   const nb = reels.flat().filter((x) => x === "bell").length;
   const bellDef = banditSym("bell")!;
-  const bells = nb >= 3 ? bellDef.pay[Math.min(5, nb) - 2] * BANDIT_SCALE * bet : 0;
+  const bells = nb >= 3 ? bellDef.pay[Math.min(5, nb) - 2] * bet : 0;
   const roulette = reels.flat().filter((x) => x === "revolver").length >= 3;
   const mult = Object.values(wilds).reduce((a, b) => a + b, 0) || 1;
   const line = wins.reduce((a, w) => a + w.pay, 0);
   const raw = Math.min(BANDIT_MAX_X * bet, line * mult + bells);
-  return { reels, wilds, wins, bells, mult, raw, win: Math.floor(raw), free: BANDIT_FREE[Math.min(5, nb)] ?? 0, roulette };
+  return { reels, wilds, wins, bells, mult, raw, win: Math.floor(raw), free: BANDIT_FREE[Math.min(5, nb)] ?? 0, roulette, xp: wins.reduce((a, w) => a + (w.xp ?? 0), 0) };
 }

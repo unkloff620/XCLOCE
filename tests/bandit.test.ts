@@ -1,19 +1,19 @@
 import { describe, it, expect } from "vitest";
 import { act, freshDb, newPlayer, qty, setMoney, wallet } from "./helpers.ts";
-import { BANDIT_RTP, BANDIT_SCALE, ROULETTE_MEAN, ROULETTE_PAY, banditLevel, banditPay, banditSpin, type BanditCell } from "../src/content/bandit.ts";
+import { BANDIT_RTP, ROULETTE_PAY, banditLevel, banditPay, banditSpin, type BanditCell } from "../src/content/bandit.ts";
 
 const lcg = (seed: number) => () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
 
 describe("«Бандитский фарт»", () => {
-  it("gives back about BANDIT_RTP of the bets over many spins (free spins and the roulette included)", () => {
+  it("gives back about BANDIT_RTP of the bets in red boxes over many spins (free spins included; the roulette pays blue ones)", () => {
     const rng = lcg(7);
     let paid = 0, won = 0;
     for (let i = 0; i < 1_000_000; i++) {
       paid += 1;
       const s = banditSpin(1, rng);
-      won += s.raw + (s.roulette ? ROULETTE_MEAN : 0);
+      won += s.raw;
       let fs = s.free;
-      while (fs > 0) { fs--; const f = banditSpin(1, rng, true); won += f.raw + (f.roulette ? ROULETTE_MEAN : 0); fs += f.free; }
+      while (fs > 0) { fs--; const f = banditSpin(1, rng, true); won += f.raw; fs += f.free; }
     }
     expect(won / paid).toBeGreaterThan(BANDIT_RTP - 0.08);
     expect(won / paid).toBeLessThan(BANDIT_RTP + 0.08);
@@ -23,37 +23,41 @@ describe("«Бандитский фарт»", () => {
     const col = (...c: BanditCell[]) => c;
     const reels = [col("money", "a", "q"), col("money", "k", "k"), col("money", "dice", "j"), col("a", "k", "q"), col("a", "k", "q")];
     const plain = banditPay(reels, {}, 10);
-    expect(plain.wins).toEqual([{ sym: "money", n: 3, row: 0, pay: 75 * BANDIT_SCALE * 10 }]);
+    expect(plain.wins).toEqual([{ sym: "money", n: 3, row: 0, pay: 750 }]);
     // a pair pays too
     const pair = banditPay([col("a", "j", "q"), col("a", "k", "k"), col("ten", "dice", "j"), col("q", "k", "q"), col("j", "k", "q")], {}, 1);
-    expect(pair.wins).toEqual([{ sym: "a", n: 2, row: 0, pay: 0.5 * BANDIT_SCALE }]);
+    expect(pair.wins).toEqual([{ sym: "a", n: 2, row: 0, pay: 1 }]);
+    // the horseshoes give experience, no boxes
+    const hs = banditPay([col("horseshoe", "a", "q"), col("horseshoe", "k", "k"), col("horseshoe", "dice", "j"), col("horseshoe", "q", "ten"), col("a", "j", "q")], {}, 3);
+    expect(hs.xp).toBe(300);
+    expect(hs.raw).toBe(0);
     const wild = banditPay([reels[0], reels[1], Array(3).fill("W"), reels[3], reels[4]], { 2: 5 }, 10);
     expect(wild.mult).toBe(5);
     expect(wild.wins.find((w) => w.row === 0)).toMatchObject({ sym: "money", n: 3 });
-    expect(wild.raw).toBeCloseTo(wild.wins.reduce((a, w) => a + w.pay, 0) * 5);
+    expect(wild.raw).toBe(wild.wins.reduce((a, w) => a + w.pay, 0) * 5);
     const rev = banditPay([col("revolver", "a", "q"), col("k", "revolver", "k"), col("j", "dice", "j"), col("revolver", "k", "q"), col("a", "k", "q")], {}, 1);
     expect(rev.roulette).toBe(true);
     expect(rev.wins.some((w) => w.sym === "revolver")).toBe(false);
   });
 
-  it("the roulette: no spin while it is open; a click pays 25 × the bet, the shot ends it; 5 pulls at most", async () => {
+  it("the roulette: no spin while it is open; a click pays 25 × the bet, the shot ends it; 4 pulls at most", async () => {
     const db = await freshDb();
     const p = await newPlayer(db);
     await setMoney(db, p, "RUB", 100);
-    await db.query("INSERT INTO bandit_state (player_id, roul_left, roul_round, roul_pulls, roul_bet) VALUES ($1, 5, 3, 0, 2)", [p]);
+    await db.query("INSERT INTO bandit_state (player_id, roul_left, roul_round, roul_pulls, roul_bet) VALUES ($1, 4, 3, 0, 2)", [p]);
     await expect(act(db, p, "bandit_spin", { bet: 1 })).rejects.toMatchObject({ code: "roulette_open" });
     const a = await act(db, p, "bandit_pull", {});
-    expect(a.result).toMatchObject({ shot: false, got: ROULETTE_PAY * 2, boxes: 50 });
+    expect(a.result).toMatchObject({ shot: false, got: ROULETTE_PAY * 2, blue: 50, boxes: 0 });
     const b = await act(db, p, "bandit_pull", {});
-    expect(b.result).toMatchObject({ shot: false, boxes: 100 });
+    expect(b.result).toMatchObject({ shot: false, blue: 100 });
     const c = await act(db, p, "bandit_pull", {});
-    expect(c.result).toMatchObject({ shot: true, got: 0, boxes: 100, roulette: null });
+    expect(c.result).toMatchObject({ shot: true, got: 0, blue: 100, roulette: null });
     await expect(act(db, p, "bandit_pull", {})).rejects.toMatchObject({ code: "no_roulette" });
-    // the round in the 6th chamber: all 5 pulls click
-    await db.query("UPDATE bandit_state SET roul_left=5, roul_round=6, roul_pulls=0, roul_bet=1, boxes=0 WHERE player_id=$1", [p]);
+    // no shot on any pull: all 4 click
+    await db.query("UPDATE bandit_state SET roul_left=4, roul_round=9, roul_pulls=0, roul_bet=1, blue=0 WHERE player_id=$1", [p]);
     let last;
-    for (let i = 0; i < 5; i++) last = await act(db, p, "bandit_pull", {});
-    expect(last!.result).toMatchObject({ shot: false, boxes: 125, roulette: null });
+    for (let i = 0; i < 4; i++) last = await act(db, p, "bandit_pull", {});
+    expect(last!.result).toMatchObject({ shot: false, blue: 100, roulette: null });
   });
 
   it("levels: 10 experience to level 1, 100 000 more to level 100", () => {

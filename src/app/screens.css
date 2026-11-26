@@ -8460,6 +8460,7 @@ body:has(.bd-screen) .hud { background: none; border-bottom: 0; box-shadow: none
 .bd-win.big b { font-size: 12cqw; }
 @keyframes bd-big { to { box-shadow: 0 0 9cqw rgba(255, 210, 90, 0.95); } }
 .bd-free-got { position: absolute; left: 50%; top: 66%; transform: translateX(-50%); padding: 1.2cqw 3cqw; border-radius: 2cqw; background: #1f5a24; border: 0.5cqw solid #8fe08a; color: #eaffd9; font: 900 4cqw/1.2 system-ui; animation: bd-x 0.4s ease; white-space: nowrap; z-index: 3; }
+.bd-xp-got { top: 58%; background: #3a2a0a; border-color: #f2c14e; color: #ffe9a8; }
 .bd-val { position: absolute; display: flex; align-items: center; justify-content: center; gap: 1cqw; color: var(--bd-gold); font: 600 4.8cqw/1 system-ui; letter-spacing: 0.1cqw; text-shadow: 0 0.3cqw 0 #000; pointer-events: none; }
 .bd-val.free { color: #8fe08a; }
 .bd-btn { position: absolute; padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 0.08s, filter 0.15s; }
@@ -8571,28 +8572,45 @@ body:has(.bd-screen) .hud { background: none; border-bottom: 0; box-shadow: none
 .bd-roul-scene.bang { animation: bd-roul-bang 0.9s ease-out; }
 @keyframes bd-roul-bang { 0% { background-color: #fff; filter: brightness(3); transform: translate(6px, -4px); } 10% { transform: translate(-6px, 4px); } 20% { transform: translate(3px, 0); filter: brightness(1.5); } 100% { filter: none; transform: none; } }
 .bd-roul-title { position: absolute; top: 3%; left: 0; right: 0; text-align: center; font: 900 clamp(22px, 7vw, 34px)/1 var(--font-display), system-ui; color: #f2c14e; text-shadow: 0 3px 0 #3b2410; z-index: 2; }
-.bd-roul-hero { position: absolute; left: 50%; bottom: 2%; transform: translateX(-50%); width: min(78%, 330px); }
-.bd-roul-hero svg { width: 100%; height: auto; }
-.bd-roul-gun { position: absolute; left: 47%; top: 39%; width: min(40%, 180px); aspect-ratio: 1; padding: 0; border: 0; background: none; cursor: pointer; z-index: 3;
-  transform: rotate(8deg); transform-origin: 85% 70%; animation: bd-roul-aim 2.2s ease-in-out infinite; -webkit-tap-highlight-color: transparent; }
-.bd-roul-gun img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.7)); pointer-events: none; }
-.bd-roul-gun:disabled { cursor: default; }
-@keyframes bd-roul-aim { 50% { transform: rotate(5deg) translate(3px, 2px); } }
-.bd-roul-gun.click { animation: bd-roul-kick 0.35s ease-out; }
-.bd-roul-gun.bang { animation: bd-roul-recoil 0.6s ease-out; }
-@keyframes bd-roul-kick { 30% { transform: rotate(14deg) translate(-4px, -3px); } }
-@keyframes bd-roul-recoil { 15% { transform: rotate(34deg) translate(22px, -18px); filter: brightness(2.5); } }
-.bd-roul-click, .bd-roul-bang { position: absolute; left: 50%; top: 18%; transform: translateX(-50%); font: 900 clamp(26px, 9vw, 44px)/1 var(--font-display), system-ui; font-style: normal; z-index: 4; animation: bd-x 0.35s cubic-bezier(0.2, 1.6, 0.4, 1); }
+.bd-roul-hero { position: absolute; left: 50%; bottom: 2%; transform: translateX(-50%); width: min(78%, 330px); padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.bd-roul-hero > svg { width: 100%; height: auto; display: block; }
+.bd-roul-hero:disabled { cursor: default; }
+/* the revolver over the back of his head (its canvas 1000×1000: the gun's top — the barrel — at the nape) */
+.bd-roul-gun { position: absolute; left: 12%; top: 9%; width: 76%; aspect-ratio: 1; pointer-events: none; transform: translateY(160%); opacity: 0;
+  transition: transform 0.8s cubic-bezier(0.25, 0.8, 0.3, 1), opacity 0.3s; }
+.bd-roul-gun > img, .bd-roul-drum img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.bd-roul-gun-body { filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.6)); }
+[data-phase="rise"] .bd-roul-gun, [data-phase="open"] .bd-roul-gun, [data-phase="load"] .bd-roul-gun, [data-phase="close"] .bd-roul-gun,
+[data-phase="spin"] .bd-roul-gun, [data-phase="fire"] .bd-roul-gun { transform: none; opacity: 1; }
+[data-phase="lower"] .bd-roul-gun { transition-duration: 0.6s; }
+/* the drum: hidden in the gun's frame; it swings out up to its place (the artist's), back in for the spin */
+.bd-roul-drum-w { position: absolute; inset: 0; transform: translate(0, 14%) scale(0.45); opacity: 0; transition: transform 0.4s cubic-bezier(0.3, 1.3, 0.5, 1), opacity 0.25s; }
+[data-phase="open"] .bd-roul-drum-w, [data-phase="load"] .bd-roul-drum-w { transform: none; opacity: 1; }
+[data-phase="close"] .bd-roul-drum-w, [data-phase="spin"] .bd-roul-drum-w { transform: translate(0, 14%) scale(0.45); opacity: 1; }
+.bd-roul-drum { position: absolute; inset: 0; transform-origin: 49.7% 24.8%; transform: rotate(var(--turn)); }
+[data-phase="spin"] .bd-roul-drum { transition: transform 2s cubic-bezier(0.15, 0.5, 0.25, 1); }
+/* the bullet flies into the top-left chamber */
+.bd-roul-round { opacity: 0; transform: translate(-60%, -40%) scale(1.8); transition: transform 0.45s cubic-bezier(0.3, 0.9, 0.4, 1), opacity 0.2s; }
+[data-phase="load"] .bd-roul-round, [data-phase="close"] .bd-roul-round, [data-phase="spin"] .bd-roul-round, [data-phase="fire"] .bd-roul-round { opacity: 1; transform: none; }
+/* the muzzle flash at the barrel (the top of the gun) */
+.bd-roul-flash { position: absolute; left: 50%; top: 3%; width: 60%; aspect-ratio: 1; margin-left: -30%; margin-top: -30%; border-radius: 50%; opacity: 0;
+  background: radial-gradient(#fff 0, #ffe27a 25%, #ff8a1e 50%, rgba(255, 80, 20, 0) 70%); }
+.bang .bd-roul-flash { animation: bd-roul-flash 0.5s ease-out; }
+@keyframes bd-roul-flash { 0% { opacity: 1; transform: scale(0.4); } 100% { opacity: 0; transform: scale(1.6); } }
+[data-phase="fire"] .bd-roul-gun-body { animation: bd-roul-kick 0.3s ease-out; }
+.bang .bd-roul-gun-body { animation: bd-roul-recoil 0.5s ease-out; }
+@keyframes bd-roul-kick { 35% { transform: translateY(-2%) scale(1.02); } }
+@keyframes bd-roul-recoil { 15% { transform: translateY(6%) scale(1.06) rotate(4deg); filter: brightness(2); } }
+.bd-roul-click, .bd-roul-bang { position: absolute; left: 50%; top: 14%; transform: translateX(-50%); font: 900 clamp(26px, 9vw, 44px)/1 var(--font-display), system-ui; font-style: normal; z-index: 4; animation: bd-x 0.35s cubic-bezier(0.2, 1.6, 0.4, 1); }
 .bd-roul-click { color: #fff6cf; text-shadow: 0 3px 0 #3b2410; }
 .bd-roul-bang { color: #ff3b2e; text-shadow: 0 3px 0 #2a0503, 0 0 20px #ff9a2e; }
-.bd-roul-drum { position: absolute; left: 6%; top: 16%; width: 64px; height: 64px; border-radius: 50%; background: radial-gradient(#5b5f66, #2b2e33); border: 3px solid #121315; z-index: 2;
-  transform: rotate(var(--turn)); transition: transform 0.35s cubic-bezier(0.3, 1.5, 0.5, 1); }
-.bd-roul-drum i { position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px; border-radius: 50%; background: #c9a24a; border: 2px solid #121315;
-  transform: rotate(var(--a)) translateY(-19px); }
-.bd-roul-drum i.done { background: #121315; }
-.bd-roul-drum i.shot { background: #ff3b2e; box-shadow: 0 0 8px #ff3b2e; }
+.bd-roul-hint { position: absolute; left: 0; right: 0; bottom: 3%; text-align: center; font: 800 14px/1 system-ui; font-style: normal; color: #f2c14e; text-shadow: 0 2px 0 #000; animation: bd-word 0.9s ease-in-out infinite alternate; z-index: 4; pointer-events: none; }
+/* the bullets left, top left: a fired one is its shadow */
+.bd-roul-ammo { position: absolute; left: 4%; top: 10%; display: flex; flex-direction: column; gap: 6px; z-index: 2; }
+.bd-roul-ammo img { width: 74px; height: auto; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.6)); transition: filter 0.4s, opacity 0.4s; }
+.bd-roul-ammo img.gone { filter: brightness(0) blur(0.5px); opacity: 0.35; }
 .bd-roul-panel { flex: none; display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 12px; color: #f3e3c3; text-align: center; }
 .bd-roul-got { display: inline-flex; align-items: center; gap: 8px; font: 900 26px/1 system-ui; color: #f2c14e; }
 .bd-roul-got img { width: 34px; height: 34px; }
 .bd-roul-end { font-size: 18px; }
-@media (prefers-reduced-motion: reduce) { .bd-roul-gun, .bd-roul-scene::after { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .bd-roul-scene::after { animation: none; } }

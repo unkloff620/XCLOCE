@@ -1935,4 +1935,9 @@ ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS roul_round INT NOT NULL DEFAUL
 ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS roul_pulls INT NOT NULL DEFAULT 0;
 ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS roul_bet INT NOT NULL DEFAULT 0;`,
   },
+  {
+    // «Бандитский фарт»: the blue matchboxes — the roulette's win (the spins give the red ones)
+    id: "v2-147-bandit-blue",
+    sql: `ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS blue BIGINT NOT NULL DEFAULT 0;`,
+  },
 ];

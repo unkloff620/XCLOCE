@@ -20,7 +20,7 @@ import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
 import { BANDIT_UI as UI } from "../art/bandit-ui-data.ts";
 import { HeroRig } from "../art/rig.tsx";
-import { BANDIT_CHEST_PRICE, BANDIT_BET_MAX, BANDIT_BET_MIN, BANDIT_FREE, BANDIT_REELS, BANDIT_ROWS, BANDIT_SCALE, BANDIT_SCATTER, BANDIT_SYMS, BANDIT_WILD, ROULETTE_PAY, ROULETTE_PULLS, type BanditCell, type BanditSpin, type BanditSym } from "../../content/bandit.ts";
+import { BANDIT_CHEST_PRICE, BANDIT_BET_MAX, BANDIT_BET_MIN, BANDIT_FREE, BANDIT_REELS, BANDIT_ROWS, BANDIT_SCATTER, BANDIT_SYMS, BANDIT_WILD, ROULETTE_PAY, ROULETTE_PULLS, type BanditCell, type BanditSpin, type BanditSym } from "../../content/bandit.ts";
 
 const V = "?v=2";
 /** the machine's canvas: the artist's 2000×3000 one row (ROW) shorter — the frame of 3 rows, the panel up by ROW */
@@ -36,10 +36,14 @@ const LOOP = 12, LOOP_MS = 380;
 /** the last run onto the result: so many cells before it, in STOP_MS; the first reel stops no sooner than MIN_RUN after
  *  the tap, each next one STOP_GAP later */
 const TAIL = 8, STOP_MS = 520, MIN_RUN = 650, STOP_GAP = 230;
-const fmt = (n: number) => n.toLocaleString("ru-RU", { maximumFractionDigits: 1 });
+const fmt = (n: number) => n.toLocaleString("ru-RU");
+/** the blue matchbox: the roulette's win (the spins give the red ones) */
+const BLUE = "/assets/bandit/matchbox-blue.webp?v=1";
 
 interface Roulette { left: number; pulls: number; bet: number }
-interface View { free: number; freeBet: number; spins: number; won: number; rub: number; xp: number; lvl: { level: number; into: number; need: number }; boxes: number; roulette: Roulette | null }
+interface View { free: number; freeBet: number; spins: number; won: number; rub: number; xp: number; lvl: { level: number; into: number; need: number }; boxes: number; blue: number; roulette: Roulette | null }
+/** the machine's state out of an answer */
+const viewOf = (r: View): View => ({ free: r.free, freeBet: r.freeBet, spins: r.spins, won: r.won, rub: r.rub, xp: r.xp, lvl: r.lvl, boxes: r.boxes, blue: r.blue, roulette: r.roulette });
 type SpinRes = BanditSpin & View & { bet: number; paid: number; wasFree: boolean; freeLeft: number; levelBefore: number };
 
 export function BanditScreen() {
@@ -94,7 +98,7 @@ export function BanditScreen() {
     const end = wait + (BANDIT_REELS - 1) * STOP_GAP + STOP_MS + 250;
     later(() => {
       setRes(r); setShown(true);
-      setV({ free: r.freeLeft, freeBet: r.freeBet, spins: r.spins, won: r.won, rub: r.rub, xp: r.xp, lvl: r.lvl, boxes: r.boxes, roulette: r.roulette });
+      setV({ ...viewOf(r), free: r.freeLeft });
       if (r.lvl.level > r.levelBefore) { sfx("levelup"); setLvlUp(r.lvl.level - r.levelBefore); later(() => setLvlUp(null), 1600); }
       // 3+ revolvers: the roulette opens a moment later (the auto play stops)
       if (r.roulette) { autoRef.current = false; setAuto(false); later(() => setRoul(true), 900); }
@@ -184,6 +188,8 @@ export function BanditScreen() {
           </div>
         )}
         {shown && res && res.free > 0 && <div className="bd-free-got">+{res.free} бесплатных!</div>}
+        {/* the horseshoes: the machine's experience */}
+        {shown && res && res.xp > 0 && <div className="bd-free-got bd-xp-got">+{fmt(res.xp)} опыта</div>}
 
         {/* the panel */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -219,6 +225,9 @@ export function BanditScreen() {
           <img src={pic("matchbox" as BanditSym)} alt="" draggable={false} />
           <b className="num">{v ? fmt(v.boxes) : 0}</b>
           {shown && res && res.win > 0 && <i className="bd-last-plus num">+{fmt(winShown)}</i>}
+          {/* the roulette's blue boxes */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {!!v?.blue && <><img src={BLUE} alt="синих коробков" draggable={false} /><b className="num">{fmt(v.blue)}</b></>}
         </div>
       </div>
       <Link href="/yard" className="bd-back" aria-label="Назад во двор">‹</Link>
@@ -274,7 +283,7 @@ function ChestWindow({ v, onClose, onView }: { v: View; onClose: () => void; onV
     if (!r) return;
     sfx("casedrop");
     setGot(r.tattoo);
-    onView({ free: r.free, freeBet: r.freeBet, spins: r.spins, won: r.won, rub: r.rub, xp: r.xp, lvl: r.lvl, boxes: r.boxes, roulette: r.roulette });
+    onView(viewOf(r));
   };
   return (
     <Modal title="Сундук" onClose={onClose}>
@@ -310,7 +319,8 @@ function PayTable({ bet, onClose }: { bet: number; onClose: () => void }) {
   const mults = BANDIT_WILD.mult.map(([m]) => `×${m}`).join(", ");
   const money = BANDIT_SYMS.find((s) => s.id === "money")!;
   const bell = BANDIT_SYMS.find((s) => s.id === "bell")!;
-  const box = (n: number) => <span className="num bd-pay-n">{fmt(n * BANDIT_SCALE * bet)}<img src={pic("matchbox" as BanditSym)} alt="коробков" /></span>;
+  const box = (n: number) => <span className="num bd-pay-n">{fmt(n * bet)}<img src={pic("matchbox" as BanditSym)} alt="коробков" /></span>;
+  const xp = (n: number) => <span className="num bd-pay-n">{fmt(n)} опыта</span>;
   return (
     <Modal title="Таблица выплат" onClose={onClose} wide className="bd-paywin">
       <ul className="bd-rules small">
@@ -332,7 +342,7 @@ function PayTable({ bet, onClose }: { bet: number; onClose: () => void }) {
         <div className="bd-pay-big">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={pic("revolver")} alt="" />
-          <div><b>Русская рулетка</b><span className="small">3 револьвера в любом месте — бонусная игра: в барабане один патрон из шести. Жми на спуск до {ROULETTE_PULLS} раз: каждый щелчок — {fmt(ROULETTE_PAY * bet)} коробков, выстрел — игра окончена.</span></div>
+          <div><b>Русская рулетка</b><span className="small">3 револьвера в любом месте — бонусная игра: {ROULETTE_PULLS} пули, каждая заряжается в барабан на шесть гнёзд и барабан крутится. Щелчок — {fmt(ROULETTE_PAY * bet)} синих коробков, выстрел — игра окончена.</span></div>
         </div>
         <div className="bd-pay-big">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -343,7 +353,11 @@ function PayTable({ bet, onClose }: { bet: number; onClose: () => void }) {
           <div key={s.id} className="bd-pay-row">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={pic(s.id)} alt={s.name} />
-            <span><i>5</i> — {box(s.pay[3])}<br /><i>4</i> — {box(s.pay[2])}<br /><i>3</i> — {box(s.pay[1])}<br /><i>2</i> — {box(s.pay[0])}</span>
+            {s.xp ? (
+              <span><i>5</i> — {xp(s.xp[3])}<br /><i>4</i> — {xp(s.xp[2])}<br /><i>3</i> — {xp(s.xp[1])}</span>
+            ) : (
+              <span><i>5</i> — {box(s.pay[3])}<br /><i>4</i> — {box(s.pay[2])}<br /><i>3</i> — {box(s.pay[1])}<br /><i>2</i> — {box(s.pay[0])}</span>
+            )}
           </div>
         ))}
       </div>
@@ -352,65 +366,103 @@ function PayTable({ bet, onClose }: { bet: number; onClose: () => void }) {
 }
 
 /**
- * «Русская рулетка» (3+ revolvers): the player's hero sits with his back to us on the stool in a dark backroom, a
- * revolver is held to the back of his head. A tap on the revolver pulls the trigger (the server knows the chamber):
- * a click — +ROULETTE_PAY × the bet boxes, the drum turns one chamber; the shot — a flash, the game is over. At most
- * ROULETTE_PULLS pulls; he can put it down and keep what he got. (The revolver is the reel's symbol until the artist's
- * revolver and its animation come.)
+ * «Русская рулетка» (3+ revolvers; the user 2026-11-26): the player's hero sits with his back to us on the stool in a dark
+ * backroom; ROULETTE_PULLS bullets lie top left. A tap: the revolver (the artist's, seen from behind) rises from below to
+ * the back of his head, the drum swings out, a bullet flies into a chamber (its place top left goes to a shadow), the drum
+ * swings back and spins for 2 s, stops — and the trigger: a click (+ROULETTE_PAY × the bet boxes, the revolver goes down)
+ * or the shot (a flash, the game is over). The server decides the pull at the tap; the window only plays it out.
  */
+const R = "/assets/bandit/roulette";
+/** the timeline of a pull (ms from the tap) */
+const RT = { rise: 0, open: 800, load: 1250, close: 1800, spin: 2150, fire: 4150, lower: 5000 };
+type Phase = "idle" | "rise" | "open" | "load" | "close" | "spin" | "fire" | "lower";
 function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Parameters<typeof HeroRig>[0]["look"]; onView: (v: View) => void; onClose: () => void }) {
   const { act, busy } = useGame();
-  const [pulls, setPulls] = useState(r.pulls);
+  const [used, setUsed] = useState(r.pulls);
   const [got, setGot] = useState(r.pulls * ROULETTE_PAY * r.bet);
-  const [flash, setFlash] = useState<"click" | "bang" | null>(null);
+  const [phase, setPhase] = useState<Phase>("idle");
+  const [result, setResult] = useState<"click" | "bang" | null>(null);
   const [over, setOver] = useState<"bang" | "max" | null>(null);
-  const [aim, setAim] = useState(0);
-  const pull = async (stop = false) => {
-    if (busy || over) return;
+  const [turn, setTurn] = useState(0);
+  const timers = useRef<number[]>([]);
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  const at = (ms: number, fn: () => void) => { timers.current.push(window.setTimeout(fn, ms)); };
+  const playing = phase !== "idle";
+  const pull = async () => {
+    if (busy || over || playing) return;
     haptic.tap();
-    if (!stop) setAim((a) => a + 1);
-    const res = await act<View & { shot: boolean; got: number; stopped: boolean }>("bandit_pull", { stop });
-    if (!res) return;
-    onView({ free: res.free, freeBet: res.freeBet, spins: res.spins, won: res.won, rub: res.rub, xp: res.xp, lvl: res.lvl, boxes: res.boxes, roulette: res.roulette });
-    if (res.stopped) { onClose(); return; }
-    setPulls((p) => p + 1);
-    if (res.shot) { setFlash("bang"); sfx("hit"); haptic.tap(); setOver("bang"); }
-    else { setFlash("click"); sfx("tap"); setGot((g) => g + res.got); if (!res.roulette) setOver("max"); }
-    window.setTimeout(() => setFlash(null), res.shot ? 900 : 420);
+    setResult(null);
+    setPhase("rise");
+    const res = await act<View & { shot: boolean; got: number; stopped: boolean }>("bandit_pull", {});
+    if (!res) { setPhase("idle"); return; }
+    at(RT.open, () => setPhase("open"));
+    at(RT.load, () => { setPhase("load"); setUsed((u) => u + 1); sfx("tap", 0.3); });
+    at(RT.close, () => setPhase("close"));
+    // the drum spins 2 s and stops on a chamber (a whole number of turns and a sixth)
+    at(RT.spin, () => { setPhase("spin"); setTurn((t) => t + 360 * 5 + 60 * (1 + Math.floor(Math.random() * 6))); sfx("spin", 0.3); });
+    at(RT.fire, () => {
+      setPhase("fire");
+      setResult(res.shot ? "bang" : "click");
+      onView(viewOf(res));
+      if (res.shot) { sfx("hit"); haptic.tap(); setOver("bang"); }
+      else { sfx("tap"); setGot((g) => g + res.got); if (!res.roulette) setOver("max"); }
+    });
+    if (!res.shot) at(RT.lower, () => setPhase("lower"));
+    at(res.shot ? RT.fire + 1200 : RT.lower + 650, () => setPhase("idle"));
   };
-  const left = ROULETTE_PULLS - pulls;
+  const stop = async () => {
+    if (busy || playing) return;
+    haptic.tap();
+    const res = await act<View>("bandit_pull", { stop: true });
+    if (res) onView(viewOf(res));
+    onClose();
+  };
+  const left = ROULETTE_PULLS - used;
   // over the whole app (the machine's screen is a size container: a fixed child would be caught in it)
   return createPortal(
     <div className="bd-roul" role="dialog" aria-label="Русская рулетка">
-      <div className={`bd-roul-scene ${flash === "bang" ? "bang" : ""}`}>
+      <div className={`bd-roul-scene ${result === "bang" && phase === "fire" ? "bang" : ""}`} data-phase={phase}>
         <b className="bd-roul-title">Русская рулетка</b>
-        {/* the drum: six chambers, the pulled ones empty */}
-        <div className="bd-roul-drum" style={{ ["--turn" as string]: `${pulls * 60}deg` }}>
-          {Array.from({ length: 6 }, (_, i) => <i key={i} className={i < pulls ? (over === "bang" && i === pulls - 1 ? "shot" : "done") : ""} style={{ ["--a" as string]: `${i * 60}deg` }} />)}
+        {/* the bullets left: a fired one leaves its shadow */}
+        <div className="bd-roul-ammo">
+          {Array.from({ length: ROULETTE_PULLS }, (_, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={i} className={i < used ? "gone" : ""} src={`${R}/bullet.webp${V}`} alt="" draggable={false} />
+          ))}
         </div>
-        {/* the hero from behind on the stool; the revolver at the back of his head (a tap pulls the trigger) */}
-        <div className="bd-roul-hero"><HeroRig size={360} back look={look} /></div>
-        <button type="button" className={`bd-roul-gun ${flash ?? ""}`} key={aim} disabled={!!busy || !!over} onClick={() => void pull()} aria-label="Нажать на спуск">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={pic("revolver")} alt="" draggable={false} />
+        <button type="button" className="bd-roul-hero" disabled={!!busy || !!over || playing} onClick={() => void pull()} aria-label="Приставить револьвер и нажать на спуск">
+          <HeroRig size={360} back look={look} />
+          {/* the revolver: from below to the back of the head; the drum (with the bullet in it) swings out of it, spins */}
+          <span className="bd-roul-gun">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="bd-roul-gun-body" src={`${R}/gun.webp${V}`} alt="" draggable={false} />
+            <span className="bd-roul-drum-w"><span className="bd-roul-drum" style={{ ["--turn" as string]: `${turn}deg` }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`${R}/drum.webp${V}`} alt="" draggable={false} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="bd-roul-round" src={`${R}/round.webp${V}`} alt="" draggable={false} />
+            </span></span>
+            <i className="bd-roul-flash" />
+          </span>
         </button>
-        {flash === "click" && <i className="bd-roul-click">ЩЁЛК!</i>}
-        {flash === "bang" && <i className="bd-roul-bang">БАХ!</i>}
+        {result === "click" && phase !== "idle" && <i className="bd-roul-click">ЩЁЛК!</i>}
+        {result === "bang" && <i className="bd-roul-bang">БАХ!</i>}
+        {phase === "idle" && !over && <i className="bd-roul-hint">Жми на персонажа</i>}
       </div>
       <div className="bd-roul-panel">
         <span className="bd-roul-got num">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={pic("matchbox" as BanditSym)} alt="коробков" /> {fmt(got)}
+          <img src={BLUE} alt="синих коробков" /> {fmt(got)}
         </span>
-        {over ? (
+        {over && !playing ? (
           <>
-            <b className="bd-roul-end">{over === "bang" ? "Выстрел! Игра окончена" : `Все ${ROULETTE_PULLS} щелчков — повезло!`}</b>
+            <b className="bd-roul-end">{over === "bang" ? "Выстрел! Игра окончена" : `Все ${ROULETTE_PULLS} пули — мимо, повезло!`}</b>
             <button type="button" className="btn gold block" onClick={onClose}>Дальше</button>
           </>
         ) : (
           <>
-            <span className="small">Жми на револьвер. Осталось нажатий: <b className="num">{left}</b> · щелчок — +{fmt(ROULETTE_PAY * r.bet)}</span>
-            <button type="button" className="btn block" disabled={!!busy} onClick={() => void pull(true)}>{pulls > 0 ? "Забрать и уйти" : "Уйти"}</button>
+            <span className="small">Пуль осталось: <b className="num">{left}</b> · щелчок — +{fmt(ROULETTE_PAY * r.bet)}</span>
+            <button type="button" className="btn block" disabled={!!busy || playing || !!over} onClick={() => void stop()}>{used > 0 ? "Забрать и уйти" : "Уйти"}</button>
           </>
         )}
       </div>
