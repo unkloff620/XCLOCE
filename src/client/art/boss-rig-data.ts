@@ -4746,18 +4746,18 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
         "v": "b699855d"
       },
       "teeth-up": {
-        "x": 380.0,
-        "y": 227.0,
-        "w": 34,
-        "h": 10,
-        "v": "2ce3ec93"
-      },
-      "teeth-low": {
         "x": 373.0,
         "y": 219.5,
         "w": 50,
         "h": 12,
         "v": "88b48010"
+      },
+      "teeth-low": {
+        "x": 380.0,
+        "y": 227.0,
+        "w": 34,
+        "h": 10,
+        "v": "2ce3ec93"
       },
       "eyes": {
         "x": 352.0,

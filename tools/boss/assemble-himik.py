@@ -6,8 +6,8 @@ glass twice, 70 % and solid — the poison goes between them), coatR / coatL (th
 thumbR (his right glove's fingers and thumb over the round flask), flaskR-glass / flaskR (the round flask, the same
 pair), handR (the glove's palm), lowR (the forearm in the rolled cuff), armR (the sleeve), legs, body (the shirt), neck;
 the head on its own 684×685 sheet, H00…H11 — maskEar (the mask hanging off his ear: below half HP), mask (on the face),
-brows, beard, mustache, chin (the lower lip and the jaw), teeth-up, head (the hair, the face with the eye holes and the
-mouth's hole), pupils, teeth-low, eyes (the whites), throat. The head is fitted by hand on the neck (HEAD: its scale and
+brows, beard, mustache, chin (the lower lip and the jaw), teeth-low (over the head, under the chin: it drops with the jaw), head (the hair, the face with the eye holes and the
+mouth's hole), pupils, teeth-up (under the head, in its mouth's hole: they stay with the head), eyes (the whites), throat. The head is fitted by hand on the neck (HEAD: its scale and
 where its jaw goes). Everything is cropped to CROP → the rig sources for build-boss.py; and the poison's masks
 (poisonR-mask / poisonL-mask: the inside of each glass, white) for boss-himik.tsx. Prints the joints (rig px) for
 build-boss.py PIVOT_BY_BOSS, the eye holes, the glasses' mouths.
@@ -22,8 +22,8 @@ R = f"{D}/raw"
 BODY = {"lowL": "B00", "armL": "B01", "tube-glass": "B02", "tube": "B03", "coatR": "B04", "coatL": "B05", "fingersR": "B06",
         "thumbR": "B07", "flaskR-glass": "B08", "flaskR": "B09", "handR": "B10", "lowR": "B11", "armR": "B12", "legs": "B13",
         "body": "B14", "neck": "B15"}
-FACE = {"maskEar": "H00", "mask": "H01", "brows": "H02", "beard": "H03", "mustache": "H04", "chin": "H05", "teeth-up": "H06",
-        "head": "H07", "pupils": "H08", "teeth-low": "H09", "eyes": "H10", "throat": "H11"}
+FACE = {"maskEar": "H00", "mask": "H01", "brows": "H02", "beard": "H03", "mustache": "H04", "chin": "H05", "teeth-low": "H06",
+        "head": "H07", "pupils": "H08", "teeth-up": "H09", "eyes": "H10", "throat": "H11"}
 W, H = 2000, 3000
 # the head's sheet on the body: its scale, where its jaw's middle (343, 470 on the sheet) goes — over the neck
 HEAD = {"s": 1.0, "cx": 1052, "jaw": 560}
@@ -99,7 +99,7 @@ for n in ["chin", "teeth-low", "brows", "pupils", "mask", "maskEar", "beard", "m
 fr = A("flaskR"); ys, xs = np.nonzero(fr); top = ys.min(); print("flask mouth", rig(xs[ys < top + 12].mean(), top))
 tb = A("tube"); ys, xs = np.nonzero(tb); s = xs + ys; i = np.argsort(s)[:40]; print("tube mouth", rig(xs[i].mean(), ys[i].mean()))
 order = ["legs", "neck", "body", "armR", "lowR", "handR", "flaskR", "flaskR-glass", "thumbR", "fingersR", "coatL", "coatR",
-         "throat", "teeth-low", "eyes", "pupils", "head", "teeth-up", "chin", "mustache", "beard", "brows", "mask",
+         "throat", "teeth-up", "eyes", "pupils", "head", "teeth-low", "chin", "mustache", "beard", "brows", "mask",
          "tube", "tube-glass", "armL", "lowL"]
 whole = Image.new("RGBA", (W, H), (0, 0, 0, 0))
 for n in order:

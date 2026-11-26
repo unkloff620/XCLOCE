@@ -83,14 +83,14 @@ export function HimikRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
           </linearGradient>
         </defs>
         <g mask={`url(#${mid})`}>
-          <g className={`hm-liq hm-liq-${side.toLowerCase()}`} style={at(cx, lv)}>
+          <g className={`hm-liq hm-liq-${side.toLowerCase()}`} style={at(cx, lv)}><g className={`hm-lvl hm-lvl-${side.toLowerCase()}`}>
             <g className="hm-wave hm-wave-back"><path d={wave(2.2, 22, -1.5)} fill={POISON.deep} opacity={0.75} /></g>
             <g className="hm-wave hm-wave-front"><path d={wave(1.8, 18, 0.5)} fill={`url(#${gid})`} /><path d={top(1.8, 18, 0.5)} fill="none" stroke={POISON.line} strokeWidth={1.1} opacity={0.8} /></g>
             {[0, 1, 2, 3, 4].map((i) => (
               <circle key={i} className="hm-bub" cx={cx + (i - 2) * (m.w / 7)} cy={m.y + m.h - 4} r={1.2 + (i % 3) * 0.6}
                 fill="rgba(230,255,200,0.75)" style={{ animationDelay: `${(i * 0.53) % 2.4}s`, ["--rise" as string]: `${(m.y + m.h - lv - 6).toFixed(1)}px` }} />
             ))}
-          </g>
+          </g></g>
         </g>
       </g>
     );
@@ -104,8 +104,9 @@ export function HimikRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
         <g className="br-up" style={at(WAIST[0], WAIST[1])}>
           {pic("neck", "back")}
           {pic("body", "back")}
-          {/* his right arm (the flask's, on the left of the picture) under the coat: the sleeve, the forearm, the glove's palm */}
-          {bone("br-arm br-arm-r", "armR", <>{pic("armR", "back")}{bone("br-low br-low-r", "lowR", <>{pic("lowR", "back")}{bone("br-hand br-hand-r", "handR", pic("handR", "back"), 90)}</>, 110)}</>, 130)}
+          {/* his right arm (the flask's, on the left of the picture): the sleeve under the coat (an empty elbow in it — its end
+              bends with the forearm); the forearm with the flask is in front of the coat, below */}
+          {bone("br-arm br-arm-r", "armR", <>{pic("armR", "back")}{bone("br-low br-low-r", "lowR", null, 110)}</>, 130)}
           {/* the lab coat's halves over it: the tails below the belt swing with an empty group (the pose engine's hem) */}
           <g className="hm-hem" style={at(HEM[0], HEM[1])} />
           {pic("coatR", "back", ["hm-hem", "0.98,0.3"])}
@@ -114,7 +115,8 @@ export function HimikRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
               head's eye holes, the lids, the head, the beard, the brows, the mask — on the face, or off it on the ear */}
           {bone("br-head", "head", <>
             {pic("throat")}
-            <g className="hm-jaw">{pic("teeth-low")}</g>
+            {/* the upper teeth: in the head's mouth hole, with the head (the upper jaw) */}
+            {pic("teeth-up")}
             {pic("eyes")}
             <g className="hm-pupils">{pic("pupils")}</g>
             <g className="hm-lids">
@@ -126,22 +128,25 @@ export function HimikRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
               ))}
             </g>
             {pic("head")}
-            {pic("teeth-up")}
-            <g className="hm-jaw">{pic("chin")}{pic("mustache")}</g>
+            {/* the lower teeth over the head, under the lower lip: both drop with the jaw; the mustache stays on the upper lip */}
+            <g className="hm-jaw">{pic("teeth-low")}{pic("chin")}</g>
+            {pic("mustache")}
             <g className="hm-beard" style={box("beard", 0.5, 0.15)}>{pic("beard")}</g>
             <g className="hm-brows" style={box("brows", 0.5, 0.5)}>{pic("brows")}</g>
             <g className="hm-mask" style={box("mask", 0.5, 0.1)}>{pic("mask")}</g>
-            <g className="hm-mask-ear" style={box("maskEar", 0.6, 0.02)}>{pic("maskEar")}</g>
+            {/* off the face it hangs on the ear: a soft spring of its own (the pose engine's «hair») swings it on his jerks */}
+            <g className="hm-mask-ear" style={box("maskEar", 0.6, 0.02)}><g className="hm-mask-j" style={box("maskEar", 0.6, 0.02)}>{pic("maskEar")}</g></g>
           </>, 150)}
-          {/* the round flask in his right glove (over the palm): the solid glass, the poison, the glass over it, the thumb
-              and the fingers round it */}
-          {bone("br-arm br-arm-r", "armR", bone("br-low br-low-r", "lowR", bone("br-hand br-hand-r", "handR", <>
+          {/* his right forearm in front of the coat (the user 2026-11-26): the rolled cuff, the glove's palm, the round flask
+              (the solid glass, the poison, the glass over it), the thumb and the fingers round it */}
+          {bone("br-arm br-arm-r", "armR", bone("br-low br-low-r", "lowR", <>{pic("lowR")}{bone("br-hand br-hand-r", "handR", <>
+            {pic("handR")}
             {pic("flaskR")}
             {poison("R")}
             <g className="hm-glass">{pic("flaskR-glass")}</g>
             {pic("thumbR")}
             {pic("fingersR")}
-          </>, 90, handR), 110), 130)}
+          </>, 90, handR)}</>, 110), 130)}
           {/* his left arm over the coat: the sleeve, the forearm with the glove — the test tube under its fingers */}
           {bone("br-arm br-arm-l", "armL", <>
             {pic("armL", "front")}
@@ -179,7 +184,7 @@ function useSplash(svgRef: RefObject<SVGSVGElement | null>, handRef: RefObject<S
     if (!on || typeof window === "undefined") return;
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
     const NS = "http://www.w3.org/2000/svg";
-    type Drop = { el: SVGElement; x: number; y: number; vx: number; vy: number; r: number; life: number; age: number; streak: boolean };
+    type Drop = { el: SVGElement; x: number; y: number; vx: number; vy: number; r: number; life: number; age: number; streak: boolean; grow: number };
     const drops: Drop[] = [];
     let raf = 0, last = 0, was = false;
     let prev: [number, number] | null = null;
@@ -191,27 +196,28 @@ function useSplash(svgRef: RefObject<SVGSVGElement | null>, handRef: RefObject<S
       const m = a.inverse().multiply(b);
       return [m.a * FLASK_MOUTH[0] + m.c * FLASK_MOUTH[1] + m.e, m.b * FLASK_MOUTH[0] + m.d * FLASK_MOUTH[1] + m.f];
     };
-    const burst = (p: [number, number]) => {
+    const add = (x: number, y: number, vx: number, vy: number, r: number, life: number, streak: boolean, grow = 0) => {
       const layer = layerRef.current;
       if (!layer) return;
-      const sp = Math.hypot(vel[0], vel[1]) || 1;
-      // up and out of the mouth, along the flask's swing
-      const dir: [number, number] = [vel[0] / sp * 0.6 - 0.25, vel[1] / sp * 0.4 - 0.8];
-      const base = Math.atan2(dir[1], dir[0]);
-      for (let i = 0; i < 30; i++) {
-        const streak = i < 9;
-        const el = document.createElementNS(NS, streak ? "line" : "circle");
-        const a = base + (Math.random() - 0.5) * 1.3;
-        const s = 260 + Math.random() * 520;
-        const r = streak ? 3 + Math.random() * 3 : 2.2 + Math.random() * 5.5;
-        el.setAttribute("fill", i % 3 ? "#6be832" : "#b6ff6e");
-        el.setAttribute("stroke", i % 2 ? "#3fb81c" : "#8cf24a");
-        el.setAttribute("stroke-linecap", "round");
-        el.setAttribute("stroke-width", streak ? r.toFixed(2) : "0.8");
-        el.setAttribute("style", "filter: drop-shadow(0 0 3px rgba(140,255,80,0.8))");
-        layer.appendChild(el);
-        drops.push({ el, x: p[0], y: p[1], vx: Math.cos(a) * s, vy: Math.sin(a) * s, r, life: 0.6 + Math.random() * 0.5, age: 0, streak });
+      const el = document.createElementNS(NS, streak ? "line" : "circle");
+      el.setAttribute("fill", Math.random() < 0.66 ? "#6be832" : "#b6ff6e");
+      el.setAttribute("stroke", Math.random() < 0.5 ? "#3fb81c" : "#8cf24a");
+      el.setAttribute("stroke-linecap", "round");
+      el.setAttribute("stroke-width", streak ? r.toFixed(2) : "0.8");
+      el.setAttribute("style", "filter: drop-shadow(0 0 3px rgba(140,255,80,0.8))");
+      layer.appendChild(el);
+      drops.push({ el, x, y, vx, vy, r, life, age: 0, streak, grow });
+    };
+    // at us: the poison flies out of the mouth towards the screen — the drops spread all round and grow as they come
+    const burst = (p: [number, number]) => {
+      for (let i = 0; i < 38; i++) {
+        const a = Math.random() * Math.PI * 2, s = 140 + Math.random() * 380;
+        add(p[0], p[1], Math.cos(a) * s + vel[0] * 0.15, Math.sin(a) * s * 0.8 - 160, 2 + Math.random() * 4, 0.55 + Math.random() * 0.45, i < 8, 2.5 + Math.random() * 4);
       }
+    };
+    // pouring: a thin stream off the mouth, falling
+    const pour = (p: [number, number]) => {
+      for (let i = 0; i < 2; i++) add(p[0] + (Math.random() - 0.5) * 3, p[1], 25 + (Math.random() - 0.5) * 30, 40 + Math.random() * 40, 1.6 + Math.random() * 1.6, 0.9, i === 0);
     };
     const step = (t: number) => {
       raf = requestAnimationFrame(step);
@@ -223,22 +229,25 @@ function useSplash(svgRef: RefObject<SVGSVGElement | null>, handRef: RefObject<S
       prev = p;
       const now = !!svgRef.current?.classList.contains("hm-splash");
       if (now && !was && p) burst(p);
+      if (p && svgRef.current?.classList.contains("hm-pour")) pour(p);
       was = now;
       for (let i = drops.length - 1; i >= 0; i--) {
         const d = drops[i];
         d.age += dt;
-        d.vy += 1000 * dt;
+        d.vy += (d.grow ? 450 : 1000) * dt;
         d.vx *= 1 - 1.2 * dt;
         d.x += d.vx * dt;
         d.y += d.vy * dt;
         const k = 1 - d.age / d.life;
         if (k <= 0) { d.el.remove(); drops.splice(i, 1); continue; }
         d.el.setAttribute("opacity", Math.min(1, k * 1.6).toFixed(2));
+        const g = 1 + d.grow * (d.age / d.life);
         if (d.streak) {
+          d.el.setAttribute("stroke-width", (d.r * g).toFixed(2));
           d.el.setAttribute("x1", d.x.toFixed(1)); d.el.setAttribute("y1", d.y.toFixed(1));
           d.el.setAttribute("x2", (d.x - d.vx * 0.05).toFixed(1)); d.el.setAttribute("y2", (d.y - d.vy * 0.05).toFixed(1));
         } else {
-          d.el.setAttribute("cx", d.x.toFixed(1)); d.el.setAttribute("cy", d.y.toFixed(1)); d.el.setAttribute("r", d.r.toFixed(2));
+          d.el.setAttribute("cx", d.x.toFixed(1)); d.el.setAttribute("cy", d.y.toFixed(1)); d.el.setAttribute("r", (d.r * g).toFixed(2));
         }
       }
     };
