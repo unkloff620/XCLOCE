@@ -89,11 +89,12 @@ export function Raven({ still, layer = "front" }: { still?: boolean; layer?: "ba
         <g className="rv-lift">
           {layer === "back" ? <>{wing("far-half")}{wing("far-full")}</> : (
             <>
+              {/* the near wing behind his body too: it never covers his head */}
+              {wing("near-half")}{wing("near-full")}
               <image className="rv-body-r" href={`${A}/body-r.webp${V}`} x={0} y={0} width={R.w} height={R.h} />
               <image className="rv-body-l" href={`${A}/body-l.webp${V}`} x={0} y={0} width={R.w} height={R.h} opacity={0} />
               <image className="rv-body-air-l" href={`${A}/body-air-l.webp${V}`} x={0} y={0} width={R.w} height={R.h} opacity={0} />
               <image className="rv-closed" href={`${A}/wing-closed.webp${V}`} x={0} y={0} width={R.w} height={R.h} />
-              {wing("near-half")}{wing("near-full")}
             </>
           )}
         </g>
