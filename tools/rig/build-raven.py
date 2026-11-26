@@ -31,6 +31,15 @@ def save(name, im):
 for n in ["body-r", "body-l", "wing-closed"]:
     save(n, Image.open(f"{S}/{n}.png").convert("RGBA"))
 
+# body-air-l: looking left in the air (the wings open) — body-l has its folded wing drawn on, so its head (above the
+# neck) goes onto body-r, whose own beak (right of the neck) is left out
+r = np.array(Image.open(f"{S}/body-r.png").convert("RGBA")).astype(np.float32)
+l = np.array(Image.open(f"{S}/body-l.png").convert("RGBA")).astype(np.float32)
+yy, xx = np.mgrid[0:H, 0:W]
+r *= ~((xx > 648) & (yy < 190))[..., None]
+m = np.clip((170 - yy) / 30, 0, 1)[..., None]
+save("body-air-l", Image.fromarray((l * m + r * (1 - m)).astype(np.uint8)))
+
 PAD = 120  # room for the bent tips
 for n, (amp, up) in WINGS.items():
     src = np.array(Image.open(f"{S}/{n}.png").convert("RGBA")).astype(np.float32)
