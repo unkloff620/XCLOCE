@@ -84,6 +84,7 @@ export function HomeScreen() {
   const [wish, setWish] = useState(false);
   const [messages, setMessages] = useState(false);
   const [quests, setQuests] = useState(false);
+  const [dayQuests, setDayQuests] = useState(false);
   // the [≡] menu remembers whether it was left open or closed (per device)
   const [menuOpen, setMenuOpenRaw] = useState(false);
   useEffect(() => {
@@ -151,7 +152,7 @@ export function HomeScreen() {
   const fb = f ? bossById(f.bossId)! : null;
   const mon = state.monthly;
   const questsAlert = mon ? mon.claimable : state.quests.claimable;
-  const menuAlert = questsAlert || state.prizes.length > 0;
+  const menuAlert = questsAlert || state.prizes.length > 0 || (!!mon && state.quests.claimable);
   const openWardrobe = () => {
     setDecorating(null);
     setStyling({ look: { ...state.look.body }, worn: { ...state.look.equipped } });
@@ -295,6 +296,14 @@ export function HomeScreen() {
             {(questsAlert || (mon?.todayOpen ?? false)) && <i className="side-dot" />}
             <span className="side-count num">{mon ? `${mon.closedN}/${mon.days}` : `${state.quests.list.filter((x) => x.claimed).length}/${state.quests.list.length}`}</span>
           </button>
+          {/* «Задания дня» (screens/quests.tsx) — its own button while the calendar holds «Делюги» */}
+          {mon && (
+            <button className={`menu-toggle news-toggle ${state.quests.claimable ? "glow" : ""}`} onClick={() => setDayQuests(true)} aria-label="Задания дня" title="Задания дня">
+              <Icon name="map" size={40} />
+              {state.quests.claimable && <i className="side-dot" />}
+              <span className="side-count num">{state.quests.list.filter((x) => x.claimed).length}/{state.quests.list.length}</span>
+            </button>
+          )}
           {/* «Зарубы» (screens/zarub.tsx) */}
           <Link href="/zarub" className="menu-toggle event-toggle zr-toggle" aria-label="Зарубы" title="Зарубы">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -345,6 +354,7 @@ export function HomeScreen() {
       {wish && <StashWishWindow onClose={() => setWish(false)} />}
       {messages && <MessagesWindow onClose={() => setMessages(false)} />}
       {quests && (mon ? <MonthlyWindow onClose={() => setQuests(false)} /> : <QuestsWindow onClose={() => setQuests(false)} />)}
+      {dayQuests && <QuestsWindow onClose={() => setDayQuests(false)} />}
       {decorating && <RoomEditor draft={decorating} setDraft={setDecorating} tab={roomTab} setTab={setRoomTab}
         onClose={() => { setDecorating(null); setStyledBefore(null); }}
         onBack={() => { setDecorating(null); if (styledBefore) setStyling(styledBefore); setStyledBefore(null); }} />}

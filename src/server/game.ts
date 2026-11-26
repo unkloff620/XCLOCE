@@ -33,6 +33,8 @@ import * as games from "./systems/games.ts";
 import * as craft from "./systems/craft.ts";
 import * as bj from "./systems/blackjack.ts";
 import * as home from "./systems/home.ts";
+import { craftById } from "../content/craft.ts";
+import { offerById } from "../content/shop.ts";
 import * as quests from "./systems/quests.ts";
 import * as monthly from "./systems/monthly.ts";
 import * as notify from "./systems/notify.ts";
@@ -152,6 +154,9 @@ async function afterAction(ctx: Ctx, type: ActionType, result: unknown) {
       // the achievements «Шопоголик»: money spent in the shop
       const paid = r.paid as { currency?: string; amount?: number } | undefined;
       if (paid && (paid.currency === "RUB")) await counters.bump(ctx.q, ctx.pid, `spent${paid.currency}`, Number(paid.amount) || 0);
+      // «Задания дня»: the weapons bought (the offer's pieces × how many offers)
+      const offer = offerById(String(r.offerId));
+      if (offer?.section === "weapons" && offer.give.item) await quests.questOnly(ctx, "weapon", (offer.give.qty ?? 1) * (Number(r.qty) || 1));
       return quests.questTick(ctx, "buy", 1);
     }
     case "exchange": {
@@ -175,7 +180,13 @@ async function afterAction(ctx: Ctx, type: ActionType, result: unknown) {
       await monthly.monthTick(ctx, type === "social_pump" ? "pump" : type === "social_fight" ? "fight" : "spit", 1);
       return quests.questTick(ctx, "social", 1);
     }
-    case "craft_make": return monthly.monthTick(ctx, "craft", 1);
+    case "craft_make": {
+      await monthly.monthTick(ctx, "craft", 1);
+      // «Задания дня»: a tool of level 1 made in the garage
+      return craftById(String(r.itemId))?.level === 1 ? quests.questOnly(ctx, "craft", 1) : undefined;
+    }
+    case "bandit_spin": return quests.questOnly(ctx, "bandit", 1);
+    case "fortune_spin": return quests.questOnly(ctx, "fortune", Number(r.spins) || 1);
     case "clan_create": return counters.setMax(ctx.q, ctx.pid, "clanCreated", 1);
     case "clan_leave": return counters.setMax(ctx.q, ctx.pid, "clanLeft", 1);
     case "slots_spin": return quests.questTick(ctx, "slots", 1);

@@ -1,3 +1,4 @@
+import { questOnly } from "./quests.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { addItem, grantReward, itemQty, moneyHooks, moscowDay, rewardHooks, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import {
@@ -74,14 +75,17 @@ export async function zarubTick(ctx: Ctx, kind: ZarubKind, amount = 1) {
   const tasks = s.tasks;
   if (!tasks.some((t) => t.kind === kind)) return;
   const progress = tasks.map((t, i) => Number(s.progress[i] ?? 0));
-  let changed = false;
+  let changed = false, done = 0;
   tasks.forEach((t, i) => {
     if (t.kind !== kind || progress[i] >= t.target) return;
     progress[i] = Math.min(t.target, progress[i] + amount);
+    if (progress[i] >= t.target) done++;
     changed = true;
   });
   if (!changed) return;
   await ctx.q.query("UPDATE zarub_seats SET progress=$2 WHERE id=$1", [s.id, JSON.stringify(progress)]);
+  // «Задания дня»: the race's tasks done
+  if (done) await questOnly(ctx, "zarub", done);
   if (doneOf(tasks, progress) >= tasks.length) await finish(ctx, s);
 }
 

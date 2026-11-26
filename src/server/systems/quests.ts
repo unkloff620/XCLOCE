@@ -7,8 +7,8 @@ import { zarubTick } from "./zarub.ts";
 import type { MonthKind } from "../../content/monthly.ts";
 
 /*
- * Daily quests: three a day (content/quests.ts), progress counted by the actions themselves (game.ts → questTick).
- * A finished quest pays when claimed; all three claimed → the chest. Everything resets at 00:00 MSK.
+ * «Задания дня»: five a day (content/quests.ts), progress counted by the actions themselves (game.ts → questTick /
+ * questOnly, combat.ts — a boss won, zarub.ts — a race task done). A finished quest pays when claimed. Resets at 00:00 MSK.
  */
 
 interface Row { progress: Record<string, number>; claimed: string[]; chest: Granted | null }
@@ -18,13 +18,23 @@ async function row(q: Queryable, pid: number, day: string, lock = false): Promis
   return r ?? { progress: {}, claimed: [], chest: null };
 }
 
-/** Adds progress to today's quests of that kind (a no-op when none of today's quests counts it). */
+/** Adds progress to today's quests of that kind (a no-op when none of today's quests counts it); «Календарь» and the
+ *  «Зарубы» race count the same actions */
 export async function questTick(ctx: Ctx, kind: QuestKind, amount = 1) {
   if (!(amount > 0)) return;
   // «Календарь» counts the same actions (the social ones by their kind: game.ts)
   if (kind !== "social") await monthTick(ctx, kind as MonthKind, amount);
   // «Зарубы»: the race's tasks of this kind
-  if (kind !== "exchange" && kind !== "roach") await zarubTick(ctx, kind, amount);
+  if (ZARUB_KINDS.has(kind)) await zarubTick(ctx, kind as Parameters<typeof zarubTick>[1], amount);
+  await questOnly(ctx, kind, amount);
+}
+
+/** the kinds the «Зарубы» race has tasks of */
+const ZARUB_KINDS = new Set<QuestKind>(["damage", "hits", "steps", "energy", "yard", "social", "poker", "slots", "zonk", "bj", "upgrader", "buy"]);
+
+/** only the day's quests (what «Календарь» and «Зарубы» already count elsewhere, or do not count at all) */
+export async function questOnly(ctx: Ctx, kind: QuestKind, amount = 1) {
+  if (!(amount > 0)) return;
   const day = moscowDay(ctx.now);
   const quests = questsForDay(ctx.pid, day, ctx.cfg.exchange.schedule).filter((x) => x.kind === kind);
   if (!quests.length) return;

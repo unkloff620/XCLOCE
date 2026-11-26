@@ -2,13 +2,15 @@ import { exchangeOpenOnDayNo, EXCHANGE_SCHEDULE, type ExchangeSchedule } from ".
 import type { Reward } from "./rewards.ts";
 
 /*
- * Ежедневные задания: каждый день у игрока пять заданий — по одному из каждой группы
- * (бой, энергия, экономика, мини-игры двора, прокачка и соседи). Набор на день выбирается детерминированно от игрока
- * и дня, сбрасывается в полночь по Москве. Закрыл все пять — открывается сундук.
+ * «Задания дня» (the user 2026-11-26): every day five quests — one of each group (the bosses, the locations, the yard,
+ * the table games, the rest: «Зарубы», the shop's weapons, the garage). The day's set is picked from the player and the
+ * day (the same all day), it resets at 00:00 MSK. Each one pays when claimed (no chest: «Сундук дня» is gone).
  */
 
-/** what the server counts: every kind is fed by one kind of action */
-export type QuestKind = "damage" | "hits" | "steps" | "energy" | "yard" | "buy" | "exchange" | "slots" | "poker" | "zonk" | "roach" | "bj" | "social" | "upgrader";
+/** what the server counts: every kind is fed by one kind of action (game.ts afterAction, combat.ts, zarub.ts) */
+export type QuestKind = "damage" | "hits" | "kill" | "steps" | "energy" | "yard" | "bandit" | "slots" | "fortune" | "poker" | "zonk" | "bj" | "zarub" | "weapon" | "craft"
+  // still counted for «Зарубы» and «Календарь» (no daily quest of theirs now)
+  | "buy" | "exchange" | "roach" | "social" | "upgrader";
 
 export interface QuestDef {
   id: string;
@@ -25,31 +27,35 @@ const R = (rub: number, xp: number, extra: Reward = {}): Reward => ({ currencies
 
 /** five groups → five quests a day */
 export const QUEST_GROUPS: QuestDef[][] = [
+  // the bosses («Забив»)
   [
-    { id: "q-damage", kind: "damage", target: 500, title: "Нанеси 500 урона боссам", href: "/bosses", reward: R(250, 500) },
-    { id: "q-hits", kind: "hits", target: 10, title: "Ударь босса 10 раз", href: "/bosses", reward: R(250, 500) },
+    { id: "q-damage", kind: "damage", target: 2_000, title: "Нанеси 2 000 урона боссам", href: "/bosses", reward: R(250, 500) },
+    { id: "q-hits", kind: "hits", target: 15, title: "Ударь босса 15 раз", href: "/bosses", reward: R(250, 500) },
+    { id: "q-kill", kind: "kill", target: 1, title: "Победи любого босса", href: "/bosses", reward: R(300, 600) },
   ],
+  // the locations and the energy
   [
-    { id: "q-steps", kind: "steps", target: 3, title: "Выполни 3 шага заданий в локациях", href: "/locations", reward: R(200, 400, { energy: 10 }) },
-    { id: "q-energy", kind: "energy", target: 30, title: "Потрать 30 энергии", href: "/locations", reward: R(200, 400, { energy: 10 }) },
-    { id: "q-yard", kind: "yard", target: 5, title: "Подбери 5 вещей во дворе", href: "/yard", reward: R(200, 400) },
+    { id: "q-steps", kind: "steps", target: 5, title: "Выполни 5 шагов в локациях", href: "/locations", reward: R(200, 400, { energy: 10 }) },
+    { id: "q-energy", kind: "energy", target: 50, title: "Потрать 50 энергии", href: "/locations", reward: R(200, 400, { energy: 10 }) },
   ],
+  // the yard
   [
-    { id: "q-buy", kind: "buy", target: 1, title: "Купи что-нибудь в магазине", href: "/shop", reward: R(150, 300) },
-    { id: "q-exchange", kind: "exchange", target: 1, title: "Обменяй валюту в обменнике", hint: "Нажми на любую валюту вверху экрана", reward: R(150, 300) },
-    { id: "q-slots", kind: "slots", target: 1, title: "Крутани однорукого бандита", href: "/yard", reward: R(150, 300) },
+    { id: "q-yard", kind: "yard", target: 5, title: "Подбери 5 находок во дворе", href: "/yard", reward: R(200, 400) },
+    { id: "q-bandit", kind: "bandit", target: 20, title: "Крутани «Бандитский фарт» 20 раз", href: "/yard/bandit", reward: R(200, 400) },
+    { id: "q-slots", kind: "slots", target: 1, title: "Крутани автомат 777", href: "/yard", reward: R(150, 300) },
+    { id: "q-fortune", kind: "fortune", target: 1, title: "Крутани «Колесо удачи»", href: "/yard/fortune", reward: R(150, 300) },
   ],
-  // the yard's mini-games: the prize is a «Фишка» for the poker table
+  // the table games: the prize is a «Фишка» for the poker table
   [
     { id: "q-poker", kind: "poker", target: 3, title: "Сыграй 3 раздачи в покер", href: "/yard", hint: "Стол во дворе → Покер", reward: R(150, 300, { items: [{ id: "poker-chip", qty: 1 }] }) },
-    { id: "q-zonk", kind: "zonk", target: 1, title: "Доиграй партию в зонк", href: "/yard", hint: "Стол во дворе → Зонк", reward: R(150, 300, { items: [{ id: "poker-chip", qty: 1 }] }) },
-    { id: "q-roach", kind: "roach", target: 1, title: "Прихлопни таракана в зонке", href: "/yard", hint: "Он бегает по раме доски", reward: R(150, 300, { items: [{ id: "poker-chip", qty: 1 }] }) },
+    { id: "q-zonk", kind: "zonk", target: 2, title: "Доиграй 2 партии в зонк", href: "/yard", hint: "Стол во дворе → Зонк", reward: R(150, 300, { items: [{ id: "poker-chip", qty: 1 }] }) },
     { id: "q-bj", kind: "bj", target: 3, title: "Сыграй 3 раунда в блэкджек", href: "/yard", hint: "Стол во дворе → Блэкджек", reward: R(150, 300, { items: [{ id: "poker-chip", qty: 1 }] }) },
   ],
-  // the neighbours and the «Апгрейдер» («Вложи талант или улучши комнату» removed: players farmed it)
+  // «Зарубы», the shop's weapons, the garage
   [
-    { id: "q-social", kind: "social", target: 2, title: "Наедь, харкни или накачай бицуху 2 раза", href: "/rating", hint: "Рейтинг → профиль игрока", reward: R(200, 400) },
-    { id: "q-upgrader", kind: "upgrader", target: 1, title: "Крутани апгрейдер", href: "/yard", hint: "Автомат «Апгрейдер» во дворе", reward: R(200, 400) },
+    { id: "q-zarub", kind: "zarub", target: 3, title: "Выполни 3 задания в зарубах", href: "/zarub", reward: R(250, 500) },
+    { id: "q-weapon", kind: "weapon", target: 10, title: "Купи 10 оружия в магазине", href: "/shop", reward: R(200, 400) },
+    { id: "q-craft", kind: "craft", target: 1, title: "Собери в гараже инструмент 1 уровня", href: "/craft", reward: R(250, 500) },
   ],
 ];
 

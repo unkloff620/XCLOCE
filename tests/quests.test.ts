@@ -35,7 +35,7 @@ describe("daily quests", () => {
     await act(db, p, "fight_start", { boss: "datsik" }, T0);
     const r = await act(db, p, "attack", { weapon: "red-candle" }, T0, always(0.99));
     const q0 = r.state.quests.list[0];
-    expect(q0.progress).toBe(q0.id === "q-damage" ? 12 : 1);
+    expect(q0.progress).toBe(q0.id === "q-damage" ? 12 : q0.id === "q-hits" ? 1 : 0);
   });
 
   it("a location step counts toward steps / energy quests", async () => {
@@ -66,13 +66,15 @@ describe("daily quests", () => {
     await expect(act(db, p, "quest_chest", {}, T0)).rejects.toMatchObject({ code: "no_chest" });
   });
 
-  it("the mini-game quest counts a squashed roach", async () => {
+  it("the yard quest counts a spin of «Бандитский фарт»", async () => {
     let p = 0;
-    // a player whose mini-game quest today is the roach
-    for (let i = 0; i < 40 && !p; i++) { const q = await newPlayer(db); if (questsForDay(q, moscowDay(T0))[3].id === "q-roach") p = q; }
+    // a player whose yard quest today is the bandit machine
+    for (let i = 0; i < 60 && !p; i++) { const q = await newPlayer(db); if (questsForDay(q, moscowDay(T0))[2].id === "q-bandit") p = q; }
     expect(p).toBeGreaterThan(0);
-    const r = await act(db, p, "roach_squash", {}, T0, always(0.5));
-    expect(r.state.quests.list[3]).toMatchObject({ id: "q-roach", progress: 1 });
+    await db.query("UPDATE wallets SET amount=100 WHERE player_id=$1 AND currency='RUB'", [p]);
+    await db.query("INSERT INTO wallets (player_id, currency, amount) VALUES ($1,'RUB',100) ON CONFLICT (player_id, currency) DO UPDATE SET amount=100", [p]);
+    const r = await act(db, p, "bandit_spin", { bet: 1 }, T0);
+    expect(r.state.quests.list[2]).toMatchObject({ id: "q-bandit", progress: 1 });
   });
 
   it("a quest not in today's set cannot be claimed; the set resets at midnight", async () => {

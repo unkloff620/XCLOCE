@@ -1,3 +1,4 @@
+import { questOnly } from "./quests.ts";
 import { addTalentDamage, fightOverTalents, talentDamageOf } from "./talent-progress.ts";
 import { baulTick } from "./baul.ts";
 import { monthTick } from "./monthly.ts";
@@ -556,6 +557,8 @@ export async function claimFight(ctx: Ctx, fightId: number, see = true) {
   if (bg) granted.baul = bg;
   // «Зарубы»: a task «kill a boss»
   await zarubTick(ctx, "kill", 1);
+  // «Задания дня»: a boss won
+  await questOnly(ctx, "kill", 1);
   // «Сходняк»: a task «beat this boss»
   await shodTick(ctx, "kill", 1, { boss: def.id, mode: mode.id });
   await ctx.q.query("UPDATE fights SET reward=$2, seen=seen OR $3 WHERE id=$1", [f.id, JSON.stringify(granted), see]);
