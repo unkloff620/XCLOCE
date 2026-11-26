@@ -25,6 +25,7 @@ import { FokusRig } from "./boss-fokus.tsx";
 import { DatsikRig } from "./boss-datsik.tsx";
 import { HimikRig } from "./boss-himik.tsx";
 import { KedrRig } from "./boss-kedr.tsx";
+import { GarkushaRig } from "./boss-garkusha.tsx";
 import { SunRig } from "./boss-sun.tsx";
 
 type Part = { x: number; y: number; w: number; h: number; pivot?: readonly number[]; frames?: number; v?: string };
@@ -44,7 +45,7 @@ const NO_PUPPET = new Set<string>(["knyaz"]);
  *  and where the torso picture bends (data-pp-follow-at: the top follows fully down to a, not at all from b) */
 const WAIST: Record<string, { at: [number, number]; bend?: string }> = {
   babafey: { at: [547, 940], bend: "0.24,0.46" }, bebyakyan: { at: [400, 650], bend: "0.35,0.62" },
-  garkusha: { at: [420, 700], bend: "0.4,0.66" }, mugo: { at: [600, 660], bend: "0.35,0.5" },
+  mugo: { at: [600, 660], bend: "0.35,0.5" },
   // cut off at the waist: he leans whole from the bottom edge
   datsik: { at: [590, 1400] },
   // Утилизатор: the legs stand; the T-shirt and the apron go up and lean together (the apron's hem follows too)
@@ -403,6 +404,7 @@ export function BossRig({ id: asked, hpShare = 1, bust = false, outfit: wanted }
   }
   if (baseId === "psih") return <PsihRig id={id} look={look} rig={rig} bust={bust} dazed={dazed} dying={dying} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} />;
   if (baseId === "fokus") return <FokusRig id={id} look={look} rig={rig} bust={bust} dazed={dazed} dying={dying} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} />;
+  if (baseId === "garkusha") return <GarkushaRig id={id} look={look} rig={rig} bust={bust} dazed={dazed} dying={dying} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} />;
   if (baseId === "kedr") return <KedrRig id={id} look={look} rig={rig} bust={bust} dazed={dazed} dying={dying} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} />;
   if (baseId === "himik") return <HimikRig id={id} look={look} rig={rig} bust={bust} dazed={dazed} dying={dying} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} />;
   if (baseId === "datsik") return <DatsikRig id={id} look={look} rig={rig} bust={bust} dazed={dazed} dying={dying} svgRef={svgRef} wrapRef={wrapRef} puppet={puppet} viewBox={bust ? bustBox(rig) : `0 0 ${rig.w} ${rig.h}`} />;

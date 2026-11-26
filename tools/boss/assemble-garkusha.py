@@ -1,83 +1,94 @@
 """
-Гаркуша (boss 4, id garkusha): turns the artist's loose parts into rig layers for build-boss.py.
-Sources: tools/boss/source/garkusha/raw/ — reference (whole boss, 2000×2800); body parts already in place on that canvas:
-legs, torso (the vest), armL (sleeve on the viewer's left), fistL (its hand with money), armR (the bent arm on the right),
-fistR (its hand); face parts on one 1000×1000 sheet: head (blank eyes), eyes (whites), pupils, eyes-closed, brows,
-mouth (open lips with teeth).
-Fit (raw/fit.json, reference = sheet·s + (tx, ty)): the face sheet by fit-parts.py:
-  python3 tools/boss/fit-parts.py garkusha '{"head": {"win": [740, 0, 1320, 660], "s": [0.4, 0.7]}}'
-The head keeps its own closed lips; the open mouth (teeth) shows when he is hit (mouth-closed slot, class "ouch").
-Layers (one canvas, cropped to CROP):
-  body   legs + torso (breathes)        head   hair, face, lips (sways)
-  eyes / pupils / eyes-closed / brows / brows-sad (each brow flipped upside down) / mouth-closed (teeth)
-  armL + handL, armR + handR — arms swing at the shoulder, hands turn at the wrist (pivots in build-boss.py)
-Also writes public/bosses/garkusha/{full,portrait}.webp.
+Гаркуша (id garkusha — the artist's new model 2026-11-26: the body redrawn, the arms in three pieces; the old model and
+its beaten look removed): the layers (tools/boss/source/garkusha/raw/): the body on the 2000×3000 sheet in place, B00…B07
+(the PSD's order, top first) — handR (his right fist with the cash, the left of the picture, held out), handL (the left
+one, raised by the face), lowR (the right forearm), armR (the right upper arm), lowL (the left forearm), body (the puffer
+jacket), armL (the left upper arm, behind the jacket), legs; the head on its own 535×528 sheet, H00…H03 — head (with the eye
+holes), pupilL / pupilR (one picture «pupils» here), eyes (the whites). The head is fitted by hand on the neck (HEAD: its
+scale, where the chin's bottom goes). Everything is cropped to CROP → the rig sources for build-boss.py; prints the joints
+(rig px) for build-boss.py PIVOT_BY_BOSS and the eye holes.
 """
-import json
+import os
 import numpy as np
 from PIL import Image
+from scipy import ndimage
 
 D = "tools/boss/source/garkusha"
-CROP = (180, 20, 1780, 1920)
-ref = Image.open(f"{D}/raw/reference.png").convert("RGBA")
-W, H = ref.size
-fit = json.load(open(f"{D}/raw/fit.json"))["head"]
+R = f"{D}/raw"
+BODY = {"handR": "B00", "handL": "B01", "lowR": "B02", "armR": "B03", "lowL": "B04", "body": "B05", "armL": "B06", "legs": "B07"}
+FACE = {"head": "H00", "pupilL": "H01", "pupilR": "H02", "eyes": "H03"}
+W, H0 = 2000, 3000
+# the head goes up over the sheet's top: everything is drawn PAD px lower on a taller canvas
+PAD = 120
+H = H0 + PAD
+# the head's sheet on the body: its scale, where the chin's bottom middle (271, 517 on the sheet) goes — over the neck
+HEAD = {"s": 1.15, "cx": 990, "jaw": 710}
+CHIN = (271, 517)
+os.makedirs(f"{D}/placed", exist_ok=True)
 
 
-def body(n):
-    return Image.open(f"{D}/raw/{n}.png").convert("RGBA")
+def find(prefix):
+    return next(f for f in os.listdir(R) if f.startswith(prefix + "-"))
 
 
-def face(n):
-    im = Image.open(f"{D}/raw/{n}.png").convert("RGBA")
-    s = fit["s"]
-    im = im.resize((round(im.width * s), round(im.height * s)), Image.LANCZOS)
+def placed_face(f):
+    im = Image.open(f"{R}/{find(f)}").convert("RGBA")
+    s = HEAD["s"]
+    sc = im.resize((round(im.width * s), round(im.height * s)), Image.LANCZOS)
     c = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    c.alpha_composite(im, (round(fit["tx"]), round(fit["ty"])))
+    c.alpha_composite(sc, (round(HEAD["cx"] - CHIN[0] * s), round(PAD + HEAD["jaw"] - CHIN[1] * s)))
     return c
 
 
-def save(n, im):
+def placed_body(f):
+    c = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    c.alpha_composite(Image.open(f"{R}/{find(f)}").convert("RGBA"), (0, PAD))
+    return c
+
+
+L = {n: placed_body(f) for n, f in BODY.items()}
+L.update({n: placed_face(f) for n, f in FACE.items()})
+# both pupils are one picture (they look about together)
+L["pupils"] = L.pop("pupilL")
+L["pupils"].alpha_composite(L.pop("pupilR"))
+for n, im in L.items():
+    a = np.array(im)
+    a[a[..., 3] < 8] = 0
+    L[n] = Image.fromarray(a)
+    L[n].save(f"{D}/placed/{n}.png")
+bb = [im.getbbox() for im in L.values()]
+CROP = (max(0, min(b[0] for b in bb) - 60), max(0, min(b[1] for b in bb) - 60), min(W, max(b[2] for b in bb) + 60), H)
+print("CROP", CROP)
+for n, im in L.items():
     im.crop(CROP).save(f"{D}/{n}.png")
+rig = lambda x, y: [round((x - CROP[0]) * 0.5, 1), round((y - CROP[1]) * 0.5, 1)]
+A = lambda n: np.array(L[n])[..., 3] > 128
 
 
-b = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-b.alpha_composite(body("legs"))
-b.alpha_composite(body("torso"))
-save("body", b)
-save("head", face("head"))
-save("eyes", face("eyes"))
-save("pupils", face("pupils"))
-save("eyes-closed", face("eyes-closed"))
-brows = face("brows")
-save("brows", brows)
-save("mouth-closed", face("mouth"))
+def mid(a, b):
+    ys, xs = np.nonzero(a & b)
+    return rig(xs.mean(), ys.mean()) if len(xs) else None
 
-# sad brows: every brow flipped upside down in its own box and lifted a little (inner ends go up)
-bw = np.array(brows)
-sad = np.zeros_like(bw)
-a = bw[:, :, 3] > 0
-mid = (np.nonzero(a)[1].min() + np.nonzero(a)[1].max()) // 2
-for x0, x1 in [(0, mid), (mid, W)]:
-    ys, xs = np.nonzero(a[:, x0:x1])
-    if not len(ys):
-        continue
-    y0, y1 = ys.min(), ys.max() + 1
-    piece = bw[y0:y1, x0:x1][::-1]
-    lift = 8
-    sad[y0 - lift:y1 - lift, x0:x1] = np.where(piece[:, :, 3:] > 0, piece, sad[y0 - lift:y1 - lift, x0:x1])
-save("brows-sad", Image.fromarray(sad))
 
-save("armL", body("armL"))
-save("handL", body("fistL"))
-save("armR", body("armR"))
-save("handR", body("fistR"))
-
-# pictures for the lists: the whole boss (2:3) and the face
-import os
+print("head (the chin over the neck)", rig(HEAD["cx"], PAD + HEAD["jaw"] - 20))
+print("armR", mid(A("armR"), A("body")), "lowR", mid(A("armR"), A("lowR")), "handR", mid(A("lowR"), A("handR")))
+print("armL", mid(A("armL"), A("body")), "lowL", mid(A("armL"), A("lowL")), "handL", mid(A("lowL"), A("handL")))
+holes = A("eyes") & ~A("head")
+lab, n = ndimage.label(holes)
+sizes = ndimage.sum(holes, lab, range(1, n + 1))
+for k in np.argsort(sizes)[::-1][:2]:
+    yy, xx = np.nonzero(lab == k + 1)
+    print("hole", rig(xx.min(), yy.min()), rig(xx.max(), yy.max()), "skin over", np.array(L["head"])[max(0, yy.min() - 6), int(xx.mean())][:3])
+for n in ["pupils", "eyes", "handR", "handL", "legs"]:
+    b = L[n].getbbox(); print(n, "box", rig(b[0], b[1]), rig(b[2], b[3]))
+order = ["legs", "armL", "body", "lowL", "armR", "lowR", "eyes", "pupils", "head", "handL", "handR"]
+whole = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+for n in order:
+    whole.alpha_composite(L[n])
+whole = whole.crop(CROP)
 os.makedirs("public/bosses/garkusha", exist_ok=True)
-full = Image.new("RGBA", (1867, 2800), (0, 0, 0, 0))
-full.alpha_composite(ref.crop((67, 0, 1934, 2800)))
-full.resize((1024, 1536), Image.LANCZOS).save("public/bosses/garkusha/full.webp", quality=88, method=6)
-ref.crop((780, 40, 1340, 600)).resize((512, 512), Image.LANCZOS).save("public/bosses/garkusha/portrait.webp", quality=88, method=6)
-print("ok")
+whole.resize((whole.width // 2, whole.height // 2), Image.LANCZOS).save("public/bosses/garkusha/full.webp", quality=88, method=6)
+hb = L["head"].getbbox()
+cx, cy = (hb[0] + hb[2]) // 2 - CROP[0], (hb[1] + hb[3]) // 2 - CROP[1]
+whole.crop((cx - 330, cy - 300, cx + 330, cy + 360)).resize((320, 320), Image.LANCZOS).save("public/bosses/garkusha/portrait.webp", quality=88, method=6)
+print("ok", whole.size)

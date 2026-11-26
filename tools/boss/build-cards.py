@@ -11,7 +11,7 @@ CARDS = {
     "datsik": ("public/bosses/datsik/full.webp", (0, -20, 560, 680)),
     "kedr": ("public/bosses/kedr/full.webp", (60, -20, 660, 720)),
     "bebyakyan": ("tools/boss/source/bebyakyan/raw/reference.png", (240, -80, 1700, 1722)),
-    "garkusha": ("tools/boss/source/garkusha/raw/reference.png", (220, -40, 1760, 1860)),
+    "garkusha": ("public/bosses/garkusha/full.webp", (50, -20, 730, 820)),
     "babafey": ("tools/boss/source/babafey/raw/reference.png", (400, -60, 2180, 2138)),
     "vodovoz": ("tools/boss/source/vodovoz/raw/reference.png", (170, -110, 1650, 1717)),
     "vadim": ("public/bosses/vadim/full.webp", (150, -40, 740, 690)),
