@@ -94,7 +94,14 @@ h = L["hand"][..., 3] > 128
 hy, hx = np.nonzero(h)
 far = np.argmax(hx - hy * 0.6)
 wrist = (float(hx[far]) - 40, float(hy[far]) + 40)
-pivots = {"grip": [R(grip[0]), R(grip[1])], "bulb": [R(bulb_c[0]), R(bulb_c[1])], "wrist": [R(wrist[0]), R(wrist[1])]}
+# the thumb and the index finger (their own layers) turn at their roots: the end that goes into the palm (the right one)
+def root(n):
+    a = L[n][..., 3] > 128
+    ys_, xs_ = np.nonzero(a)
+    near = xs_ > xs_.max() - 30
+    return float(xs_[near].mean()) - 12, float(ys_[near].mean())
+pivots = {"grip": [R(grip[0]), R(grip[1])], "bulb": [R(bulb_c[0]), R(bulb_c[1])], "wrist": [R(wrist[0]), R(wrist[1])],
+          "thumb": [R(v) for v in root("thumb")], "fingers": [R(v) for v in root("fingers")]}
 shape = {"bulbR": R(bulb_r), "bottom": R(bottom), "neckY": R(neck_y), "lipY": R(lip_y)}
 
 canvas = Image.new("RGBA", (2000, 2800), (0, 0, 0, 0))

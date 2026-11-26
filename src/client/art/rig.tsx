@@ -683,6 +683,7 @@ function FlaskHand() {
   const { skin } = useContext(LookCtx);
   const uid = useId().replace(/:/g, "");
   const handRef = useRef<SVGGElement>(null), flaskRef = useRef<SVGGElement>(null), liqRef = useRef<SVGGElement>(null), waveRef = useRef<SVGPathElement>(null);
+  const topRef = useRef<SVGGElement>(null), lowRef = useRef<SVGGElement>(null);
   const [gx, gy] = FLASK_PIVOTS.grip, [cx, cy] = FLASK_PIVOTS.bulb, [wx, wy] = FLASK_PIVOTS.wrist;
   const r = FLASK_SHAPE.bulbR;
   // the liquid's surface (in the bulb's own frame, level at LV): a wavy top, the body down past the bottom
@@ -731,6 +732,12 @@ function FlaskHand() {
       flaskRef.current?.setAttribute("transform", `rotate(${(deg(th) - hand).toFixed(2)} ${gx} ${gy})`);
       // the liquid (inside the flask's group): turned back to the world's level, plus its own lag
       liqRef.current?.setAttribute("transform", `rotate(${(deg(su) - deg(th)).toFixed(2)} ${cx} ${cy})`);
+      // the two fingers on the neck fidget at their roots, each on its own beat: the upper one lifts and presses, the lower
+      // one rubs the glass
+      const up = 6 * Math.sin(t * 2.3) * Math.max(0, Math.sin(t * 0.9)) - 2.5 * Math.max(0, Math.sin(t * 5.2 + 1)) ** 4;
+      const low = 5.5 * Math.sin(t * 3.1 + 0.8) * (0.6 + 0.4 * Math.sin(t * 0.6 + 2));
+      topRef.current?.setAttribute("transform", `rotate(${up.toFixed(2)} ${FLASK_PIVOTS.thumb[0]} ${FLASK_PIVOTS.thumb[1]})`);
+      lowRef.current?.setAttribute("transform", `rotate(${low.toFixed(2)} ${FLASK_PIVOTS.fingers[0]} ${FLASK_PIVOTS.fingers[1]})`);
       waveRef.current?.setAttribute("d", `${wave(t * 7, 0.6 + Math.min(2.2, Math.abs(suV) * 0.6))} L${cx + r * 2} ${cy + r * 2.4} L${cx - r * 2} ${cy + r * 2.4} Z`);
     };
     raf = requestAnimationFrame(tick);
@@ -763,9 +770,9 @@ function FlaskHand() {
           <g ref={liqRef}>
             <path ref={waveRef} d={`${wave(0, 0.6)} L${cx + r * 2} ${cy + r * 2.4} L${cx - r * 2} ${cy + r * 2.4} Z`} fill={`url(#fl-liq-${uid})`} />
             <rect x={cx - r * 2} y={LV - 0.6} width={r * 4} height={1.6} fill="#e2ffa8" opacity={0.85} />
-            {[0, 1, 2, 3, 4].map((i) => (
-              <circle key={i} className="rig-flask-bub" cx={cx - r * 0.5 + i * r * 0.25} cy={cy + r * 0.75} r={0.9 + (i % 3) * 0.5} fill="rgba(230,255,200,0.85)"
-                style={{ animationDelay: `${(i * 0.53) % 2.2}s`, ["--rise" as string]: `${(cy + r * 0.75 - LV - 2).toFixed(1)}px` }} />
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <circle key={i} className="rig-flask-bub" cx={cx - r * 0.55 + i * r * 0.22} cy={cy + r * 0.72} r={2.2 + (i % 3) * 0.9} fill="rgba(230,255,200,0.85)"
+                style={{ animationDelay: `${(i * 0.53) % 2.2}s`, ["--rise" as string]: `${(cy + r * 0.72 - LV - 3).toFixed(1)}px` }} />
             ))}
           </g>
         </g>
@@ -773,8 +780,8 @@ function FlaskHand() {
         <g opacity={0.28}>{img("glass-front")}</g>
       </g>
       {img("hand", true)}
-      {img("fingers", true)}
-      {img("thumb", true)}
+      <g ref={lowRef}>{img("fingers", true)}</g>
+      <g ref={topRef}>{img("thumb", true)}</g>
     </g>
   );
 }

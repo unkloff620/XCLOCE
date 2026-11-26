@@ -44,5 +44,5 @@ export const FLASK_PARTS: Record<string, { x: number; y: number; w: number; h: n
     "h": 157.0
   }
 };
-export const FLASK_PIVOTS: Record<string, [number, number]> = {"grip": [626.2, 797.5], "bulb": [626.0, 886.5], "wrist": [729.5, 784.0]};
+export const FLASK_PIVOTS: Record<string, [number, number]> = {"grip": [626.2, 797.5], "bulb": [626.0, 886.5], "wrist": [729.5, 784.0], "thumb": [641.1, 767.3], "fingers": [656.4, 821.4]};
 export const FLASK_SHAPE = {"bulbR": 49.5, "bottom": 936.0, "neckY": 803.0, "lipY": 792.0} as const;
