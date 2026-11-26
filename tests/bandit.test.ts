@@ -29,7 +29,7 @@ describe("«Бандитский фарт»", () => {
     expect(pair.wins).toEqual([{ sym: "a", n: 2, row: 0, pay: 1 }]);
     // the horseshoes give experience, no boxes
     const hs = banditPay([col("horseshoe", "a", "q"), col("horseshoe", "k", "k"), col("horseshoe", "dice", "j"), col("horseshoe", "q", "ten"), col("a", "j", "q")], {}, 3);
-    expect(hs.xp).toBe(300);
+    expect(hs.xpGot).toBe(300);
     expect(hs.raw).toBe(0);
     const wild = banditPay([reels[0], reels[1], Array(3).fill("W"), reels[3], reels[4]], { 2: 5 }, 10);
     expect(wild.mult).toBe(5);

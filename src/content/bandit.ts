@@ -96,7 +96,7 @@ export interface BanditSpin {
   /** free spins this spin gives */
   free: number;
   /** the machine's experience the horseshoes gave */
-  xp: number;
+  xpGot: number;
   /** 3+ revolvers: the bonus game «Русская рулетка» */
   roulette: boolean;
 }
@@ -150,5 +150,5 @@ export function banditPay(reels: BanditCell[][], wilds: Record<number, number>, 
   const mult = Object.values(wilds).reduce((a, b) => a + b, 0) || 1;
   const line = wins.reduce((a, w) => a + w.pay, 0);
   const raw = Math.min(BANDIT_MAX_X * bet, line * mult + bells);
-  return { reels, wilds, wins, bells, mult, raw, win: Math.floor(raw), free: BANDIT_FREE[Math.min(5, nb)] ?? 0, roulette, xp: wins.reduce((a, w) => a + (w.xp ?? 0), 0) };
+  return { reels, wilds, wins, bells, mult, raw, win: Math.floor(raw), free: BANDIT_FREE[Math.min(5, nb)] ?? 0, roulette, xpGot: wins.reduce((a, w) => a + (w.xp ?? 0), 0) };
 }

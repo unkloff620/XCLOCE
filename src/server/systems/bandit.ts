@@ -43,7 +43,7 @@ export async function banditSpinAction(ctx: Ctx, body: { bet?: unknown }) {
   await ctx.q.query(
     `INSERT INTO bandit_state (player_id, free, free_bet, carry, spins, won, xp, boxes) VALUES ($1,$2,$3,$4,1,$5,$6,$5)
      ON CONFLICT (player_id) DO UPDATE SET free=$2, free_bet=$3, carry=$4, spins=bandit_state.spins+1, won=bandit_state.won+$5, xp=bandit_state.xp+$6, boxes=bandit_state.boxes+$5`,
-    [ctx.pid, freeLeft, freeLeft > 0 ? bet : 0, total - pay, pay, (free ? 0 : bet) + s.xp],
+    [ctx.pid, freeLeft, freeLeft > 0 ? bet : 0, total - pay, pay, (free ? 0 : bet) + s.xpGot],
   );
   // 3+ revolvers: the roulette opens, the round in a chamber 1…6
   if (s.roulette) {

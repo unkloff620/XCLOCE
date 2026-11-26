@@ -22,7 +22,7 @@ import { BANDIT_UI as UI } from "../art/bandit-ui-data.ts";
 import { HeroRig } from "../art/rig.tsx";
 import { BANDIT_CHEST_PRICE, BANDIT_BET_MAX, BANDIT_BET_MIN, BANDIT_FREE, BANDIT_REELS, BANDIT_ROWS, BANDIT_SCATTER, BANDIT_SYMS, BANDIT_WILD, ROULETTE_PAY, ROULETTE_PULLS, type BanditCell, type BanditSpin, type BanditSym } from "../../content/bandit.ts";
 
-const V = "?v=2";
+const V = "?v=3";
 /** the machine's canvas: the artist's 2000×3000 one row (ROW) shorter — the frame of 3 rows, the panel up by ROW */
 const ROW = 307, CH = 3000 - ROW;
 /** the parts under the reels go up by the row taken out */
@@ -159,6 +159,8 @@ export function BanditScreen() {
             <small className="num">{v.lvl.need ? `${fmt(v.lvl.into)} / ${fmt(v.lvl.need)}` : "макс."}</small>
             {/* a new level: «+1» flies up over the bar (nothing else moves) */}
             {lvlUp !== null && <i key={v.lvl.level} className="bd-lvlup num">+{lvlUp}</i>}
+            {/* the horseshoes' experience flies up over the bar too */}
+            {shown && res && res.xpGot > 0 && lvlUp === null && <i key={`x${res.spins}`} className="bd-lvlup bd-xp-up num">+{fmt(res.xpGot)} опыта</i>}
           </div>
         )}
         <div className={`bd-reels ${anyWin ? "won" : ""}`}>
@@ -188,8 +190,6 @@ export function BanditScreen() {
           </div>
         )}
         {shown && res && res.free > 0 && <div className="bd-free-got">+{res.free} бесплатных!</div>}
-        {/* the horseshoes: the machine's experience */}
-        {shown && res && res.xp > 0 && <div className="bd-free-got bd-xp-got">+{fmt(res.xp)} опыта</div>}
 
         {/* the panel */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -220,14 +220,19 @@ export function BanditScreen() {
           <img src={art("auto")} alt="" draggable={false} />
         </button>
         {/* the last win: left under the balance */}
-        <div className="bd-last" style={u(up({ x: 138, y: 2470, w: 600, h: 200 }))}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={pic("matchbox" as BanditSym)} alt="" draggable={false} />
-          <b className="num">{v ? fmt(v.boxes) : 0}</b>
-          {shown && res && res.win > 0 && <i className="bd-last-plus num">+{fmt(winShown)}</i>}
-          {/* the roulette's blue boxes */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          {!!v?.blue && <><img src={BLUE} alt="синих коробков" draggable={false} /><b className="num">{fmt(v.blue)}</b></>}
+        <div className="bd-last" style={u(up({ x: 138, y: 2470, w: 600, h: 230 }))}>
+          {/* the red boxes (the spins' win) over the blue ones (the roulette's) */}
+          <span className="bd-last-row">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={pic("matchbox" as BanditSym)} alt="красных коробков" draggable={false} />
+            <b className="num">{v ? fmt(v.boxes) : 0}</b>
+            {shown && res && res.win > 0 && <i className="bd-last-plus num">+{fmt(winShown)}</i>}
+          </span>
+          <span className="bd-last-row">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={BLUE} alt="синих коробков" draggable={false} />
+            <b className="num">{v ? fmt(v.blue) : 0}</b>
+          </span>
         </div>
       </div>
       <Link href="/yard" className="bd-back" aria-label="Назад во двор">‹</Link>
