@@ -8269,8 +8269,10 @@ button:is(.modal > .x, .fs-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x,
 .route-loader .boot-tw-area { bottom: calc(var(--nav-h) + var(--safe-b) + 5%); }
 .route-loader .route-spin { position: relative; z-index: 2; }
 
-/* ── Гаркуша (art/boss-garkusha.tsx, boss-poses.ts POSES.garkusha): the pose engine sets --px --py ── */
-.rig-garkusha { --px: 0; --py: 0; }
+/* ── Гаркуша (art/boss-garkusha.tsx, boss-poses.ts POSES.garkusha): the pose engine sets --px --py --brw --bru ── */
+.rig-garkusha { --px: 0; --py: 0; --brw: 0; --bru: 0; }
+.rig-garkusha .gk-brows { transform: translateY(calc(var(--brw) * 2px)) scaleX(calc(1 - var(--brw) * 0.04)); }
+.rig-garkusha .gk-brows-u { transform: translateY(calc(var(--bru) * -3.2px)) scaleY(calc(1 + var(--bru) * 0.14)); }
 .rig-garkusha .gk-pupils { transform: translate(calc(var(--px) * 2.6px), calc(var(--py) * 1.4px)); }
 .rig-garkusha .gk-lids > g { transform: scaleY(0); animation: fk-blink 3.9s linear infinite; }
 @media (prefers-reduced-motion: reduce) { .rig-garkusha .gk-lids > g { animation: none; } }

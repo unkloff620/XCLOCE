@@ -347,17 +347,17 @@ const bbWave: Action = {
 };
 /* Гаркуша (the new model 2026-11-26, boss-garkusha.tsx): a stack of cash in each fist — the right one held out low (the
    left of the picture), the left one raised by his face. Slaps: the held-out fist swings back and then across at you (the
-   forearm turns in at the elbow, the wrist whips the cash), he leans in and drops into the knees; the raised fist goes
-   back and comes down at you. He flaunts the raised stack by his face (the wrist shakes it), shakes both. The arms rise
+   forearm turns in at the elbow, the wrist whips the cash, the fist grows at the screen), he leans in and drops into the
+   knees; the raised fist goes back and comes down at you. The brows frown on a slap and go up while he flaunts. He flaunts the raised stack by his face (the wrist shakes it), shakes both. The arms rise
    with every breath in (gkBreath). */
 const gkBreath = (t: number) => 0.5 - 0.5 * Math.cos((t / 1.7) * Math.PI);
-const gkAmp = (p: Pose, a: number): Pose => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, (v ?? 0) * a]));
+const gkAmp = (p: Pose, a: number): Pose => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, (v ?? 0) * (k === "brw" || k === "bru" || k === "px" ? 1 : a)]));
 const gkSlapR = (amp = 1, slow = 1): Action => ({
   dur: 0.75 * slow,
   keys: [
     { at: 0, pose: gkAmp({ armR: 10, lowR: 24, handR: 4, up: 2, x: 5, y: -2, head: -1.5 }, amp), stiff: 2.4 / slow }, // the cash back
-    { at: 0.14 * slow, pose: gkAmp({ armR: -12, lowR: -32, handR: 12, up: -4, x: -10, y: 18, head: 2 }, amp), stiff: 6.5 / slow }, // the slap
-    { at: 0.3 * slow, pose: gkAmp({ armR: -8, lowR: -18, handR: 6, up: -2, x: -5, y: 8 }, amp), stiff: 1.6 / slow },
+    { at: 0.14 * slow, pose: gkAmp({ armR: -12, lowR: -32, handR: 12, up: -4, x: -10, y: 18, head: 2, brw: 1, zR: 22 }, amp), stiff: 6.5 / slow }, // the slap
+    { at: 0.3 * slow, pose: gkAmp({ armR: -8, lowR: -18, handR: 6, up: -2, x: -5, y: 8, zR: 8 }, amp), stiff: 1.6 / slow },
     { at: 0.44 * slow, pose: {}, stiff: 1 / slow },
   ],
 });
@@ -365,8 +365,8 @@ const gkSlapL = (amp = 1, slow = 1): Action => ({
   dur: 0.75 * slow,
   keys: [
     { at: 0, pose: gkAmp({ armL: -8, lowL: 20, handL: 4, up: -2, x: -4, y: -2, head: 1.5 }, amp), stiff: 2.4 / slow },
-    { at: 0.14 * slow, pose: gkAmp({ armL: 10, lowL: -40, handL: 10, up: 4, x: 10, y: 18, head: -2 }, amp), stiff: 6.5 / slow },
-    { at: 0.3 * slow, pose: gkAmp({ armL: 6, lowL: -22, handL: 5, up: 2, x: 5, y: 8 }, amp), stiff: 1.6 / slow },
+    { at: 0.14 * slow, pose: gkAmp({ armL: 10, lowL: -40, handL: 10, up: 4, x: 10, y: 18, head: -2, brw: 1, zL: 22 }, amp), stiff: 6.5 / slow },
+    { at: 0.3 * slow, pose: gkAmp({ armL: 6, lowL: -22, handL: 5, up: 2, x: 5, y: 8, zL: 8 }, amp), stiff: 1.6 / slow },
     { at: 0.44 * slow, pose: {}, stiff: 1 / slow },
   ],
 });
@@ -376,7 +376,7 @@ const gkFlaunt = (amp = 1, slow = 1): Action => {
   let t = 0;
   for (let i = 0; i < 6; i++) {
     const s = i % 2 ? -1 : 1;
-    keys.push({ at: t, pose: gkAmp({ handL: 14 * s, lowL: -6 + 3 * s, armL: -3, head: 3, up: -1, px: 0.6 }, amp), stiff: 3 / slow });
+    keys.push({ at: t, pose: gkAmp({ handL: 14 * s, lowL: -6 + 3 * s, armL: -3, head: 3, up: -1, px: 0.6, bru: 1, brw: -0.3 }, amp), stiff: 3 / slow });
     t += 0.13 * slow;
   }
   for (let i = 0; i < 4; i++) {
@@ -1355,7 +1355,7 @@ const POSES: Record<string, Spec> = {
       up: { k: 130, c: 14 }, x: { k: 120, c: 14 }, y: { k: 170, c: 17 }, head: { k: 160, c: 13 },
       armR: { k: 200, c: 19 }, lowR: { k: 300, c: 21 }, handR: { k: 600, c: 30 },
       armL: { k: 200, c: 19 }, lowL: { k: 300, c: 21 }, handL: { k: 600, c: 30 },
-      px: { k: 180, c: 19 }, py: { k: 180, c: 19 },
+      px: { k: 180, c: 19 }, py: { k: 180, c: 19 }, brw: { k: 150, c: 16 }, bru: { k: 150, c: 14 }, zR: { k: 360, c: 28 }, zL: { k: 360, c: 28 },
     },
     drag: { lowL: ["armL", -0.05], handL: ["lowL", -0.02], lowR: ["armR", -0.05], handR: ["lowR", -0.02], head: ["up", -0.08] },
     // never still: he sways, the arms rise with the breath in, the stacks turn a little in the fists, the eyes look about
@@ -1369,6 +1369,9 @@ const POSES: Record<string, Spec> = {
         head: 1.4 * Math.sin(t * 1.1 + 1) + 0.6 * Math.sin(t * 0.45),
         armR: 3.5 * b + 0.6 * Math.sin(t * 1.3 + 2), lowR: -2 * b + 1 * Math.sin(t * 1.6 + 1), handR: 3 * Math.sin(t * 1.4),
         armL: -3.5 * b + 0.6 * Math.sin(t * 1.4), lowL: 2 * b + 1 * Math.sin(t * 1.8 + 0.5), handL: 3.5 * Math.sin(t * 1.9 + 1),
+        // the brows never rest: a slow frown and lift, a quick twitch now and then
+        brw: 0.35 * Math.sin(t * 0.75 + 1) + 0.25 * Math.max(0, Math.sin(t * 1.7)) ** 6,
+        bru: 0.3 * Math.max(0, Math.sin(t * 0.55)) ** 2 + 0.5 * Math.max(0, Math.sin(t * 2.5 + 2)) ** 12,
         px: (r(1) - 0.5) * 1.8, py: (r(2) - 0.5) * 1.1,
       };
     },
@@ -1377,14 +1380,16 @@ const POSES: Record<string, Spec> = {
       { a: join(gkSlapL(), shift(gkSlapR(), 0.3), shift(gkSlapL(), 0.6)), w: 1 }, { a: gkFlaunt(), w: 2 },
     ],
     rest: [1.4, 2.8],
-    hit: { head: -280, up: -80, x: -60, y: -50, armL: -90, lowL: 110, armR: 90, lowR: -110, handR: 60, handL: -60 },
+    hit: { head: -280, up: -80, x: -60, y: -50, armL: -90, lowL: 110, armR: 90, lowR: -110, handR: 60, handL: -60, bru: 8 },
     strike: join(gkSlapR(1.15), shift(gkSlapL(1.15), 0.32)),
     // below half: slower, he sways from foot to foot; below a quarter: slower still
     dazed: { pose: { armL: -5, armR: 5, head: 3 }, act: true, sway: gkShift(1.7, 1), actions: [{ a: gkSlapR(0.8, 1.35), w: 2 }, { a: gkSlapL(0.8, 1.35), w: 2 }, { a: gkFlaunt(0.7, 1.4), w: 1 }], rest: [3, 5], strike: gkSlapR(0.85, 1.3), speed: 0.75 },
     dying: { pose: { armL: -12, armR: 10, head: 6, up: -2 }, act: true, sway: gkShift(1.1, 1.2), actions: [{ a: gkSlapR(0.55, 1.9), w: 1 }, { a: gkSlapL(0.55, 1.9), w: 1 }], rest: [4, 7], strike: gkSlapL(0.6, 1.9), speed: 0.55 },
     breath: (t) => { const b = gkBreath(t); return [1 + 0.02 * b, 1 + 0.045 * b, -6 * b]; },
-    shapes: { px: {}, py: {} },
-    vars: (a) => ({ "--px": a.px.toFixed(3), "--py": a.py.toFixed(3) }),
+    shapes: { px: {}, py: {}, brw: {}, bru: {} },
+    vars: (a) => ({ "--px": a.px.toFixed(3), "--py": a.py.toFixed(3), "--brw": a.brw.toFixed(3), "--bru": Math.max(-0.3, Math.min(1.3, a.bru)).toFixed(3) }),
+    // the slapping fist comes at the screen: it grows from the wrist
+    scale: { handR: "zR", handL: "zL" },
     stiffOwn: true,
   },
   mugo: {

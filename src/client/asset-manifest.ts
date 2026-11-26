@@ -8973,6 +8973,7 @@ export const ASSET_FILES: string[] = [
  "/bosses/garkusha/rig/armL.webp",
  "/bosses/garkusha/rig/armR.webp",
  "/bosses/garkusha/rig/body.webp",
+ "/bosses/garkusha/rig/brows.webp",
  "/bosses/garkusha/rig/eyes.webp",
  "/bosses/garkusha/rig/handL.webp",
  "/bosses/garkusha/rig/handR.webp",

@@ -3,9 +3,9 @@
  * Гаркуша (the artist's new model 2026-11-26, tools/boss/assemble-garkusha.py): the layers on soft joints — the puppet
  * (boss-puppet.ts) bends the legs (only the feet stay: a crouch bends the knees), the body and the arms in three pieces
  * at the shoulders, the elbows and the wrists (a fist with a stack of cash in each); the face is plain SVG over the body —
- * the whites and the pupils under the head's eye holes, the lids. The pose engine (boss-poses.ts POSES.garkusha) runs
+ * the whites and the pupils under the head's eye holes, the lids, the brows. The pose engine (boss-poses.ts POSES.garkusha) runs
  * everything: slaps with the cash (the held-out right one swings across, the raised left one comes down at you), he
- * flaunts the stack by his face, shakes both; the arms rise with every breath in; the pupils look about (--px, --py).
+ * flaunts the stack by his face, shakes both; the arms rise with every breath in; the brows frown and lift (--brw, --bru), the pupils look about (--px, --py).
  */
 import type { CSSProperties, ReactNode, RefObject } from "react";
 
@@ -13,11 +13,11 @@ type Part = { x: number; y: number; w: number; h: number; pivot?: readonly numbe
 type Rig = { w: number; h: number; parts: Record<string, Part> };
 
 /** the eye holes of the head (rig units): his right eye (the left of the picture), his left */
-const HOLES = [{ x: 361, y: 190, w: 28, h: 12 }, { x: 432, y: 196.5, w: 24.5, h: 11.5 }];
+const HOLES = [{ x: 372, y: 190, w: 28, h: 12 }, { x: 443, y: 196.5, w: 24.5, h: 11.5 }];
 const SKIN = "#f9a56b";
 const LID_LINE = "#5a2a18";
 /** the waist: the upper body leans and bends round it */
-const WAIST = [392, 740] as const;
+const WAIST = [400, 716] as const;
 
 export function GarkushaRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, puppet, viewBox }: {
   id: string; look: string; rig: Rig; bust: boolean; dazed: boolean; dying: boolean; svgRef: RefObject<SVGSVGElement | null>; wrapRef: RefObject<HTMLDivElement | null>; puppet: boolean; viewBox: string;
@@ -66,6 +66,8 @@ export function GarkushaRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef
             <g className="gk-pupils">{pic("pupils")}</g>
             {lids}
             {pic("head")}
+            {/* the brows: a frown (down and in), up (a sneer), each one twitches on its own a little */}
+            <g className="gk-brows" style={box("brows", 0.5, 0.6)}><g className="gk-brows-u" style={box("brows", 0.5, 0.6)}>{pic("brows")}</g></g>
           </>, 150)}
           {/* the left forearm (up from the elbow) and the raised fist with the cash, over the jacket */}
           {bone("br-arm br-arm-l", "armL", bone("br-low br-low-l", "lowL", <>

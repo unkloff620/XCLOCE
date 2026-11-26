@@ -26,7 +26,7 @@ HIRES_BY_BOSS = {"vodovoz": (2, {"head", "eyes", "pupils", "eyes-closed", "browL
                   "himik": (2, {"head", "eyes", "pupils", "brows", "chin", "throat", "teeth-up", "teeth-low", "beard", "mustache", "mask", "maskEar"}),
                   "datsik": (2, {"head", "eyes", "pupils", "brows", "chin", "throat", "tongue", "teeth-up", "teeth-low"}),
                   "fokus": (2, {"head", "eyes", "pupils", "brows", "glasses", "throat", "teeth-up", "teeth-low", "chin", "hoodFront", "hoodShadow", "phone"}),
-                  "garkusha": (2, {"head", "eyes", "pupils"}),
+                  "garkusha": (2, {"head", "eyes", "pupils", "brows"}),
                   "kedr": (2, {"head", "eyes", "pupils", "brows", "chin", "throat", "teeth-up", "teeth-low"}),
                   "nitka": (2, {"head", "eyes", "pupils", "brows", "glasses", "throat", "teeth-up", "teeth-low", "chin"}),
                   "knyaz": (2, {"head", "head-open", "eyes", "pupils", "eyes-closed", "throat", "teeth-up", "teeth-low", "lips", "mouth-closed", "mouth-sad", "gag"})}
@@ -80,10 +80,10 @@ PIVOT_BY_BOSS = {
              "armL": [547.9, 432.2], "lowL": [588.6, 564.8], "handL": [610.4, 737.8]},
     "solntse": {"head": [508.0, 196.0], "armR": [362.0, 268.0], "lowR": [92.0, 414.0], "armL": [578.0, 300.0], "lowL": [668.0, 505.0]},
     "bebyakyan": {"foreL": [228.0, 405.0], "foreR": [617.0, 437.0]},
-    # Гаркуша (the new model 2026-11-26, tools/boss/assemble-garkusha.py, the sheet 120 px lower, cropped at (205, 188)):
+    # Гаркуша (the new model 2026-11-26, tools/boss/assemble-garkusha.py, the sheet 120 px lower, cropped at (205, 236)):
     # the neck under the chin, the shoulders, the elbows, the wrists (the fists with the cash) — printed by that script
-    "garkusha": {"head": [392.5, 311.0], "armR": [254.7, 412.6], "lowR": [149.7, 460.3], "handR": [154.4, 552.3],
-                 "armL": [522.5, 431.3], "lowL": [676.3, 461.6], "handL": [660.0, 357.8]},
+    "garkusha": {"head": [403.5, 311.0], "armR": [254.7, 388.6], "lowR": [149.7, 436.3], "handR": [154.4, 528.3],
+                 "armL": [522.5, 407.3], "lowL": [676.3, 437.6], "handL": [660.0, 333.8]},
     # the shark: shoulders, wrists and the root of the tail
     # elbows: the far end of each forearm; wrists: where forearm and fist overlap (tools/boss/assemble-mugo.py)
     "mugo": {"armL": [470.0, 300.0], "lowL": [505.0, 415.0], "handL": [738.0, 492.0],

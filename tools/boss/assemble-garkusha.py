@@ -16,13 +16,14 @@ from scipy import ndimage
 D = "tools/boss/source/garkusha"
 R = f"{D}/raw"
 BODY = {"handR": "B00", "handL": "B01", "lowR": "B02", "armR": "B03", "lowL": "B04", "body": "B05", "armL": "B06", "legs": "B07"}
-FACE = {"head": "H00", "pupilL": "H01", "pupilR": "H02", "eyes": "H03"}
+# H04-brows: the old model's brows (its 1000 px head sheet ×0.526, moved (+4, +5)) fitted onto the new head — it has none
+FACE = {"head": "H00", "pupilL": "H01", "pupilR": "H02", "eyes": "H03", "brows": "H04"}
 W, H0 = 2000, 3000
 # the head goes up over the sheet's top: everything is drawn PAD px lower on a taller canvas
 PAD = 120
 H = H0 + PAD
 # the head's sheet on the body: its scale, where the chin's bottom middle (271, 517 on the sheet) goes — over the neck
-HEAD = {"s": 1.15, "cx": 990, "jaw": 710}
+HEAD = {"s": 1.15, "cx": 1012, "jaw": 758}
 CHIN = (271, 517)
 os.makedirs(f"{D}/placed", exist_ok=True)
 
@@ -81,7 +82,7 @@ for k in np.argsort(sizes)[::-1][:2]:
     print("hole", rig(xx.min(), yy.min()), rig(xx.max(), yy.max()), "skin over", np.array(L["head"])[max(0, yy.min() - 6), int(xx.mean())][:3])
 for n in ["pupils", "eyes", "handR", "handL", "legs"]:
     b = L[n].getbbox(); print(n, "box", rig(b[0], b[1]), rig(b[2], b[3]))
-order = ["legs", "armL", "body", "lowL", "armR", "lowR", "eyes", "pupils", "head", "handL", "handR"]
+order = ["legs", "armL", "body", "lowL", "armR", "lowR", "eyes", "pupils", "head", "brows", "handL", "handR"]
 whole = Image.new("RGBA", (W, H), (0, 0, 0, 0))
 for n in order:
     whole.alpha_composite(L[n])
