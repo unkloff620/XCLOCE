@@ -3,7 +3,7 @@ Animated boss rigs from the artist's layers: tools/boss/source/<boss>/{body,head
 plus optional face parts {pupils,brows,brows-sad,mouth,mouth-closed} and {collar} (all on one canvas, in place)
 → public/bosses/<boss>/rig/<part>.webp (trimmed, half size) + src/client/art/boss-rig-data.ts.
 Pivots: head — bottom of the neck; forearms — the elbow (the end that joins the body).
-Loose parts drawn on separate sheets are put in place first by fit-parts.py / place-parts.py (see assemble-kedr.py).
+Loose parts drawn on separate sheets are put in place first by fit-parts.py / place-parts.py (see assemble-nitka.py).
 """
 import os, glob, json
 import numpy as np
@@ -26,6 +26,7 @@ HIRES_BY_BOSS = {"vodovoz": (2, {"head", "eyes", "pupils", "eyes-closed", "browL
                   "himik": (2, {"head", "eyes", "pupils", "brows", "chin", "throat", "teeth-up", "teeth-low", "beard", "mustache", "mask", "maskEar"}),
                   "datsik": (2, {"head", "eyes", "pupils", "brows", "chin", "throat", "tongue", "teeth-up", "teeth-low"}),
                   "fokus": (2, {"head", "eyes", "pupils", "brows", "glasses", "throat", "teeth-up", "teeth-low", "chin", "hoodFront", "hoodShadow", "phone"}),
+                  "kedr": (2, {"head", "eyes", "pupils", "brows", "chin", "throat", "teeth-up", "teeth-low"}),
                   "nitka": (2, {"head", "eyes", "pupils", "brows", "glasses", "throat", "teeth-up", "teeth-low", "chin"}),
                   "knyaz": (2, {"head", "head-open", "eyes", "pupils", "eyes-closed", "throat", "teeth-up", "teeth-low", "lips", "mouth-closed", "mouth-sad", "gag"})}
 PARTS = ["tail", "legs", "shirtR", "shirtL", "handR-blood", "handL-blood", "legs-glow", "body", "body-glow", "apron", "chestR", "chestR-glow", "chestL", "poker", "mouthIn", "jawLow", "armR-glow", "lowR-glow", "headset", "foreL", "foreR", "armL", "lowL", "handL", "bag", "vials", "gasmask", "cover", "keyRing", "keyFob", "keyKey", "duck", "armR", "lowR", "handR", "head", "head-open", "throat", "teeth-up", "teeth-low", "jaw", "lips", "lips-up", "mouth-sad", "eyes", "eyes-closed", "pupils", "brows", "brows-sad", "browL", "browR", "mouth", "mouth-closed", "collar", "gag", "fingerR", "nose", "chin", "temple", "glasses", "hair", "phone", "hoodFront", "hoodShadow", "neck", "hoodBack", "laptop", "coat", "coatBack", "tongue",
@@ -36,7 +37,7 @@ FRAMES = ["brows", "jaw", "armRb", "armLb"]
 # which edge of the part joins the parent: (axis, side) — y/bottom for head and left forearm, x/right for the right one
 JOINT = {"head": ("y", "max"), "foreL": ("y", "max"), "foreR": ("x", "max")}
 # bosses whose arms come up from below (both elbows at the bottom end)
-JOINT_BY_BOSS = {"kedr": {"foreR": ("y", "max")}, "kedr-beaten": {"foreR": ("y", "max")}}
+JOINT_BY_BOSS = {}
 # hand-placed joints (output px): where the arm piece lies over the end of the torso's sleeve, so it turns without a gap
 PIVOT_BY_BOSS = {
     # Боцман (2000×3000 sheet cropped at (40, 100), tools/boss/assemble-botsman.py): the neck, shoulders, elbows, wrists
@@ -72,6 +73,10 @@ PIVOT_BY_BOSS = {
     # the elbows, the right wrist (the glove with the round flask) — printed by that script
     "himik": {"head": [399.5, 252.5], "armR": [282.0, 398.0], "lowR": [194.4, 576.2], "handR": [154.8, 634.8],
               "armL": [548.0, 382.0], "lowL": [649.8, 537.6]},
+    # Кедр (the new model 2026-11-26, tools/boss/assemble-kedr.py, the sheet 120 px lower, cropped at (193, 44)): the neck
+    # under the chin, the shoulders, the elbows, the wrists (the hammer's fist, the open left hand) — printed by that script
+    "kedr": {"head": [408.0, 290.5], "armR": [284.7, 422.4], "lowR": [231.8, 580.3], "handR": [170.4, 718.4],
+             "armL": [547.9, 432.2], "lowL": [588.6, 564.8], "handL": [610.4, 737.8]},
     "solntse": {"head": [508.0, 196.0], "armR": [362.0, 268.0], "lowR": [92.0, 414.0], "armL": [578.0, 300.0], "lowL": [668.0, 505.0]},
     "bebyakyan": {"foreL": [228.0, 405.0], "foreR": [617.0, 437.0]},
     # whole arms swing at the shoulder, the hands with money turn at the wrist (inside the arm's swing)

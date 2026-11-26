@@ -345,17 +345,6 @@ const bbWave: Action = {
     { at: 0.6, pose: {} },
   ],
 };
-// Кедр: claws up — swipes at the screen, both claws reaching to grab
-const kdL = fistBlow("armL", "sL", 13, 2.5, 16), kdR = fistBlow("armR", "sR", -13, -2.5, 16);
-const kdGrab: Action = {
-  dur: 0.95,
-  keys: [
-    { at: 0, pose: { sL: -4, sR: -4, armL: -4, armR: 4, up: -1.5, head: 1 } },
-    { at: 0.14, pose: { sL: 20, sR: 20, armL: 4, armR: -4, up: 2, head: -2 }, stiff: 4 }, // both claws at the player
-    { at: 0.42, pose: { sL: 16, sR: 16, armL: 3, armR: -3, up: 1.5 }, stiff: 2 },
-    { at: 0.64, pose: {} },
-  ],
-};
 /* Гаркуша: a bundle of cash in each hand — slaps with it (the shoulder swings in, the wrist whips the money), counts it */
 const gkSlapR: Action = {
   dur: 0.6,
@@ -868,6 +857,54 @@ const hmShift = (rate: number, a: number) => (t: number): Pose => {
   return { x: 8 * a * s, up: 1.2 * a * s, head: -1 * a * s, y: -2 * a * Math.abs(s) };
 };
 
+/* Кедр (the new model 2026-11-26, boss-kedr.tsx): the hammer in his right fist (the left of the picture). He hammers:
+   three quick blows — the forearm goes up and out, the wrist cocks the hammer back over his shoulder, then the blow comes
+   down hard (the wrist snaps the head down, he leans in, drops into the knees, the mouth opens, the brows frown); on the
+   third the hammer sticks — the fist stays where it hit, he tugs twice, then yanks it out (the arm flies up) and the arm
+   comes back to its place smoothly. While he hammers the left arm bends to the body and its hand clenches into a fist (fg).
+   Both arms rise a little with every breath in (kdBreath); now and then the left hand slowly clenches and opens. */
+const kdBreath = (t: number) => 0.5 - 0.5 * Math.cos((t / 1.8) * Math.PI);
+const KD_CLENCH = { lowL: 30, armL: -3, handL: -6, fg: 1 };
+const kdAmp = (p: Pose, a: number): Pose => Object.fromEntries(Object.entries(p).map(([k, v]) => [k, (v ?? 0) * (k === "jaw" || k === "brw" || k === "fg" ? 1 : a)]));
+const kdHammer = (amp = 1, slow = 1): Action => {
+  const keys: Key[] = [];
+  const UP = kdAmp({ armR: 12, lowR: 52, handR: 34, up: 2, x: 4, y: -2, head: 1.5, brw: 0.5, jaw: 0.15, ...KD_CLENCH }, amp);
+  const HIT = kdAmp({ armR: -4, lowR: -6, handR: -46, up: -4, x: -8, y: 22, head: -2.5, brw: 1, jaw: 1, ...KD_CLENCH, lowL: 36 }, amp);
+  let t = 0;
+  for (let i = 0; i < 3; i++) {
+    keys.push({ at: t, pose: UP, stiff: 2.6 / slow });
+    keys.push({ at: t + 0.15 * slow, pose: HIT, stiff: 7 / slow });
+    t += 0.31 * slow;
+  }
+  // the third sticks: the fist stays put, he tugs at it twice (the body pulls back, the arm strains), then yanks it out
+  const STUCK = { ...HIT, jaw: 0.35 };
+  keys.push({ at: t, pose: STUCK, stiff: 4 });
+  t += 0.16 * slow;
+  for (let k = 0; k < 2; k++) {
+    keys.push({ at: t, pose: kdAmp({ ...STUCK, lowR: 4, handR: -40, armR: 2, up: 3, x: 3, y: 14, head: 2, brw: 1, jaw: 0.1 }, amp), stiff: 5 / slow });
+    keys.push({ at: t + 0.12 * slow, pose: STUCK, stiff: 6 / slow });
+    t += 0.26 * slow;
+  }
+  keys.push({ at: t, pose: kdAmp({ armR: 20, lowR: 64, handR: 30, up: 4, x: 7, y: -4, head: 3, brw: 0.6, jaw: 0.6, ...KD_CLENCH, lowL: 20, fg: 0.6 }, amp), stiff: 8 / slow });
+  t += 0.2 * slow;
+  // back in its place, smoothly (soft springs), the left hand opens
+  keys.push({ at: t, pose: {}, stiff: 0.45 / slow });
+  return { keys, dur: t + 0.9 * slow };
+};
+/** a slow clench of the left hand: it squeezes into a fist and opens */
+const kdClench = (slow = 1): Action => ({
+  dur: 2.4 * slow,
+  keys: [
+    { at: 0, pose: { fg: 1, lowL: 6, handL: -4, brw: 0.4 }, stiff: 0.5 / slow },
+    { at: 1.2 * slow, pose: { fg: 0.2 }, stiff: 0.45 / slow },
+    { at: 1.6 * slow, pose: {}, stiff: 0.6 / slow },
+  ],
+});
+const kdShift = (rate: number, a: number) => (t: number): Pose => {
+  const s = Math.sin(t * rate);
+  return { x: 8 * a * s, up: 1.2 * a * s, head: -1 * a * s, y: -2 * a * Math.abs(s) };
+};
+
 const POSES: Record<string, Spec> = {
   solntse: {
     // heavy: slow, overdamped springs; the fists a little quicker on the blow
@@ -1252,18 +1289,43 @@ const POSES: Record<string, Spec> = {
     dazed: { pose: { armL: -12, armR: 12, sL: -5, sR: -5, head: 4, up: -1 }, act: false },
   },
   kedr: {
-    sel: fistSel, springs: fistSprings, scale: { armL: "sL", armR: "sR" }, cssStrike: true,
-    drag: { head: ["up", -0.08] },
-    idle: (t) => ({ ...fistIdle(t), sL: 3 + 3 * Math.sin(t * 1.2), sR: 3 + 3 * Math.sin(t * 1.2 + Math.PI) }), // the claws creep at you in turns
-    actions: [
-      { a: kdL, w: 16 }, { a: kdR, w: 16 },
-      { a: join(kdL, shift(kdR, 0.04)), w: 22 },
-      { a: join(kdR, shift(kdL, 0.04), shift(kdR, 0.04)), w: 12 },
-      { a: kdGrab, w: 16 },
-    ],
-    rest: [0.8, 2.0],
-    hit: { head: 220, up: 60, x: 50, armL: -180, armR: 180, sL: -150, sR: -150 },
-    dazed: { pose: { armL: -10, armR: 10, sL: -6, sR: -6, head: 4, up: -1 }, act: false },
+    springs: {
+      up: { k: 130, c: 14 }, x: { k: 120, c: 14 }, y: { k: 170, c: 17 }, head: { k: 160, c: 13 },
+      armR: { k: 220, c: 19 }, lowR: { k: 320, c: 22 }, handR: { k: 700, c: 34 },
+      armL: { k: 160, c: 17 }, lowL: { k: 200, c: 18 }, handL: { k: 300, c: 20 },
+      jaw: { k: 220, c: 19 }, brw: { k: 150, c: 16 }, px: { k: 180, c: 19 }, py: { k: 180, c: 19 }, fg: { k: 90, c: 15 },
+    },
+    drag: { lowL: ["armL", -0.05], handL: ["lowL", -0.02], lowR: ["armR", -0.05], handR: ["lowR", -0.02], head: ["up", -0.08] },
+    // never still: he sways a little, both arms rise with the breath in and go down with the breath out, the eyes look about
+    idle: (t) => {
+      const g = Math.floor(t / 1.6);
+      const r = (n: number) => { const v = Math.sin(n * 12.9898 + g * 78.233) * 43758.5453; return v - Math.floor(v); };
+      const b = kdBreath(t);
+      return {
+        up: 0.6 * Math.sin(t * 0.8) + 0.25 * Math.sin(t * 2 + 1), x: 2 * Math.sin(t * 0.6),
+        y: 1.2 * (0.5 - 0.5 * Math.cos(t * 1.9)),
+        head: 1.3 * Math.sin(t * 1.1 + 1) + 0.6 * Math.sin(t * 0.45),
+        armR: 1 + 2.2 * b + 0.5 * Math.sin(t * 1.3 + 2), lowR: -2.5 * b + 0.8 * Math.sin(t * 1.6 + 1), handR: -1.5 * b + 0.8 * Math.sin(t * 1.4),
+        armL: -1 - 2.2 * b + 0.5 * Math.sin(t * 1.4), lowL: 2.5 * b + 0.8 * Math.sin(t * 1.8 + 0.5), handL: 1.2 * Math.sin(t * 1.2),
+        fg: 0.12 * b,
+        jaw: 0.05 + 0.06 * b,
+        px: (r(1) - 0.5) * 1.6, py: (r(2) - 0.5) * 1,
+      };
+    },
+    actions: [{ a: kdHammer(), w: 3 }, { a: kdClench(), w: 1 }],
+    rest: [1.6, 3],
+    hit: { head: -280, up: -80, x: -60, y: -50, armL: -90, lowL: 100, armR: 80, lowR: 110, handR: 80, jaw: 5 },
+    strike: kdHammer(1.1, 0.85),
+    // below half: slower, he sways from foot to foot; below a quarter: slower still
+    dazed: { pose: { armL: -4, armR: 4, head: 3, jaw: 0.3 }, act: true, sway: kdShift(1.7, 1), actions: [{ a: kdHammer(0.85, 1.35), w: 2 }, { a: kdClench(1.3), w: 1 }], rest: [3, 5], strike: kdHammer(0.9, 1.25), speed: 0.75 },
+    dying: { pose: { armL: -10, armR: 8, head: 6, up: -2, jaw: 0.45 }, act: true, sway: kdShift(1.1, 1.2), actions: [{ a: kdHammer(0.6, 1.9), w: 1 }], rest: [4, 7], strike: kdHammer(0.6, 1.9), speed: 0.55 },
+    breath: (t) => { const b = kdBreath(t); return [1 + 0.012 * b, 1 + 0.026 * b, -3.5 * b]; },
+    shapes: { jaw: {}, brw: {}, px: {}, py: {}, fg: {} },
+    vars: (a) => ({
+      "--jaw": Math.max(0, Math.min(1, a.jaw)).toFixed(3), "--brw": a.brw.toFixed(3), "--px": a.px.toFixed(3), "--py": a.py.toFixed(3),
+      "--fg": Math.max(0, Math.min(1, a.fg)).toFixed(3),
+    }),
+    stiffOwn: true,
   },
   garkusha: {
     cssStrike: true,

@@ -1,80 +1,92 @@
 """
-Кедр: turns the fitted loose parts (tools/boss/source/kedr/placed, see fit-parts.py / place-parts.py) into rig layers
-for build-boss.py, all on one canvas: the reference cropped to the upper body (CROP), so the boss is big in the arena.
-  body        legs + shorts + shirt (breathes)
-  collar      the shirt fabric round the neck, drawn over the head so the neck seam never shows when the head sways
-  head        head with hair, no face;  eyes / pupils / eyes-closed / brows / brows-sad / mouth / mouth-closed — the face
-  foreL/foreR the arms with clawed hands (viewer's left / right), scaled from the elbow: reaching for the player
-Not in the reference (closed eyes, closed mouth) are placed by the open ones; brows-sad = each brow flipped upside down.
-Also writes public/bosses/kedr/{full,portrait}.webp from the assembled reference.
+Кедр (id kedr, the 2nd boss — the new model 2026-11-26, the old one and its beaten look removed): the artist's layers
+(tools/boss/source/kedr/raw/): the body on the 2000×3000 sheet in place, B00…B07 (the PSD's order, top first) — handL (his
+left hand, open: the right of the picture), lowL (its forearm), armL (its sleeve), body (the T-shirt, the neck), handR (the
+fist with the hammer, the left of the picture), lowR, armR, legs; the head on its own 535×528 sheet, H00…H07 — brows, chin
+(the lower lip and the jaw: it drops), head (the hair, the face with the eye holes and the mouth's hole), pupils, eyes (the
+whites), teeth-up, teeth-low, throat. The head is fitted by hand on the neck (HEAD: its scale, where the chin's bottom
+goes). Everything is cropped to CROP → the rig sources for build-boss.py; prints the joints (rig px) for build-boss.py
+PIVOT_BY_BOSS, the eye holes, the left hand's knuckles and the hammer's head.
 """
-import json
+import os
 import numpy as np
 from PIL import Image
+from scipy import ndimage
 
 D = "tools/boss/source/kedr"
-CROP = (250, 0, 1750, 1800)  # x0, y0, x1, y1 on the 2000×2800 reference
-ref = Image.open(f"{D}/raw/reference.png").convert("RGBA")
-W, H = ref.size
+R = f"{D}/raw"
+BODY = {"handL": "B00", "lowL": "B01", "armL": "B02", "body": "B03", "handR": "B04", "lowR": "B05", "armR": "B06", "legs": "B07"}
+FACE = {"brows": "H00", "chin": "H01", "head": "H02", "pupils": "H03", "eyes": "H04", "teeth-up": "H05", "teeth-low": "H06", "throat": "H07"}
+W, H0 = 2000, 3000
+# the head goes up over the sheet's top: everything is drawn PAD px lower on a taller canvas
+PAD = 120
+H = H0 + PAD
+# the head's sheet on the body: its scale, where the chin's bottom middle (293, 502 on the sheet) goes — over the neck
+HEAD = {"s": 1.15, "cx": 1009, "jaw": 525}
+os.makedirs(f"{D}/placed", exist_ok=True)
 
-def placed(n):
-    return Image.open(f"{D}/placed/{n}.png").convert("RGBA")
 
-def sheet_at(n, s, tx, ty):
-    sh = Image.open(f"{D}/raw/{n}.png").convert("RGBA")
-    sc = sh.resize((round(sh.width * s), round(sh.height * s)), Image.LANCZOS)
+def find(prefix):
+    return next(f for f in os.listdir(R) if f.startswith(prefix + "-"))
+
+
+def placed_face(f):
+    im = Image.open(f"{R}/{find(f)}").convert("RGBA")
+    s = HEAD["s"]
+    sc = im.resize((round(im.width * s), round(im.height * s)), Image.LANCZOS)
     c = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    c.alpha_composite(sc, (round(tx), round(ty)))
+    c.alpha_composite(sc, (round(HEAD["cx"] - 293 * s), round(PAD + HEAD["jaw"] - 502 * s)))
     return c
 
-def save(n, im):
+
+def placed_body(f):
+    c = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    c.alpha_composite(Image.open(f"{R}/{find(f)}").convert("RGBA"), (0, PAD))
+    return c
+
+
+L = {n: placed_body(f) for n, f in BODY.items()}
+L.update({n: placed_face(f) for n, f in FACE.items()})
+for n, im in L.items():
+    a = np.array(im)
+    a[a[..., 3] < 8] = 0
+    L[n] = Image.fromarray(a)
+    L[n].save(f"{D}/placed/{n}.png")
+bb = [im.getbbox() for im in L.values()]
+CROP = (max(0, min(b[0] for b in bb) - 60), max(0, min(b[1] for b in bb) - 60), min(W, max(b[2] for b in bb) + 60), H)
+print("CROP", CROP)
+for n, im in L.items():
     im.crop(CROP).save(f"{D}/{n}.png")
+rig = lambda x, y: [round((x - CROP[0]) * 0.5, 1), round((y - CROP[1]) * 0.5, 1)]
+A = lambda n: np.array(L[n])[..., 3] > 128
 
-body = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-for p in ["legL", "legR", "shorts", "shirt"]:
-    body.alpha_composite(placed(p))
-save("body", body)
 
-shirt = np.array(placed("shirt"))
-lum = shirt[:, :, :3].astype(int).mean(axis=2)
-collar = shirt.copy()
-fabric = (lum < 70) & (shirt[:, :, 3] > 0)
-keep = np.zeros_like(fabric)
-keep[440:540, :] = True  # the collar band in front of the neck
-collar[~(fabric & keep), 3] = 0
-save("collar", Image.fromarray(collar))
+def mid(a, b):
+    ys, xs = np.nonzero(a & b)
+    return rig(xs.mean(), ys.mean()) if len(xs) else None
 
-save("head", placed("head"))
-save("eyes", placed("eyes"))
-save("pupils", placed("pupils"))
-save("brows", placed("brows"))
-save("mouth", placed("mouth-grin"))
-f = json.load(open(f"{D}/raw/fit.json"))
-g = f["mouth-grin"]
-save("mouth-closed", sheet_at("mouth-closed", g["s"], g["tx"], g["ty"]))  # drawn on the same sheet as the grin
-save("eyes-closed", sheet_at("eyes-closed", 0.2793, 814.0, 145.6))  # lids over the open eyes' corners
-# the rig data (src/client/art/boss-rig-data.ts) lifts the lids 4 px (eyes-closed y 139.5): at the bottom of the eyes they looked sunk into the head
 
-# sad brows: every brow flipped upside down in its own box and lifted a little (inner ends go up)
-b = np.array(placed("brows"))
-sad = np.zeros_like(b)
-a = b[:, :, 3] > 0
-mid = (np.nonzero(a)[1].min() + np.nonzero(a)[1].max()) // 2
-for x0, x1 in [(0, mid), (mid, W)]:
-    ys, xs = np.nonzero(a[:, x0:x1])
-    if not len(ys):
-        continue
-    y0, y1 = ys.min(), ys.max() + 1
-    piece = b[y0:y1, x0:x1][::-1]
-    lift = 8
-    sad[y0 - lift:y1 - lift, x0:x1] = np.where(piece[:, :, 3:] > 0, piece, sad[y0 - lift:y1 - lift, x0:x1])
-save("brows-sad", Image.fromarray(sad))
-
-save("foreL", placed("handR"))  # the sheet named "hand right" is the arm on the viewer's left
-save("foreR", placed("handL"))
-
-# pictures for the lists: the whole boss (2:3) and the face
-full = ref.crop((300, 0, 1700, 2100)).resize((1024, 1536), Image.LANCZOS)
-full.save("public/bosses/kedr/full.webp", quality=88, method=6)
-ref.crop((690, 30, 1210, 550)).resize((512, 512), Image.LANCZOS).save("public/bosses/kedr/portrait.webp", quality=88, method=6)
-print("ok")
+print("head (the chin over the neck)", rig(HEAD["cx"], PAD + HEAD["jaw"] - 20))
+print("armR", mid(A("armR"), A("body")), "lowR", mid(A("armR"), A("lowR")), "handR", mid(A("lowR"), A("handR")))
+print("armL", mid(A("armL"), A("body")), "lowL", mid(A("armL"), A("lowL")), "handL", mid(A("lowL"), A("handL")))
+# the left hand's knuckles (where its fingers bend when it clenches): by hand off the artist's hand
+print("knuckles", rig(1425, PAD + 1488))
+holes = A("eyes") & ~A("head")
+lab, n = ndimage.label(holes)
+sizes = ndimage.sum(holes, lab, range(1, n + 1))
+for k in np.argsort(sizes)[::-1][:2]:
+    yy, xx = np.nonzero(lab == k + 1)
+    print("hole", rig(xx.min(), yy.min()), rig(xx.max(), yy.max()), "skin over", np.array(L["head"])[max(0, yy.min() - 6), int(xx.mean())][:3])
+for n in ["chin", "teeth-low", "teeth-up", "throat", "brows", "pupils", "handR", "legs"]:
+    b = L[n].getbbox(); print(n, "box", rig(b[0], b[1]), rig(b[2], b[3]))
+order = ["legs", "armR", "lowR", "handR", "body", "throat", "teeth-up", "teeth-low", "chin", "eyes", "pupils", "head", "brows", "armL", "lowL", "handL"]
+whole = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+for n in order:
+    whole.alpha_composite(L[n])
+whole = whole.crop(CROP)
+os.makedirs("public/bosses/kedr", exist_ok=True)
+whole.resize((whole.width // 2, whole.height // 2), Image.LANCZOS).save("public/bosses/kedr/full.webp", quality=88, method=6)
+hb = L["head"].getbbox()
+cx, cy = (hb[0] + hb[2]) // 2 - CROP[0], (hb[1] + hb[3]) // 2 - CROP[1]
+whole.crop((cx - 330, cy - 300, cx + 330, cy + 360)).resize((320, 320), Image.LANCZOS).save("public/bosses/kedr/portrait.webp", quality=88, method=6)
+print("ok", whole.size)

@@ -448,10 +448,6 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 /* the fists punch forward when the boss is hit */
 .arena-photo.hit .br-fist-l, .arena-photo.hit .br-fist-r { animation-duration: 0.28s; }
 /* Кедр: reaches for the player (arms grow from the elbows in turns), looks around, the face reacts to hits */
-.rig-kedr .br-breath { animation-duration: 3.6s; }
-.rig-kedr .br-head { animation-duration: 6.5s; }
-.rig-kedr .br-fist-l { animation: br-reach 2.6s ease-in-out infinite; }
-.rig-kedr .br-fist-r { animation: br-reach 2.6s ease-in-out infinite 1.3s; }
 @keyframes br-reach { 0%, 100% { transform: scale(1) rotate(0); } 45% { transform: scale(1.14) rotate(-1.5deg); } 60% { transform: scale(1.12) rotate(0.5deg); } }
 .br-pupils { animation: br-look 7s ease-in-out infinite; }
 @keyframes br-look { 0%, 14%, 46%, 100% { transform: translate(0, 0); } 20%, 32% { transform: translate(-4px, 0.5px); } 52%, 64% { transform: translate(4px, 0.5px); } 74%, 84% { transform: translate(0, 1.5px); } }
@@ -462,7 +458,6 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .arena-photo.ouch .br-brows-sad, .arena-photo.ouch .br-mouth-closed { opacity: 1; }
 .arena-photo.ouch .br-brows { animation: br-brow-ouch 0.5s ease-out; }
 @keyframes br-brow-ouch { 0% { transform: translateY(3px); } 100% { transform: translateY(0); } }
-.arena-photo.ouch .rig-kedr .br-fist-l, .arena-photo.ouch .rig-kedr .br-fist-r { animation-play-state: paused; }
 /* Командате: the irises are cut to the lids, so they glance only a little */
 .rig-bebyakyan .br-pupils { animation-name: br-look-small; }
 @keyframes br-look-small { 0%, 14%, 46%, 100% { transform: translate(0, 0); } 20%, 32% { transform: translate(-1.6px, 0); } 52%, 64% { transform: translate(1.6px, 0); } }
@@ -8277,6 +8272,21 @@ button:is(.modal > .x, .fs-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x,
 .route-loader { background: url(/assets/loading/bg.webp) center bottom / cover no-repeat, #4a3a33; overflow: hidden; }
 .route-loader .boot-tw-area { bottom: calc(var(--nav-h) + var(--safe-b) + 5%); }
 .route-loader .route-spin { position: relative; z-index: 2; }
+
+/* ── Кедр (art/boss-kedr.tsx, boss-poses.ts POSES.kedr): the pose engine sets --jaw --brw --px --py --fg ── */
+.rig-kedr { --jaw: 0; --brw: 0; --px: 0; --py: 0; --fg: 0; }
+/* the mouth: the chin and the lower teeth drop */
+.rig-kedr .kd-jaw { transform: translateY(calc(var(--jaw) * 6px)); }
+.rig-kedr .kd-pupils { transform: translate(calc(var(--px) * 2.4px), calc(var(--py) * 1.3px)); }
+/* the frown: the brows down and in */
+.rig-kedr .kd-brows { transform: translateY(calc(var(--brw) * 1.8px)) scaleX(calc(1 - var(--brw) * 0.035)); }
+/* the left hand clenches: its fingers turn in round the knuckles and get shorter (they curl under the palm) — the puppet
+   bends the hand's picture by this empty bone */
+.rig-kedr .kd-fingers { transform: rotate(calc(var(--fg) * 58deg)) scale(calc(1 - var(--fg) * 0.12), calc(1 - var(--fg) * 0.42)); }
+.rig-kedr .kd-lids > g { transform: scaleY(0); animation: fk-blink 4.1s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .rig-kedr .kd-lids > g { animation: none; } }
+/* below half HP his own shift from foot to foot (the pose engine), not the shared sway and limp */
+.rig-kedr.boss-rig.dazed, .rig-kedr.boss-rig.dazed :is(.br-arm-l, .br-arm-r, .br-low-l, .br-low-r, .br-hand-l, .br-hand-r, .br-head) { animation: none; }
 
 /* ── Нитка (art/boss-nitka.tsx, boss-poses.ts POSES.nitka): the pose engine sets --jaw --brw --gb --px --py ── */
 .rig-nitka { --jaw: 0.1; --brw: 0; --gb: 0; --px: 0; --py: 0; }
