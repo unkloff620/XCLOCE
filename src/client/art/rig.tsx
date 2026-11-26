@@ -917,6 +917,8 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
       <ellipse cx="500" cy="1282" rx="400" ry="30" fill="rgba(0,0,0,0.3)" />
       {seat !== undefined && seat !== false && <Seat level={typeof seat === "number" ? seat : 0} />}
       <WearBack />
+      {/* «Ворон»'s wings behind the whole hero: they never flap in his face (the bird itself sits on the shoulder, below) */}
+      {worn?.SPECIAL === "raven" && <g className="rig-breath"><Raven layer="wings" /></g>}
       {/* torso breathes; arms and head ride along in a second group with the same animation */}
       {/* the torso layer carries the legs too; only the chest breathes visibly (origin at the hips) */}
       <g className="rig-breath">
@@ -960,8 +962,8 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
             <Ol><HandFrames /></Ol>
           </Joint>
         </Joint>
-        {/* «Ворон» on the right shoulder (slot «Особое»: the poker's royal flush): under the head — his spread wings go behind it */}
-        {worn?.SPECIAL === "raven" && <><Raven layer="back" /><Raven layer="front" /></>}
+        {/* «Ворон» on the right shoulder (slot «Особое»: the poker's royal flush): under the head (his wings: behind the whole hero, above) */}
+        {worn?.SPECIAL === "raven" && <Raven layer="body" />}
         <Ol>
           <Bone p="head" className="rig-head">
             <Face />
