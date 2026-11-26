@@ -38,6 +38,18 @@ describe("daily quests", () => {
     expect(q0.progress).toBe(q0.id === "q-damage" ? 12 : q0.id === "q-hits" ? 1 : 0);
   });
 
+  it("using a spent weapon on a boss counts toward the weapons quest, the free fist does not", async () => {
+    let p = 0;
+    for (let i = 0; i < 60 && !p; i++) { const q = await newPlayer(db); if (questsForDay(q, moscowDay(T0))[6].id === "q-weapon") p = q; }
+    expect(p).toBeGreaterThan(0);
+    await act(db, p, "fight_start", { boss: "datsik" }, T0);
+    await act(db, p, "attack", { weapon: "fist" }, T0, always(0.99));
+    await give(db, p, "keyboard", 3);
+    let r;
+    for (let i = 0; i < 3; i++) r = await act(db, p, "attack", { weapon: "keyboard" }, T0, always(0.99));
+    expect(r!.state.quests.list[6]).toMatchObject({ id: "q-weapon", progress: 3 });
+  });
+
   it("a location step counts toward steps / energy quests", async () => {
     const p = await newPlayer(db);
     const r = await act(db, p, "task", { taskId: "os-standup" }, T0);

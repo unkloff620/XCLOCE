@@ -34,7 +34,6 @@ import * as craft from "./systems/craft.ts";
 import * as bj from "./systems/blackjack.ts";
 import * as home from "./systems/home.ts";
 import { craftById } from "../content/craft.ts";
-import { offerById } from "../content/shop.ts";
 import * as quests from "./systems/quests.ts";
 import * as monthly from "./systems/monthly.ts";
 import * as notify from "./systems/notify.ts";
@@ -137,6 +136,8 @@ async function afterAction(ctx: Ctx, type: ActionType, result: unknown) {
       await rating.addWeeklyDamage(ctx, Number(r.damage) || 0);
       await shodTick(ctx, "damage", Number(r.damage) || 0);
       await quests.questTick(ctx, "hits", Number(r.count) || 1);
+      // «Задания дня»: the weapons used (spent ones — a knife, a gun, a cannon; not the free fist, poke, kick)
+      if (weaponById(String(r.weapon))?.weapon.kind !== "permanent") await quests.questOnly(ctx, "weapon", Number(r.count) || 1);
       // a free weapon (fist, mouse, candle) rests 5 hours: remind when it is ready again
       if (typeof r.readyAt === "number" && weaponById(String(r.weapon))?.weapon.kind === "permanent") {
         await notify.schedule(ctx.q, ctx.pid, "fist_ready", r.readyAt, { fightId: r.fightId, weapon: r.weapon });
@@ -154,9 +155,6 @@ async function afterAction(ctx: Ctx, type: ActionType, result: unknown) {
       // the achievements «Шопоголик»: money spent in the shop
       const paid = r.paid as { currency?: string; amount?: number } | undefined;
       if (paid && (paid.currency === "RUB")) await counters.bump(ctx.q, ctx.pid, `spent${paid.currency}`, Number(paid.amount) || 0);
-      // «Задания дня»: the weapons bought (the offer's pieces × how many offers)
-      const offer = offerById(String(r.offerId));
-      if (offer?.section === "weapons" && offer.give.item) await quests.questOnly(ctx, "weapon", (offer.give.qty ?? 1) * (Number(r.qty) || 1));
       return quests.questTick(ctx, "buy", 1);
     }
     case "exchange": {

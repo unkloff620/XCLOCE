@@ -60,9 +60,9 @@ export const QUEST_GROUPS: QuestDef[][] = [
     { id: "q-zarub", kind: "zarub", target: 3, title: "Выполни 3 задания в зарубах", href: "/zarub", reward: R(20, 300) },
     { id: "q-craft", kind: "craft", target: 1, title: "Собери в гараже инструмент 1 уровня", href: "/craft", reward: R(20, 300) },
   ],
-  // the shop's weapons
+  // the weapons used on the bosses (the shop's: a knife, a gun, a cannon — not the free fist)
   [
-    { id: "q-weapon", kind: "weapon", target: 10, title: "Купи 10 оружия в магазине", href: "/shop", reward: R(10, 200) },
+    { id: "q-weapon", kind: "weapon", target: 10, title: "Используй 10 оружия в бою", href: "/bosses", hint: "Нож, ствол или пушка — не кулак", reward: R(10, 200) },
   ],
 ];
 

@@ -5,12 +5,11 @@ import { Modal, RewardChips } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
 import { clock } from "../format.ts";
 import { haptic, requestWriteAccess } from "../telegram.ts";
-import { QUEST_CHEST, questById } from "../../content/quests.ts";
+import { questById } from "../../content/quests.ts";
 import { ItemArt } from "../art/items.tsx";
 import type { Granted } from "../api.ts";
 import { sfx } from "../sound.ts";
 
-const fmtN = (n: number) => n.toLocaleString("ru-RU");
 
 /** Telegram reminders switch: energy full, fist ready, boss almost dead, streak about to burn. */
 export function NotifySwitch() {
@@ -89,11 +88,8 @@ export function QuestsWindow({ onClose }: { onClose: () => void }) {
           <ItemArt id="chest" size={46} />
           <div className="quest-main">
             <b className="quest-title">Сундук дня</b>
-            {q.chest.opened && q.chest.reward ? <RewardChips r={q.chest.reward} size={14} /> : (
-              <span className="tiny muted">
-                Ножи, стволы и пушки по {QUEST_CHEST.weapons[0][1]}–{QUEST_CHEST.weapons[0][2]}, авторитет {QUEST_CHEST.xp[0]}–{fmtN(QUEST_CHEST.xp[1])}, рубли {QUEST_CHEST.currencies.RUB[0]}–{QUEST_CHEST.currencies.RUB[1]}, фишка, слиток, папиросы {QUEST_CHEST.currencies.PAP[0]}–{fmtN(QUEST_CHEST.currencies.PAP[1])}, зубы {QUEST_CHEST.currencies.TOOTH[0]}–{fmtN(QUEST_CHEST.currencies.TOOTH[1])}
-              </span>
-            )}
+            {/* what is inside is a surprise: shown only once it is opened */}
+            {q.chest.opened && q.chest.reward && <RewardChips r={q.chest.reward} size={14} />}
           </div>
           {q.chest.opened ? <span className="quest-ok display">✓</span>
             : <button className="btn gold sm" disabled={!q.chest.ready || busy === "quest_chest"} onClick={openChest}>{q.chest.ready ? "Открыть" : `${q.list.filter((x) => x.claimed).length}/${q.list.length}`}</button>}
