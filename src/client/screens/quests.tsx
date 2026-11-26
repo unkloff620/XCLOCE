@@ -5,8 +5,12 @@ import { Modal, RewardChips } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
 import { clock } from "../format.ts";
 import { haptic, requestWriteAccess } from "../telegram.ts";
-import { questById } from "../../content/quests.ts";
+import { QUEST_CHEST, questById } from "../../content/quests.ts";
+import { ItemArt } from "../art/items.tsx";
 import type { Granted } from "../api.ts";
+import { sfx } from "../sound.ts";
+
+const fmtN = (n: number) => n.toLocaleString("ru-RU");
 
 /** Telegram reminders switch: energy full, fist ready, boss almost dead, streak about to burn. */
 export function NotifySwitch() {
@@ -43,6 +47,10 @@ export function QuestsWindow({ onClose }: { onClose: () => void }) {
   const now = useNow();
   if (!state) return null;
   const q = state.quests;
+  const openChest = async () => {
+    const r = await act<{ reward: Granted }>("quest_chest", {});
+    if (r) { haptic.ok(); sfx("chest"); }
+  };
   const claim = async (id: string) => {
     const r = await act<{ reward: Granted }>("quest_claim", { id });
     if (r) haptic.ok();
@@ -50,7 +58,7 @@ export function QuestsWindow({ onClose }: { onClose: () => void }) {
   return (
     <Modal title="Задания дня" onClose={onClose} head={
       <div className="small muted row" style={{ justifyContent: "space-between" }}>
-        <span>Новые задания каждый день в 00:00 МСК.</span>
+        <span>Выполни все — откроется сундук.</span>
         <span className="row num" style={{ gap: 4, whiteSpace: "nowrap" }}><Icon name="clock" size={14} />{clock(q.resetAt - now)}</span>
       </div>}>
       <div className="col" style={{ gap: 10 }}>
@@ -76,6 +84,20 @@ export function QuestsWindow({ onClose }: { onClose: () => void }) {
             </div>
           );
         })}
+        {/* the chest of the day: all seven claimed */}
+        <div className={`quest quest-chest ${q.chest.opened ? "claimed" : q.chest.ready ? "done" : ""}`}>
+          <ItemArt id="chest" size={46} />
+          <div className="quest-main">
+            <b className="quest-title">Сундук дня</b>
+            {q.chest.opened && q.chest.reward ? <RewardChips r={q.chest.reward} size={14} /> : (
+              <span className="tiny muted">
+                Ножи, стволы и пушки по {QUEST_CHEST.weapons[0][1]}–{QUEST_CHEST.weapons[0][2]}, авторитет {QUEST_CHEST.xp[0]}–{fmtN(QUEST_CHEST.xp[1])}, рубли {QUEST_CHEST.currencies.RUB[0]}–{QUEST_CHEST.currencies.RUB[1]}, фишка, слиток, папиросы {QUEST_CHEST.currencies.PAP[0]}–{fmtN(QUEST_CHEST.currencies.PAP[1])}, зубы {QUEST_CHEST.currencies.TOOTH[0]}–{fmtN(QUEST_CHEST.currencies.TOOTH[1])}
+              </span>
+            )}
+          </div>
+          {q.chest.opened ? <span className="quest-ok display">✓</span>
+            : <button className="btn gold sm" disabled={!q.chest.ready || busy === "quest_chest"} onClick={openChest}>{q.chest.ready ? "Открыть" : `${q.list.filter((x) => x.claimed).length}/${q.list.length}`}</button>}
+        </div>
         <NotifySwitch />
       </div>
     </Modal>

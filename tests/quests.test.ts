@@ -22,10 +22,10 @@ async function setProgress(pid: number, now: number, progress: Record<string, nu
 const notes = (pid: number) => db.query<{ kind: string; due_at: Date; sent_at: Date | null; meta: Record<string, unknown> }>("SELECT kind, due_at, sent_at, meta FROM notifications WHERE player_id=$1 ORDER BY kind", [pid]);
 
 describe("daily quests", () => {
-  it("five quests a day, one from each group, the same all day, another set possible tomorrow", () => {
+  it("seven quests a day, one from each group, the same all day, another set possible tomorrow", () => {
     const day = moscowDay(T0);
     const a = questsForDay(7, day);
-    expect(a).toHaveLength(5);
+    expect(a).toHaveLength(7);
     a.forEach((q, i) => expect(QUEST_GROUPS[i]).toContain(q));
     expect(questsForDay(7, day)).toEqual(a);
   });
@@ -46,7 +46,7 @@ describe("daily quests", () => {
     expect(q1.progress).toBe(expected);
   });
 
-  it("claim only when done, once; the chest opens after all five and only once", async () => {
+  it("claim only when done, once; the chest opens after all seven and only once", async () => {
     await db.query("DELETE FROM config WHERE key='exchange.schedule'");
     (await import("../src/server/config.ts")).resetConfigCache();
     const p = await newPlayer(db);
@@ -58,12 +58,16 @@ describe("daily quests", () => {
     expect(await wallet(db, p, "RUB")).toBe(rub0 + (set[0].reward.currencies?.RUB ?? 0));
     await expect(act(db, p, "quest_claim", { id: set[0].id }, T0)).rejects.toMatchObject({ code: "quest_taken" });
     expect(r.state.quests.claimable).toBe(true);
-    await act(db, p, "quest_claim", { id: set[1].id }, T0);
-    await act(db, p, "quest_claim", { id: set[2].id }, T0);
-    await act(db, p, "quest_claim", { id: set[3].id }, T0);
-    await act(db, p, "quest_claim", { id: set[4].id }, T0);
-    // «Сундук дня» is gone (the user 2026-11-24)
-    await expect(act(db, p, "quest_chest", {}, T0)).rejects.toMatchObject({ code: "no_chest" });
+    await expect(act(db, p, "quest_chest", {}, T0)).rejects.toMatchObject({ code: "chest_locked" });
+    for (const q of set.slice(1)) await act(db, p, "quest_claim", { id: q.id }, T0);
+    const gold0 = await wallet(db, p, "GOLD");
+    const c = await act(db, p, "quest_chest", {}, T0);
+    expect(await wallet(db, p, "GOLD")).toBe(gold0 + 1);
+    expect(await qty(db, p, "poker-chip")).toBeGreaterThanOrEqual(1);
+    const knives = await qty(db, p, "keyboard");
+    expect(knives).toBeGreaterThanOrEqual(5);
+    expect(c.state.quests.chest.opened).toBe(true);
+    await expect(act(db, p, "quest_chest", {}, T0)).rejects.toMatchObject({ code: "chest_taken" });
   });
 
   it("the yard quest counts a spin of «Бандитский фарт»", async () => {

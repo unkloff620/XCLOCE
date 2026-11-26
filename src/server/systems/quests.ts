@@ -1,14 +1,15 @@
 import { loadConfig } from "../config.ts";
 import { GameError, type Queryable } from "../db.ts";
 import { grantReward, moscowDay, nextMoscowMidnight, type Ctx, type Granted } from "../core.ts";
-import { questsForDay, type QuestKind } from "../../content/quests.ts";
+import { questsForDay, rollQuestChest, type QuestKind } from "../../content/quests.ts";
 import { monthTick } from "./monthly.ts";
 import { zarubTick } from "./zarub.ts";
 import type { MonthKind } from "../../content/monthly.ts";
 
 /*
  * «Задания дня»: five a day (content/quests.ts), progress counted by the actions themselves (game.ts → questTick /
- * questOnly, combat.ts — a boss won, zarub.ts — a race task done). A finished quest pays when claimed. Resets at 00:00 MSK.
+ * questOnly, combat.ts — a boss won, zarub.ts — a race task done). A finished quest pays when claimed; all seven claimed —
+ * the chest of the day. Resets at 00:00 MSK.
  */
 
 interface Row { progress: Record<string, number>; claimed: string[]; chest: Granted | null }
@@ -77,7 +78,14 @@ export async function claimQuest(ctx: Ctx, id: string) {
   return { id, reward: await grantReward(ctx, def.reward, `quest:${id}`) };
 }
 
+/** the chest of the day: all seven claimed → once a day (content/quests.ts rollQuestChest) */
 export async function openQuestChest(ctx: Ctx) {
-  // «Сундук дня» is gone (the user 2026-11-24)
-  throw new GameError("no_chest", "Сундука дня больше нет");
+  const day = moscowDay(ctx.now);
+  const defs = questsForDay(ctx.pid, day, ctx.cfg.exchange.schedule);
+  const r = await row(ctx.q, ctx.pid, day, true);
+  if (r.chest) throw new GameError("chest_taken", "Сундук уже открыт");
+  if (!defs.every((x) => r.claimed.includes(x.id))) throw new GameError("chest_locked", "Сначала выполни все задания дня");
+  const reward = await grantReward(ctx, rollQuestChest(ctx.rng), "quest:chest");
+  await ctx.q.query("UPDATE daily_quests SET chest=$3 WHERE player_id=$1 AND day=$2", [ctx.pid, day, JSON.stringify(reward)]);
+  return { reward };
 }

@@ -72,6 +72,8 @@ describe("«Бандитский фарт»", () => {
     const p = await newPlayer(db);
     await setMoney(db, p, "RUB", 100);
     await expect(act(db, p, "bandit_spin", { bet: 11 })).rejects.toMatchObject({ code: "bad_bet" });
+    // no free attempts left (they go before the roubles)
+    await db.query("INSERT INTO bandit_state (player_id, gifts, gifts_at) VALUES ($1, 0, now())", [p]);
     const r = await act(db, p, "bandit_spin", { bet: 10 });
     expect(r.result.paid).toBe(10);
     expect(await wallet(db, p, "RUB")).toBe(90);
@@ -99,5 +101,28 @@ describe("«Бандитский фарт»", () => {
     expect(r.result.tattoo).toMatch(/^tat-/);
     expect(r.result.boxes).toBe(100);
     expect(await qty(db, p, r.result.tattoo)).toBe(1);
+  });
+
+  it("free attempts: 12 at the start, one spent before the roubles (no experience), one more every 2 hours, 12 at most", async () => {
+    const db = await freshDb();
+    const p = await newPlayer(db);
+    await setMoney(db, p, "RUB", 100);
+    const T = Date.parse("2026-12-01T10:00:00Z");
+    const a = await act(db, p, "bandit_spin", { bet: 5 }, T);
+    expect(a.result).toMatchObject({ wasGift: true, paid: 0, gifts: 11, xp: a.result.xpGot });
+    expect(await wallet(db, p, "RUB")).toBe(100);
+    expect(a.result.giftNext).toBe(T + 2 * 3_600_000);
+    for (let i = 0; i < 11; i++) await db.query("UPDATE bandit_state SET roul_left=0, free=0 WHERE player_id=$1", [p]), await act(db, p, "bandit_spin", { bet: 1 }, T + 1000);
+    await db.query("UPDATE bandit_state SET roul_left=0, free=0 WHERE player_id=$1", [p]);
+    const paid = await act(db, p, "bandit_spin", { bet: 1 }, T + 2000);
+    expect(paid.result).toMatchObject({ wasGift: false, paid: 1, gifts: 0 });
+    // 5 hours later: two back (and the clock of the third runs from the second's)
+    await db.query("UPDATE bandit_state SET roul_left=0, free=0 WHERE player_id=$1", [p]);
+    const b = await act(db, p, "bandit_spin", { bet: 1 }, T + 5 * 3_600_000);
+    expect(b.result).toMatchObject({ wasGift: true, gifts: 1, giftNext: T + 6 * 3_600_000 });
+    // a week later: 12, not more
+    await db.query("UPDATE bandit_state SET roul_left=0, free=0 WHERE player_id=$1", [p]);
+    const c = await act(db, p, "bandit_spin", { bet: 1 }, T + 7 * 24 * 3_600_000);
+    expect(c.result).toMatchObject({ wasGift: true, gifts: 11 });
   });
 });

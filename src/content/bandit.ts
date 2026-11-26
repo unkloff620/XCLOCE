@@ -55,6 +55,18 @@ export const BANDIT_RTP = 0.94;
 export const BANDIT_WILD = { reels: [1, 2, 3], chance: 0.01, freeChance: 0.04, mult: [[2, 60], [3, 25], [5, 10], [10, 4], [25, 1]] as [number, number][] };
 /** a spin never pays more than this × the bet */
 export const BANDIT_MAX_X = 5000;
+/** the free attempts (the user 2026-11-26): one every BANDIT_GIFT_MS, at most BANDIT_GIFT_MAX kept; a gift spin is at
+ *  the player's bet, costs nothing and gives no experience (like the bells' free spins, which go first) */
+export const BANDIT_GIFT_MS = 2 * 3_600_000;
+export const BANDIT_GIFT_MAX = 12;
+/** the gifts a player has at `now` (kept `n` at `at`) and when the next one comes (null: full) */
+export function banditGifts(n: number, at: number, now: number) {
+  const grown = Math.max(0, Math.floor((now - at) / BANDIT_GIFT_MS));
+  const have = Math.min(BANDIT_GIFT_MAX, n + grown);
+  // the clock of the next one: from `at` plus the whole periods passed (full — it waits; a spin starts it again)
+  const from = have >= BANDIT_GIFT_MAX ? null : at + grown * BANDIT_GIFT_MS;
+  return { have, from, next: from === null ? null : from + BANDIT_GIFT_MS };
+}
 /** bells anywhere → free spins */
 export const BANDIT_FREE: Record<number, number> = { 3: 10, 4: 12, 5: 15 };
 

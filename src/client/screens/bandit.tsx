@@ -9,7 +9,8 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { useGame } from "../store.tsx";
+import { useGame, useNow } from "../store.tsx";
+import { clock } from "../format.ts";
 import { api } from "../api.ts";
 import { usePageReady } from "../route-loader.tsx";
 import { Modal } from "../ui.tsx";
@@ -41,13 +42,14 @@ const fmt = (n: number) => n.toLocaleString("ru-RU");
 const BLUE = "/assets/bandit/matchbox-blue.webp?v=1";
 
 interface Roulette { left: number; pulls: number; bet: number }
-interface View { free: number; freeBet: number; spins: number; won: number; rub: number; xp: number; lvl: { level: number; into: number; need: number }; boxes: number; blue: number; bet: number; roulette: Roulette | null }
+interface View { free: number; freeBet: number; spins: number; won: number; rub: number; xp: number; lvl: { level: number; into: number; need: number }; boxes: number; blue: number; bet: number; gifts: number; giftNext: number | null; roulette: Roulette | null }
 /** the machine's state out of an answer */
-const viewOf = (r: View): View => ({ free: r.free, freeBet: r.freeBet, spins: r.spins, won: r.won, rub: r.rub, xp: r.xp, lvl: r.lvl, boxes: r.boxes, blue: r.blue, bet: r.bet, roulette: r.roulette });
+const viewOf = (r: View): View => ({ free: r.free, freeBet: r.freeBet, spins: r.spins, won: r.won, rub: r.rub, xp: r.xp, lvl: r.lvl, boxes: r.boxes, blue: r.blue, bet: r.bet, gifts: r.gifts, giftNext: r.giftNext, roulette: r.roulette });
 type SpinRes = BanditSpin & View & { bet: number; paid: number; wasFree: boolean; freeLeft: number; levelBefore: number };
 
 export function BanditScreen() {
   const { act, state } = useGame();
+  const now = useNow();
   const [v, setV] = useState<View | null>(null);
   usePageReady(!!v);
   // the bet stays until changed: kept on this device at once (and on the server with every spin)
@@ -217,10 +219,12 @@ export function BanditScreen() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={art("plus")} alt="" draggable={false} />
         </button>
-        <button type="button" className={`bd-btn bd-spin ${free > 0 ? "free" : ""}`} style={u(up(UI.boxes.spin))} disabled={spinning || !v} onClick={() => void spin()} aria-label={free > 0 ? `Бесплатный спин, осталось ${free}` : "Крутить"}>
+        <button type="button" className={`bd-btn bd-spin ${free > 0 || (v?.gifts ?? 0) > 0 ? "free" : ""}`} style={u(up(UI.boxes.spin))} disabled={spinning || !v} onClick={() => void spin()} aria-label={free > 0 ? `Бесплатный спин, осталось ${free}` : "Крутить"}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={art("spin")} alt="" draggable={false} />
           {free > 0 && <span className="bd-free num">{free}</span>}
+          {/* the free attempts (one every 2 hours, 12 at most): their count, the clock of the next */}
+          {free === 0 && !!v && <span className={`bd-gift num ${v.gifts > 0 ? "" : "empty"}`}>{v.gifts > 0 ? `${v.gifts} беспл.` : v.giftNext ? clock(v.giftNext - now) : ""}</span>}
         </button>
         <button type="button" className={`bd-btn bd-auto ${auto ? "on" : ""}`} style={u(up(UI.boxes.auto))} onClick={toggleAuto} aria-pressed={auto} aria-label={auto ? "Остановить автоигру" : "Автоигра"}>
           {/* eslint-disable-next-line @next/next/no-img-element */}

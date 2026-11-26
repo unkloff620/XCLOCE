@@ -1945,4 +1945,11 @@ ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS roul_bet INT NOT NULL DEFAULT 
     id: "v2-148-bandit-bet",
     sql: `ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS bet INT NOT NULL DEFAULT 1;`,
   },
+  {
+    // «Бандитский фарт»: the free attempts — one every 2 hours, 12 at most (content/bandit.ts banditGifts): how many were
+    // kept and when (everybody starts full)
+    id: "v2-149-bandit-gifts",
+    sql: `ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS gifts INT NOT NULL DEFAULT 12;
+ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS gifts_at TIMESTAMPTZ NOT NULL DEFAULT now();`,
+  },
 ];
