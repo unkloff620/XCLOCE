@@ -1,6 +1,6 @@
 "use client";
 /*
- * «Ворон» on the hero's left shoulder (the poker's royal flush; slot «SPECIAL»; tools/rig/build-raven.py). He sits with
+ * «Ворон» on the hero's right shoulder (the left of the picture, drawn mirrored) (the poker's royal flush; slot «SPECIAL»; tools/rig/build-raven.py). He sits with
  * the wing on his back, looks about — now right, now left (the artist's two bodies) — and every few seconds spreads his
  * wings and flaps: the wings come out a little open, then each flap goes from the half-open drawing with the tips bent
  * down to the spread one with the tips bent up (the puppet-bent frames of the strips crossfade, so the feathers bend
@@ -12,9 +12,10 @@ import { RAVEN as R } from "./raven-data.ts";
 
 const A = "/assets/hero/raven";
 const V = "?v=1";
-/** where his feet hold (his canvas) and where they go on the hero (the top of the left shoulder, the rig's units) */
+/** where his feet hold (his canvas) and where they go on the hero (the top of his right shoulder — the left of the
+ *  picture, the rig's units); he is drawn mirrored there (the far wing goes towards the head and behind it) */
 const FEET = [552, 478] as const;
-const AT = { x: 772, y: 352, k: 0.44 };
+const AT = { x: 228, y: 352, k: 0.44 };
 /** the timeline of one loop (s): he sits, looks left a while, opens, flaps, folds */
 const T = { loop: 9.5, lookL: [1.4, 3.1], open: 4.4, flaps: 4, flap: 0.52, fold: 0.3 };
 const FW = R.w * 0.5, FH = (R.h + 2 * R.pad) * 0.5;
@@ -80,7 +81,7 @@ export function Raven({ still, layer = "front" }: { still?: boolean; layer?: "ba
     </svg>
   );
   return (
-    <g className="rv" transform={`translate(${AT.x} ${AT.y}) scale(${AT.k}) translate(${-FEET[0]} ${-FEET[1]})`} pointerEvents="none">
+    <g className="rv" transform={`translate(${AT.x} ${AT.y}) scale(${-AT.k} ${AT.k}) translate(${-FEET[0]} ${-FEET[1]})`} pointerEvents="none">
       <g ref={root}>
         <g className="rv-lift">
           {layer === "back" ? <>{wing("far-half")}{wing("far-full")}</> : (

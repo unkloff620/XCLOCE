@@ -975,7 +975,7 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
             <Wear slot="HEAD" hat="over" />
           </Bone>
         </Ol>
-        {/* «Ворон» on the left shoulder (slot «Особое»: the poker's royal flush) */}
+        {/* «Ворон» on the right shoulder (slot «Особое»: the poker's royal flush) */}
         {worn?.SPECIAL === "raven" && <Raven />}
       </g>
       {edit && edit.mode !== "body" && <PreloadPlaces grid={edit.mode === "ink" ? "zone" : "slot"} />}
