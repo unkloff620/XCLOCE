@@ -26,6 +26,8 @@ const WAIST = [400, 640] as const;
 const HEM = [400, 520] as const;
 /** the round flask's mouth (rig units, as drawn): the poison flies out of it */
 const FLASK_MOUTH = [89.7, 659.5] as const;
+/** where each glove holds its glass (rig units): the glass swings round it */
+const GRIP = { R: [92, 700], L: [548, 700] } as const;
 /** how full the glasses are: the poison's surface (rig y, as drawn) */
 const LEVEL = { R: 738, L: 708 } as const;
 const POISON = { top: "#9dff3a", mid: "#46d10f", deep: "#167a0a", line: "#e2ffa8" };
@@ -141,19 +143,25 @@ export function HimikRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
               (the solid glass, the poison, the glass over it), the thumb and the fingers round it */}
           {bone("br-arm br-arm-r", "armR", bone("br-low br-low-r", "lowR", <>{pic("lowR")}{bone("br-hand br-hand-r", "handR", <>
             {pic("handR")}
-            {pic("flaskR")}
-            {poison("R")}
-            <g className="hm-glass">{pic("flaskR-glass")}</g>
+            {/* the flask sits loose in the glove: it swings a little round the grip (--lR, the pose engine's hmLoose) */}
+            <g className="hm-loose-r" style={at(GRIP.R[0], GRIP.R[1])}>
+              {pic("flaskR")}
+              {poison("R")}
+              <g className="hm-glass">{pic("flaskR-glass")}</g>
+            </g>
             {pic("thumbR")}
             {pic("fingersR")}
           </>, 90, handR)}</>, 110), 130)}
           {/* his left arm over the coat: the sleeve, the forearm with the glove — the test tube under its fingers */}
           {bone("br-arm br-arm-l", "armL", <>
-            {pic("armL", "front")}
+            {/* the sleeve on the back canvas (over the coat, it is drawn after it): the tube raised to the neck stays over it */}
+            {pic("armL", "back")}
             {bone("br-low br-low-l", "lowL", <>
-              {pic("tube")}
-              {poison("L")}
-              <g className="hm-glass">{pic("tube-glass")}</g>
+              <g className="hm-loose-l" style={at(GRIP.L[0], GRIP.L[1])}>
+                {pic("tube")}
+                {poison("L")}
+                <g className="hm-glass">{pic("tube-glass")}</g>
+              </g>
               {pic("lowL", "front")}
             </>, 120)}
           </>, 130)}
