@@ -44,13 +44,14 @@ describe("«Бандитский фарт»", () => {
     await expect(act(db, p, "bandit_spin", { bet: 11 })).rejects.toMatchObject({ code: "bad_bet" });
     const r = await act(db, p, "bandit_spin", { bet: 10 });
     expect(r.result.paid).toBe(10);
-    expect(r.result.xp).toBe(10);
-    expect(await wallet(db, p, "RUB")).toBe(90 + r.result.win);
+    expect(await wallet(db, p, "RUB")).toBe(90);
+    expect(r.result.xp).toBe(10 + r.result.win);
     await db.query("UPDATE bandit_state SET free=2, free_bet=7 WHERE player_id=$1", [p]);
     const before = await wallet(db, p, "RUB");
     const f = await act(db, p, "bandit_spin", { bet: 1 });
-    expect(f.result).toMatchObject({ wasFree: true, bet: 7, paid: 0, xp: 10 });
-    expect(await wallet(db, p, "RUB")).toBe(before + f.result.win);
+    expect(f.result).toMatchObject({ wasFree: true, bet: 7, paid: 0 });
+    expect(f.result.xp).toBe(r.result.xp + f.result.win);
+    expect(await wallet(db, p, "RUB")).toBe(before);
     await setMoney(db, p, "RUB", 0);
     await db.query("UPDATE bandit_state SET free=0 WHERE player_id=$1", [p]);
     await expect(act(db, p, "bandit_spin", { bet: 1 })).rejects.toMatchObject({ code: "no_money" });

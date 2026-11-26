@@ -1,9 +1,9 @@
 /*
  * «Бандитский фарт» (content/bandit.ts): a spin for roubles (a bet of 1–10), or a free one while any are left (at the
- * bet they were won with). The kopecks of a win are kept (bandit_state.carry) and paid with the next win.
+ * bet they were won with). A win is matchboxes: the machine's experience (bandit_state.xp), on top of 1 per rouble bet.
  */
 import { GameError, type Queryable } from "../db.ts";
-import { addMoney, takeMoney, type Ctx } from "../core.ts";
+import { takeMoney, type Ctx } from "../core.ts";
 import { BANDIT_BET_MAX, BANDIT_BET_MIN, banditLevel, banditSpin } from "../../content/bandit.ts";
 
 interface Row { free: number; free_bet: number; carry: number; spins: number; won: string | number; xp: string | number }
@@ -28,12 +28,12 @@ export async function banditSpinAction(ctx: Ctx, body: { bet?: unknown }) {
   const s = banditSpin(bet, ctx.rng, free);
   const total = s.raw + Number(r.carry);
   const pay = Math.floor(total + 1e-9);
-  if (pay > 0) await addMoney(ctx, "RUB", pay, "bandit:win");
+  // the win is matchboxes — the machine's experience, not roubles (the user 2026-11-26)
   const freeLeft = Math.max(0, Number(r.free) - (free ? 1 : 0)) + s.free;
   await ctx.q.query(
     `INSERT INTO bandit_state (player_id, free, free_bet, carry, spins, won, xp) VALUES ($1,$2,$3,$4,1,$5,$6)
      ON CONFLICT (player_id) DO UPDATE SET free=$2, free_bet=$3, carry=$4, spins=bandit_state.spins+1, won=bandit_state.won+$5, xp=bandit_state.xp+$6`,
-    [ctx.pid, freeLeft, freeLeft > 0 ? bet : 0, total - pay, pay, free ? 0 : bet],
+    [ctx.pid, freeLeft, freeLeft > 0 ? bet : 0, total - pay, pay, (free ? 0 : bet) + pay],
   );
   const levelBefore = banditLevel(Number(r.xp)).level;
   return { ...s, ...(await banditView(ctx.q, ctx.pid)), levelBefore, bet, paid: free ? 0 : bet, win: pay, wasFree: free, freeLeft };
