@@ -18,26 +18,26 @@ export type BanditCell = BanditSym | "W";
 export interface BanditSymDef { id: BanditSym; name: string; weight: number; pay: [number, number, number] }
 /** the price of 3 / 4 / 5 in a row, × the bet (before BANDIT_SCALE); the weight — how often it falls in a cell */
 export const BANDIT_SYMS: BanditSymDef[] = [
-  { id: "money", name: "Пачка денег", weight: 3, pay: [1, 2.5, 5] },
-  { id: "ring", name: "Печатка", weight: 4, pay: [0.8, 2, 4] },
-  { id: "chain", name: "Цепь", weight: 5, pay: [0.6, 1.5, 3] },
-  { id: "raven", name: "Ворон", weight: 6, pay: [0.5, 1.2, 2.5] },
-  { id: "cap", name: "Кепка", weight: 7, pay: [0.4, 1, 2] },
-  { id: "revolver", name: "Револьвер", weight: 8, pay: [0.3, 0.8, 1.5] },
-  { id: "dice", name: "Кости", weight: 9, pay: [0.25, 0.6, 1.2] },
-  { id: "horseshoe", name: "Подкова", weight: 9, pay: [0.25, 0.6, 1.2] },
-  { id: "a", name: "Туз", weight: 11, pay: [0.15, 0.4, 0.8] },
-  { id: "k", name: "Король", weight: 11, pay: [0.15, 0.4, 0.8] },
-  { id: "q", name: "Дама", weight: 12, pay: [0.1, 0.25, 0.5] },
-  { id: "j", name: "Валет", weight: 12, pay: [0.1, 0.25, 0.5] },
-  { id: "ten", name: "Десятка", weight: 12, pay: [0.1, 0.25, 0.5] },
-  { id: "bell", name: "Колокол", weight: 2.5, pay: [2, 5, 20] },
+  { id: "money", name: "Пачка денег", weight: 3, pay: [5, 10, 30] },
+  { id: "ring", name: "Печатка", weight: 4, pay: [4, 8, 20] },
+  { id: "chain", name: "Цепь", weight: 5, pay: [3, 6, 15] },
+  { id: "raven", name: "Ворон", weight: 6, pay: [3, 5, 10] },
+  { id: "cap", name: "Кепка", weight: 7, pay: [2, 4, 8] },
+  { id: "revolver", name: "Револьвер", weight: 8, pay: [2, 3, 6] },
+  { id: "dice", name: "Кости", weight: 9, pay: [1, 2, 4] },
+  { id: "horseshoe", name: "Подкова", weight: 9, pay: [1, 2, 4] },
+  { id: "a", name: "Туз", weight: 11, pay: [1, 2, 3] },
+  { id: "k", name: "Король", weight: 11, pay: [1, 2, 3] },
+  { id: "q", name: "Дама", weight: 12, pay: [1, 1, 2] },
+  { id: "j", name: "Валет", weight: 12, pay: [1, 1, 2] },
+  { id: "ten", name: "Десятка", weight: 12, pay: [1, 1, 2] },
+  { id: "bell", name: "Колокол", weight: 2.5, pay: [3, 10, 50] },
 ];
 /** all the prices × this: tuned so the machine gives back about BANDIT_RTP of what is bet (tests/bandit.test.ts) */
 export const BANDIT_SCALE = 0.27;
 export const BANDIT_RTP = 0.94;
 /** the wild reel: the chance per reel 2–4 (in the free spins higher), its multiplier by weight */
-export const BANDIT_WILD = { reels: [1, 2, 3], chance: 0.045, freeChance: 0.13, mult: [[2, 40], [3, 25], [5, 20], [10, 10], [25, 5]] as [number, number][] };
+export const BANDIT_WILD = { reels: [1, 2, 3], chance: 0.02, freeChance: 0.07, mult: [[2, 50], [3, 25], [5, 15], [10, 7], [25, 3]] as [number, number][] };
 /** a spin never pays more than this × the bet */
 export const BANDIT_MAX_X = 2000;
 /** bells anywhere → free spins */
@@ -105,7 +105,7 @@ export function banditPay(reels: BanditCell[][], wilds: Record<number, number>, 
       ways *= c; n++;
     }
     // a run of wilds alone with no symbol of its own pays nothing: the first reel never has wilds
-    if (n >= 3) wins.push({ sym: s.id, n, ways, pay: s.pay[n - 3] * BANDIT_SCALE * ways * bet });
+    if (n >= 3) wins.push({ sym: s.id, n, ways, pay: s.pay[n - 3] * bet });
   }
   const nb = reels.flat().filter((x) => x === "bell").length;
   const bellDef = banditSym("bell")!;

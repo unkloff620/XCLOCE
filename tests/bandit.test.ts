@@ -19,15 +19,16 @@ describe("«Бандитский фарт»", () => {
     expect(won / paid).toBeLessThan(BANDIT_RTP + 0.06);
   });
 
-  it("pays by ways from the left; a wild reel stands in and its multiplier multiplies the whole win", () => {
+  it("pays whole boxes from the left; a wild reel stands in and its multiplier multiplies the whole win", () => {
     const col = (...c: BanditCell[]) => c;
     const reels = [col("money", "a", "q", "j"), col("money", "money", "k", "ten"), col("money", "dice", "q", "j"), col("a", "k", "q", "j"), col("a", "k", "q", "j")];
     const plain = banditPay(reels, {}, 10);
     const money = plain.wins.find((w) => w.sym === "money")!;
-    expect(money).toMatchObject({ n: 3, ways: 2 });
+    expect(money).toMatchObject({ n: 3, pay: 50 });
+    expect(Number.isInteger(plain.win)).toBe(true);
     const wild = banditPay([reels[0], reels[1], Array(4).fill("W"), reels[3], reels[4]], { 2: 5 }, 10);
     expect(wild.mult).toBe(5);
-    expect(wild.wins.find((w) => w.sym === "money")).toMatchObject({ n: 3, ways: 8 });
+    expect(wild.wins.find((w) => w.sym === "money")).toMatchObject({ n: 3 });
     expect(wild.win).toBe(Math.floor(wild.wins.reduce((a, w) => a + w.pay, 0) * 5));
   });
 

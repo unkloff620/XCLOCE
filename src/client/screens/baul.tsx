@@ -4,6 +4,7 @@
  * «Посмотреть» (the bag from inside: what lies in it now, «Забрать» there too) and «Забрать» (take it without looking).
  * Its level grows from the boss wins' points; the bag looks empty (0–14), half full (15–29) and stuffed (30).
  */
+import { CURRENCY_DEFS, type Currency } from "../../content/currencies.ts";
 import { useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Modal } from "../ui.tsx";
@@ -88,7 +89,7 @@ function Inside({ r, title, button, onClose }: { r: Reward | Granted; title?: st
   const tats = (r.items ?? []).filter((it) => it.qty > 0 && !!tattooSetOf(it.id));
   const cells: { key: string; icon: ReactNode; n: number; name: string }[] = [
     ...(r.xp ? [{ key: "xp", icon: <Icon name="xp" size={22} />, n: r.xp, name: "Авторитет" }] : []),
-    ...Object.entries(r.currencies ?? {}).filter(([, v]) => !!v).map(([c, v]) => ({ key: c, icon: <Icon name={c} size={22} />, n: v as number, name: c })),
+    ...Object.entries(r.currencies ?? {}).filter(([, v]) => !!v).map(([c, v]) => ({ key: c, icon: <Icon name={c} size={22} />, n: v as number, name: CURRENCY_DEFS[c as Currency]?.name ?? c })),
     ...(r.items ?? []).filter((it) => it.qty > 0 && !tattooSetOf(it.id) && !STASH.has(it.id)).map((it) => ({ key: it.id, icon: <ItemArt id={it.id} size={26} />, n: it.qty, name: itemById(it.id)?.name ?? it.id })),
   ];
   // the нычки: one sign for all of them (the chest, as everywhere in the rewards), the names in the tooltip

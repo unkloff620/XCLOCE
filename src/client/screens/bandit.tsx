@@ -6,7 +6,7 @@
  * reel opens over its column with its multiplier, the winning cells glow, the win counts up; 3+ bells give free spins.
  */
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useGame } from "../store.tsx";
 import { api } from "../api.ts";
 import { usePageReady } from "../route-loader.tsx";
@@ -15,17 +15,18 @@ import { Icon } from "../art/icons.tsx";
 import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
 import { BANDIT_UI as UI } from "../art/bandit-ui-data.ts";
-import { BANDIT_BET_MAX, BANDIT_BET_MIN, BANDIT_FREE, BANDIT_REELS, BANDIT_ROWS, BANDIT_SCALE, BANDIT_SYMS, BANDIT_WILD, type BanditCell, type BanditSpin, type BanditSym } from "../../content/bandit.ts";
+import { BANDIT_BET_MAX, BANDIT_BET_MIN, BANDIT_FREE, BANDIT_REELS, BANDIT_ROWS, BANDIT_SYMS, BANDIT_WILD, type BanditCell, type BanditSpin, type BanditSym } from "../../content/bandit.ts";
 
 const V = "?v=1";
 const pic = (s: BanditSym) => `/assets/bandit/${s}.webp${V}`;
 const SYMS = BANDIT_SYMS.map((s) => s.id);
 const randSym = (): BanditSym => SYMS[Math.floor(Math.random() * SYMS.length)];
 const randCol = (): BanditCell[] => Array.from({ length: BANDIT_ROWS }, randSym);
-/** how many cells run past before a reel stops; each next reel runs longer */
-const RUN = 14, RUN_STEP = 4;
-/** a reel's run (ms) and the gap before the next one stops */
-const SPIN_MS = 700, STOP_GAP = 220;
+/** the endless run while the server answers: so many cells, one loop in LOOP_MS */
+const LOOP = 12, LOOP_MS = 380;
+/** the last run onto the result: so many cells before it, in STOP_MS; the first reel stops no sooner than MIN_RUN after
+ *  the tap, each next one STOP_GAP later */
+const TAIL = 8, STOP_MS = 520, MIN_RUN = 650, STOP_GAP = 230;
 const fmt = (n: number) => n.toLocaleString("ru-RU");
 
 interface View { free: number; freeBet: number; spins: number; won: number; rub: number }
@@ -37,9 +38,9 @@ export function BanditScreen() {
   usePageReady(!!v);
   const [bet, setBet] = useState(1);
   const [cols, setCols] = useState<BanditCell[][]>(() => Array.from({ length: BANDIT_REELS }, randCol));
-  /** the strips while spinning: the coming 4 on top, the run below them */
-  const [strips, setStrips] = useState<BanditCell[][] | null>(null);
-  const [stopped, setStopped] = useState<boolean[]>(Array(BANDIT_REELS).fill(true));
+  /** each reel: still (its 4 cells), running endlessly, or running down onto its result (the result on top of the strip) */
+  const [mode, setMode] = useState<("idle" | "loop" | "stop")[]>(Array(BANDIT_REELS).fill("idle"));
+  const [strips, setStrips] = useState<BanditCell[][]>(() => Array.from({ length: BANDIT_REELS }, () => []));
   const [res, setRes] = useState<SpinRes | null>(null);
   const [shown, setShown] = useState(false);
   const [winShown, setWinShown] = useState(0);
@@ -59,18 +60,25 @@ export function BanditScreen() {
     if (spinning) return;
     haptic.tap();
     setSpinning(true); setShown(false); setRes(null); setWinShown(0);
-    // the reels start running at once; they stop when the answer is here
-    setStrips(cols.map((c, i) => [...randCol(), ...Array.from({ length: RUN + i * RUN_STEP }, randSym), ...c]));
-    setStopped(Array(BANDIT_REELS).fill(false));
+    // the reels start running at once, endlessly, until the answer is here
+    const t0 = performance.now();
+    setStrips(Array.from({ length: BANDIT_REELS }, () => Array.from({ length: LOOP }, randSym)));
+    setMode(Array(BANDIT_REELS).fill("loop"));
     sfx("spin");
     const r = await act<SpinRes>("bandit_spin", { bet });
-    if (!r) { setStrips(null); setStopped(Array(BANDIT_REELS).fill(true)); setSpinning(false); autoRef.current = false; setAuto(false); return; }
-    // the real screen goes on top of every strip, then the reels stop one by one
-    setStrips((st) => st && st.map((s, i) => [...r.reels[i], ...s.slice(BANDIT_ROWS)]));
-    for (let i = 0; i < BANDIT_REELS; i++) later(() => { setStopped((p) => p.map((x, j) => (j === i ? true : x))); sfx("tap", 0.25); }, SPIN_MS + i * STOP_GAP);
-    const end = SPIN_MS + (BANDIT_REELS - 1) * STOP_GAP + 380;
+    if (!r) { setMode(Array(BANDIT_REELS).fill("idle")); setSpinning(false); autoRef.current = false; setAuto(false); return; }
+    // then each reel runs down onto its result (a wild reel falls in as one tall bandit), one after another from the left
+    const wait = Math.max(0, MIN_RUN - (performance.now() - t0));
+    for (let i = 0; i < BANDIT_REELS; i++) {
+      later(() => {
+        setStrips((st) => st.map((x, j) => (j === i ? [...r.reels[i], ...Array.from({ length: TAIL }, randSym)] : x)));
+        setMode((m) => m.map((x, j) => (j === i ? "stop" : x)));
+      }, wait + i * STOP_GAP);
+      later(() => { setCols((c) => c.map((x, j) => (j === i ? r.reels[i] : x))); setMode((m) => m.map((x, j) => (j === i ? "idle" : x))); sfx("tap", 0.25); }, wait + i * STOP_GAP + STOP_MS);
+    }
+    const end = wait + (BANDIT_REELS - 1) * STOP_GAP + STOP_MS + 250;
     later(() => {
-      setCols(r.reels); setStrips(null); setRes(r); setShown(true);
+      setRes(r); setShown(true);
       setV({ free: r.free > 0 ? r.freeLeft : r.freeLeft, freeBet: r.freeBet, spins: r.spins, won: r.won, rub: r.rub });
       if (r.win > 0) {
         sfx(r.win >= r.bet * 20 ? "bigwin" : "coin");
@@ -108,49 +116,31 @@ export function BanditScreen() {
   const reelTop = UI.cellY[0], reelH = UI.cellY[3] + UI.boxes.cell.h - UI.cellY[0];
 
   return (
-    <div className="bd-screen" style={{ backgroundImage: `url(/assets/bandit/ui/bg.webp${V})` }}>
+    <div className="bd-screen" style={{ ["--bd-bg" as string]: `url(/assets/bandit/ui/bg.webp${V})` }}>
       <div className="bd-stage">
         {/* the artist's machine on its 2000×3000 canvas */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="bd-l" style={u(UI.boxes.title)} src={art("title")} alt="Бандитский фарт" draggable={false} />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="bd-l" style={u(UI.boxes.frame)} src={art("frame")} alt="" draggable={false} />
-        {UI.cellX.map((x) => UI.cellY.map((y) => (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img key={`${x}-${y}`} className="bd-l" style={u({ x, y, w: UI.boxes.cell.w, h: UI.boxes.cell.h })} src={art("cell")} alt="" draggable={false} />
-        )))}
         <div className={`bd-reels ${anyWin ? "won" : ""}`}>
-          {UI.cellX.map((x, r) => {
-            const strip = strips?.[r];
-            const wildMult = shown && res ? res.wilds[r] : undefined;
-            return (
-              <div key={r} className="bd-reel" style={u({ x, y: reelTop, w: UI.boxes.cell.w, h: reelH })}>
-                {strip && !stopped[r] ? (
-                  <div className="bd-strip run" style={{ ["--n" as string]: strip.length - BANDIT_ROWS, ["--ms" as string]: `${SPIN_MS + r * STOP_GAP}ms` }}>
-                    {strip.map((c, i) => <Cell key={i} c={c} />)}
-                  </div>
-                ) : strip && stopped[r] ? (
-                  <div className="bd-strip land">{strip.slice(0, BANDIT_ROWS).map((c, i) => <Cell key={i} c={c} />)}</div>
-                ) : (
-                  <div className="bd-strip">{cols[r].map((c, i) => <Cell key={i} c={c} lit={lit(r, i)} dim={anyWin && !lit(r, i)} />)}</div>
-                )}
-              </div>
-            );
-          })}
-          {/* the wild reels: the artist's bandit over the column, «WILD» on his plate, the multiplier over his head */}
-          {shown && res && Object.entries(res.wilds).map(([k, m]) => {
-            const dx = UI.cellX[Number(k)] - UI.cellX[3];
-            const w = UI.boxes.wild, ww = UI.boxes["wild-word"];
-            return (
-              <div key={k} className="bd-wild" style={u({ ...w, x: w.x + dx })} aria-label={`Дикий барабан ×${m}`}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={art("wild")} alt="" draggable={false} />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="bd-wild-word" style={{ left: `${((ww.x - w.x) / w.w) * 100}%`, top: `${((ww.y - w.y) / w.h) * 100}%`, width: `${(ww.w / w.w) * 100}%` }} src={art("wild-word")} alt="" draggable={false} />
-                <b className="bd-wild-x num">×{m}</b>
-              </div>
-            );
-          })}
+          {UI.cellX.map((x, r) => (
+            <div key={r} className="bd-reel" style={u({ x, y: reelTop, w: UI.boxes.cell.w, h: reelH })}>
+              {mode[r] === "loop" ? (
+                <div className="bd-strip loop" style={{ ["--n" as string]: LOOP, ["--ms" as string]: `${LOOP_MS}ms` }}>
+                  {[...strips[r], ...strips[r]].map((c, i) => <Cell key={i} c={c} />)}
+                </div>
+              ) : mode[r] === "stop" ? (
+                <div className="bd-strip stop" style={{ ["--n" as string]: TAIL, ["--ms" as string]: `${STOP_MS}ms` }}>
+                  <Strip cells={strips[r]} />
+                </div>
+              ) : (
+                <div className="bd-strip land">
+                  <Strip cells={cols[r]} lit={(i) => lit(r, i)} dim={(i) => anyWin && !lit(r, i)} mult={shown && res ? res.wilds[r] : undefined} />
+                </div>
+              )}
+            </div>
+          ))}
         </div>
         {shown && res && res.win > 0 && (
           <div className={`bd-win ${res.win >= res.bet * 20 ? "big" : ""}`}>
@@ -203,9 +193,34 @@ export function BanditScreen() {
   );
 }
 
+/** a reel's cells; four «W» in a row are the one tall wild bandit (it falls in with the reel), its multiplier over his head */
+function Strip({ cells, lit, dim, mult }: { cells: BanditCell[]; lit?: (i: number) => boolean; dim?: (i: number) => boolean; mult?: number }) {
+  const out: ReactNode[] = [];
+  for (let i = 0; i < cells.length; i++) {
+    if (cells[i] === "W" && cells.slice(i, i + BANDIT_ROWS).every((c) => c === "W")) {
+      out.push(<Wild key={i} mult={mult} />);
+      i += BANDIT_ROWS - 1;
+    } else out.push(<Cell key={i} c={cells[i]} lit={lit?.(i)} dim={dim?.(i)} />);
+  }
+  return <>{out}</>;
+}
+
+function Wild({ mult }: { mult?: number }) {
+  const w = UI.boxes.wild, ww = UI.boxes["wild-word"];
+  return (
+    <div className="bd-wild" aria-label={mult ? `Дикий барабан ×${mult}` : "Дикий барабан"}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={`/assets/bandit/ui/wild.webp${V}`} alt="" draggable={false} />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img className="bd-wild-word" style={{ left: `${((ww.x - w.x) / w.w) * 100}%`, top: `${((ww.y - w.y) / w.h) * 100}%`, width: `${(ww.w / w.w) * 100}%` }} src={`/assets/bandit/ui/wild-word.webp${V}`} alt="" draggable={false} />
+      {mult !== undefined && <b className="bd-wild-x num">×{mult}</b>}
+    </div>
+  );
+}
+
 function Cell({ c, lit, dim }: { c: BanditCell; lit?: boolean; dim?: boolean }) {
   return (
-    <div className={`bd-cell ${lit ? "lit" : ""} ${dim ? "dim" : ""} ${c === "W" ? "w" : ""}`}>
+    <div className={`bd-cell ${lit ? "lit" : ""} ${dim ? "dim" : ""}`} style={{ backgroundImage: `url(/assets/bandit/ui/cell.webp${V})` }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       {c !== "W" && <img src={pic(c)} alt="" draggable={false} />}
     </div>
@@ -213,19 +228,18 @@ function Cell({ c, lit, dim }: { c: BanditCell; lit?: boolean; dim?: boolean }) 
 }
 
 function PayTable({ bet, onClose }: { bet: number; onClose: () => void }) {
-  const r = (x: number) => Math.round(x * 100) / 100;
   const mults = BANDIT_WILD.mult.map(([m]) => `×${m}`).join(", ");
   return (
     <Modal title="Таблица выплат" onClose={onClose}>
       <p className="small" style={{ marginTop: 0 }}>
-        Выигрыш по способам: одинаковые символы на соседних барабанах слева направо, в любом месте барабана. Цена × число способов, при ставке <b className="num">{bet}</b>.
+        Одинаковые символы на соседних барабанах слева направо, в любом месте барабана. Выплата в коробках при ставке <b className="num">{bet}</b>.
       </p>
       <div className="bd-pay">
         {BANDIT_SYMS.filter((s) => s.id !== "bell").map((s) => (
           <div key={s.id} className="bd-pay-row">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={pic(s.id)} alt="" />
-            <span className="num">5 — {r(s.pay[2] * BANDIT_SCALE * bet)}<br />4 — {r(s.pay[1] * BANDIT_SCALE * bet)}<br />3 — {r(s.pay[0] * BANDIT_SCALE * bet)}</span>
+            <span className="num">5 — {s.pay[2] * bet}<br />4 — {s.pay[1] * bet}<br />3 — {s.pay[0] * bet}</span>
           </div>
         ))}
       </div>

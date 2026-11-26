@@ -11,7 +11,7 @@ import "./admin.css";
 import { ITEMS, itemById, type ItemDef, type Slot } from "../../content/items.ts";
 import { ItemArt } from "../../client/art/items.tsx";
 import { Icon } from "../../client/art/icons.tsx";
-import { CURRENCIES } from "../../content/currencies.ts";
+import { CURRENCIES, CURRENCY_DEFS } from "../../content/currencies.ts";
 import { EXTRA_NAMES, TALENT_PATH, talentStop } from "../../content/talents.ts";
 import { BOSSES, bossById, bossHasArt, keyId, unlockBossOf } from "../../content/bosses.ts";
 import { TATTOO_SETS, setBonusText } from "../../content/tattoos.ts";
@@ -747,7 +747,7 @@ function Player({ id }: { id: number }) {
       {tab === "res" && (
         <section className="adm-card">
           <div className="adm-fields">
-            {CURRENCIES.map((c) => <EditNum key={c} icon={<Icon name={c} size={22} />} label={c} value={data.money[c]} step="any" onSave={(v) => edit({ op: "set_money", currency: c, amount: v }, c)} />)}
+            {CURRENCIES.map((c) => <EditNum key={c} icon={<Icon name={c} size={22} />} label={CURRENCY_DEFS[c]?.name ?? c} value={data.money[c]} step="any" onSave={(v) => edit({ op: "set_money", currency: c, amount: v }, c)} />)}
             <EditNum icon={<Icon name="xp" size={22} />} label="Авторитет" value={num(p.xp)} onSave={(v) => edit({ op: "set_xp", value: v }, "Авторитет")} />
             <EditNum icon={<Icon name="energy" size={22} />} label="Энергия" value={num(p.energyNow)} onSave={(v) => edit({ op: "set_energy", value: v }, "Энергия")} />
             <EditNum icon={<Icon name="talent" size={22} />} label="Свободные таланты" value={num(p.talents)} onSave={(v) => edit({ op: "set_talents", value: v }, "Таланты")} />

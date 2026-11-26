@@ -227,6 +227,7 @@ export function parentOf(path: string, search: string, myClan: number | null): s
   if (parts[0] === "masters") return parts.length > 1 ? "/masters" : "/yard";
   if (parts[0] === "shop") return search.includes("tab=") ? "/shop" : null; // an open shop window → the shop
   if (parts[0] === "exchange") return "/yard";
+  if (parts[0] === "yard" && parts.length > 1) return "/yard"; // «Колесо удачи», «Бандитский фарт»
   if (parts[0] === "bosses" && parts.length > 1) return "/bosses";
   if (parts[0] === "event") return "/bosses"; // an event fight (Пепе) sits under the bosses tab
   if (parts[0] === "profile" || parts[0] === "rating" || parts[0] === "zarub") return "/"; // «Зарубы» — opened from the room

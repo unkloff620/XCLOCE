@@ -15,7 +15,7 @@ import { full } from "../format.ts";
 import { api, type DuelView, type GameView, type Granted, type PokerInfo, type PokerPlay } from "../api.ts";
 import { ART_VER } from "../preload.ts";
 import { TATTOO_SETS } from "../../content/tattoos.ts";
-import type { Currency } from "../../content/currencies.ts";
+import { CURRENCY_DEFS, type Currency } from "../../content/currencies.ts";
 import { BlackjackWindow } from "./blackjack.tsx";
 import { DayTopNote } from "../day-top.tsx";
 import { OPEN_GAME_EVENT, takePendingGame } from "../game-invites.tsx";
@@ -830,7 +830,7 @@ function PrizeIcons({ hand, level, owned }: { hand: PokerHand; level: number; ow
     );
   }
   const parts = [
-    ...Object.entries(pay.currencies ?? {}).map(([c, v]) => ({ key: c, icon: <Icon name={c as Currency} size={22} />, n: v ?? 0, title: `${v} ${c}` })),
+    ...Object.entries(pay.currencies ?? {}).map(([c, v]) => ({ key: c, icon: <Icon name={c as Currency} size={22} />, n: v ?? 0, title: `${v} ${CURRENCY_DEFS[c as Currency]?.name ?? c}` })),
     ...(pay.items ?? []).map((it) => ({ key: it.id, icon: <ItemArt id={it.id} size={24} />, n: it.qty, title: `${itemById(it.id)?.name ?? it.id} ×${it.qty}` })),
   ];
   // three cells, always (empty ones when the combination pays less): the columns of the list stay even; a one-of-a-kind

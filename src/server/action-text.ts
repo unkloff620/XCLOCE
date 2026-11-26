@@ -2,6 +2,7 @@
  * Human-readable lines for the admin's action log: what the player did and what they got,
  * e.g. «нашёл «Ржавый ключ» · +120 RUB» or «Тройка BTC [BTC BTC BTC] · +1 BTC».
  */
+import { CURRENCY_DEFS, type Currency } from "../content/currencies.ts";
 import { bizById } from "../content/business.ts";
 import { weaponById } from "../content/items.ts";
 import type { Granted } from "./core.ts";
@@ -25,11 +26,14 @@ const item = (id: unknown) => String(id).startsWith("room:") ? `комната �
 const join = (...parts: (string | null | undefined | false)[]) => parts.filter(Boolean).join(" · ");
 
 /** «+300 RUB, +200 авторитета, Нож ×3» */
+/** a currency by its name: «Рубли», «Зубы» */
+const cur = (c: unknown) => CURRENCY_DEFS[String(c) as Currency]?.name ?? String(c);
+
 export function grantedText(g: unknown): string {
   if (!g || typeof g !== "object") return "";
   const r = g as Partial<Granted>;
   const out: string[] = [];
-  for (const [c, v] of Object.entries(r.currencies ?? {})) if (n(v)) out.push(`+${fmt(v)} ${c}`);
+  for (const [c, v] of Object.entries(r.currencies ?? {})) if (n(v)) out.push(`+${fmt(v)} ${cur(c)}`);
   if (n(r.xp)) out.push(`+${fmt(r.xp)} авторитета`);
   if (n(r.energy)) out.push(`+${fmt(r.energy)} энергии`);
   for (const it of r.items ?? []) if (it.qty) out.push(`${item(it.id)} ×${fmt(it.qty)}`);
@@ -47,18 +51,18 @@ export function actionText(type: string, body: Row, result: unknown): string | n
       const reels = Array.isArray(r.reels) ? `[${(r.reels as string[]).map((s) => SYMBOLS[s] ?? s).join(" ")}]` : "";
       return join(`${r.title ?? r.outcome ?? "?"} ${reels}`.trim(), grantedText(r.reward) || "без выигрыша");
     }
-    case "bandit_spin": return `«Бандитский фарт»: ${r.wasFree ? "бесплатный спин" : `ставка ${fmt(r.bet)} RUB`}${n(r.win) > 0 ? ` · +${fmt(r.win)} RUB` : " · мимо"}${n(r.mult) > 1 ? ` · ×${fmt(r.mult)}` : ""}${n(r.free) > 0 ? ` · +${fmt(r.free)} бесплатных` : ""}`;
+    case "bandit_spin": return `«Бандитский фарт»: ${r.wasFree ? "бесплатный спин" : `ставка ${fmt(r.bet)} руб.`}${n(r.win) > 0 ? ` · +${fmt(r.win)} руб.` : " · мимо"}${n(r.mult) > 1 ? ` · ×${fmt(r.mult)}` : ""}${n(r.free) > 0 ? ` · +${fmt(r.free)} бесплатных` : ""}`;
     case "buy": {
       const o = offerById(String(body.offerId));
       const paid = r.paid as { currency?: string; amount?: number } | undefined;
-      return join(`«${o?.title ?? body.offerId}»${n(r.qty) > 1 ? ` ×${fmt(r.qty)}` : ""}`, paid ? `за ${fmt(paid.amount)} ${paid.currency}` : null);
+      return join(`«${o?.title ?? body.offerId}»${n(r.qty) > 1 ? ` ×${fmt(r.qty)}` : ""}`, paid ? `за ${fmt(paid.amount)} ${cur(paid.currency)}` : null);
     }
-    case "exchange": return `${fmt(r.paid)} ${r.from} → ${fmt(r.got)} ${r.to}`;
-    case "sell": return join(`${item(r.itemId)} ×${fmt(r.qty)}`, grantedText(r.got) || (typeof r.got === "number" ? `+${fmt(r.got)} RUB` : null));
+    case "exchange": return `${fmt(r.paid)} ${cur(r.from)} → ${fmt(r.got)} ${cur(r.to)}`;
+    case "sell": return join(`${item(r.itemId)} ×${fmt(r.qty)}`, grantedText(r.got) || (typeof r.got === "number" ? `+${fmt(r.got)} руб.` : null));
     case "dealer_talk": return `поболтал с барыгой (${fmt(r.score)} очков)${r.bonus ? " · курс получше на 2 ч" : ""}`;
     case "shave": return `побрился (небрит ${fmt(r.days)} дн.)`;
     case "part_buy": return `купил ${item(r.itemId)} ×${fmt(r.qty)} · −${fmt(r.paid)} жетонов`;
-    case "sell_many": return `продал ${fmt(r.count)} шт. · +${fmt(r.got)} RUB`;
+    case "sell_many": return `продал ${fmt(r.count)} шт. · +${fmt(r.got)} руб.`;
     case "use": return join(item(r.itemId), n(r.energy) ? `энергия ${fmt(r.energy)}` : null);
     case "equip": return item(r.itemId ?? body.itemId);
     case "unequip": return SLOT_NAMES[String(r.slot ?? body.slot)] ?? String(r.slot ?? body.slot);
@@ -155,7 +159,7 @@ export function actionText(type: string, body: Row, result: unknown): string | n
       return join("Покер", typeof r.title === "string" ? r.title : "", grantedText(r.reward) || "без выигрыша", r.gainedXp ? `+${fmt(r.gainedXp)} опыта покера` : "", r.levelUp ? "новый уровень" : "");
     case "upgrade": return join(`${item(r.from ?? body.stake)}${body.uid !== undefined ? " ★" : body.qty && n(body.qty) > 1 ? ` ×${fmt(body.qty)}` : ""} (${fmt(r.stakeValue)} ₽) → ${item(r.target)} ★ ${fmt(r.value)} ₽`, `шанс ${fmt(Math.round(n(r.chance) * 10000) / 100)}%`, r.won ? "получилось!" : "сгорело");
     case "stash_collect": return join(`собрал набор нычек #${r.count ?? ""} (${String(body.set)})`, grantedText(r.reward));
-    case "up_sell": return `продал ${item(r.itemId)} ★ · +${fmt(r.got)} RUB`;
+    case "up_sell": return `продал ${item(r.itemId)} ★ · +${fmt(r.got)} руб.`;
     case "up_take": return `${item(r.itemId)} ★ → ${r.used ? "использовал" : "в обычный инвентарь"}`;
     case "clan_kick": return `исключил игрока #${body.playerId}`;
     case "stash_wish": return Array.isArray(body.items) ? `просит нычки: ${body.items.map((x) => item(x)).join(", ") || "ничего"}` : "";
@@ -182,7 +186,7 @@ export function refusedText(type: string, body: Row, message: string): string {
       case "task": return taskById(String(body.taskId))?.task.title ?? String(body.taskId ?? "");
       case "fight_start": return bossById(String(body.boss))?.name ?? String(body.boss ?? "");
       case "use": case "equip": case "sell": return item(body.itemId);
-      case "exchange": return `${fmt(body.amount)} ${body.from} → ${body.to}`;
+      case "exchange": return `${fmt(body.amount)} ${cur(body.from)} → ${body.to}`;
       default: return "";
     }
   })();

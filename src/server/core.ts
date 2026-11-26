@@ -155,7 +155,7 @@ export async function takeMoney(ctx: Ctx, c: Currency, amount: number, reason: s
   const v = Math.ceil(Math.round(amount * 1e8) / 1e8 * k - 1e-9) / k;
   if (!(v > 0)) throw new GameError("bad_amount", "Некорректная сумма");
   const r = await ctx.q.query("UPDATE wallets SET amount = amount - $3 WHERE player_id=$1 AND currency=$2 AND amount >= $3 RETURNING amount", [ctx.pid, c, v]);
-  if (!r.length) throw new GameError("no_money", `Не хватает ${c}`);
+  if (!r.length) throw new GameError("no_money", `Не хватает: ${CURRENCY_DEFS[c]?.name ?? c}`);
   await ledger(ctx, "currency", c, -v, reason);
 }
 

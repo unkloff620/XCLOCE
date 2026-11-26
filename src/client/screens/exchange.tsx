@@ -135,7 +135,7 @@ function ChatExchange({ ex, bonus, disabled, onDone, onBack }: { ex: ShopData["e
     <div className="dl-curs">
       {list.map((c) => (
         <button key={c} type="button" className={`dl-cur ${v === c ? "on" : ""}`} onClick={() => { haptic.tap(); set(c); }} aria-label={CURRENCY_DEFS[c].name}>
-          <Icon name={c} size={22} /><b>{c}</b>
+          <Icon name={c} size={22} /><b>{CURRENCY_DEFS[c]?.name ?? c}</b>
         </button>
       ))}
     </div>
