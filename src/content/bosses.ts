@@ -248,6 +248,7 @@ export const EVENT_FIGHTS: BossDef[] = [
     hp: 30_000_000, reward: { xp: 4_500, currencies: { TOOTH: 3_500, PAP: 3_500 } },
     // his things («Блатной», the user 2026-11-27): the flask in the hand (rig.tsx FlaskHand)
     wear: { items: ["flask-himik"], chance: 0.1, pity: 10 },
+    set: { weapon: "rug-pull-gun", damage: 230, also: { weapon: "gpu", damage: 100 } },
     theme: { a: "#16351f", b: "#06120a", accent: "#7dff4a" }, photo: photo("himik", true),
     keysToUnlock: 1,
   },
@@ -260,6 +261,7 @@ export const EVENT_FIGHTS: BossDef[] = [
     hp: 100_000_000, reward: { xp: xp(11), currencies: { TOOTH: 12_000, PAP: 12_000 } },
     // his things («Блатной», the user 2026-11-27): the knife in the hand (rig.tsx KnifeHand)
     wear: { items: ["knife-psih"], chance: 0.1, pity: 10 },
+    set: { weapon: "keyboard", damage: 150, also: { weapon: "rug-pull-gun", damage: 300 } },
     theme: { a: "#401624", b: "#16060c", accent: "#ff6b9a" }, photo: photo("psih", true),
     keysToUnlock: 1,
   },
