@@ -1904,4 +1904,16 @@ CREATE TABLE IF NOT EXISTS friends (
   PRIMARY KEY (player_id, friend_id)
 );`,
   },
+  {
+    // «Бандитский фарт» (the user 2026-11-26, systems/bandit.ts): a player's free spins and the kopecks of his wins
+    id: "v2-143-bandit",
+    sql: `CREATE TABLE IF NOT EXISTS bandit_state (
+  player_id INT PRIMARY KEY REFERENCES players(id) ON DELETE CASCADE,
+  free INT NOT NULL DEFAULT 0,
+  free_bet INT NOT NULL DEFAULT 0,
+  carry DOUBLE PRECISION NOT NULL DEFAULT 0,
+  spins INT NOT NULL DEFAULT 0,
+  won BIGINT NOT NULL DEFAULT 0
+);`,
+  },
 ];
