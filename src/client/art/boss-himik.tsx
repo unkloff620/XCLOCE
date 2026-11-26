@@ -36,6 +36,9 @@ const POISON = { top: "#9dff3a", mid: "#46d10f", deep: "#167a0a", line: "#e2ffa8
 const BEATEN = new Set(["armL", "armR", "body", "chin", "coatL", "coatR", "fingersR", "handR", "head", "legs", "lowL", "lowR", "neck", "thumbR"]);
 const BEATEN_V = 1;
 
+/** the brows: the gap between them (rig x), each one's outer end (it turns round it) */
+const BROW_GAP = 395.5;
+const BROW_OUT = { l: [342, 166], r: [451, 161] } as const;
 export function HimikRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, puppet, viewBox }: {
   id: string; look: string; rig: Rig; bust: boolean; dazed: boolean; dying: boolean; svgRef: RefObject<SVGSVGElement | null>; wrapRef: RefObject<HTMLDivElement | null>; puppet: boolean; viewBox: string;
 }) {
@@ -135,11 +138,20 @@ export function HimikRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
               ))}
             </g>
             {pic("head")}
-            {/* the lower teeth over the head, under the lower lip: both drop with the jaw; the mustache stays on the upper lip */}
-            <g className="hm-jaw">{pic("teeth-low")}{pic("chin")}</g>
-            {pic("mustache")}
+            {/* the lower teeth over the head, the lower lip and the little tuft under it («mustache», the soul patch): all
+                drop with the jaw */}
+            <g className="hm-jaw">{pic("teeth-low")}{pic("chin")}{pic("mustache")}</g>
             <g className="hm-beard" style={box("beard", 0.5, 0.15)}>{pic("beard")}</g>
-            <g className="hm-brows" style={box("brows", 0.5, 0.5)}>{pic("brows")}</g>
+            {/* the brows, each on its own (the picture twice, clipped at the gap between them): below half HP their inner
+                ends go up — he looks sad — each turning round its outer end */}
+            <g className="hm-brows" style={box("brows", 0.5, 0.5)}>
+              <defs>
+                <clipPath id={`hm-bl${uid}`}><rect x={BROW_GAP - 200} y={0} width={200} height={400} /></clipPath>
+                <clipPath id={`hm-br${uid}`}><rect x={BROW_GAP} y={0} width={200} height={400} /></clipPath>
+              </defs>
+              <g className="hm-brow-l" style={at(BROW_OUT.l[0], BROW_OUT.l[1])}><g clipPath={`url(#hm-bl${uid})`}>{pic("brows")}</g></g>
+              <g className="hm-brow-r" style={at(BROW_OUT.r[0], BROW_OUT.r[1])}><g clipPath={`url(#hm-br${uid})`}>{pic("brows")}</g></g>
+            </g>
             <g className="hm-mask" style={box("mask", 0.5, 0.1)}>{pic("mask")}</g>
             {/* off the face it hangs on the ear: a soft spring of its own (the pose engine's «hair») swings it on his jerks */}
             <g className="hm-mask-ear" style={box("maskEar", 0.6, 0.02)}><g className="hm-mask-j" style={box("maskEar", 0.6, 0.02)}>{pic("maskEar")}</g></g>

@@ -8521,6 +8521,10 @@ body:has(.bd-screen) .hud { background: none; border-bottom: 0; box-shadow: none
 .rig-hm .hm-beard { transform: scaleY(calc(1 + var(--jaw) * 0.045)); }
 .rig-hm .hm-pupils { transform: translate(calc(var(--px) * 2.6px), calc(var(--py) * 1.4px)); }
 .rig-hm .hm-brows { transform: translateY(calc(var(--brw) * 1.8px)) scaleX(calc(1 - var(--brw) * 0.03)); }
+/* below half HP: sad — the inner ends of the brows up (each turns round its outer end) */
+.rig-hm .hm-brow-l, .rig-hm .hm-brow-r { transition: transform 0.6s ease; }
+.rig-hm.dazed .hm-brow-l { transform: rotate(-11deg); }
+.rig-hm.dazed .hm-brow-r { transform: rotate(11deg); }
 .rig-hm .hm-lids > g { transform: scaleY(0); animation: fk-blink 4s linear infinite; }
 .rig-hm .hm-mask { transform: translateY(calc(var(--jaw) * 1.6px)) scaleY(calc(1 + var(--jaw) * 0.03)); }
 .rig-hm .hm-mask-ear { display: none; }
