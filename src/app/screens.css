@@ -8367,7 +8367,7 @@ button:is(.modal > .x, .fs-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x,
 .bd-win.big b { font-size: 12cqw; }
 @keyframes bd-big { to { box-shadow: 0 0 9cqw rgba(255, 210, 90, 0.95); } }
 .bd-free-got { position: absolute; left: 50%; top: 66%; transform: translateX(-50%); padding: 1.2cqw 3cqw; border-radius: 2cqw; background: #1f5a24; border: 0.5cqw solid #8fe08a; color: #eaffd9; font: 900 4cqw/1.2 system-ui; animation: bd-x 0.4s ease; white-space: nowrap; z-index: 3; }
-.bd-val { position: absolute; display: flex; align-items: center; justify-content: center; gap: 1cqw; color: var(--bd-gold); font: 900 5.4cqw/1 system-ui; text-shadow: 0 0.3cqw 0 #000; pointer-events: none; }
+.bd-val { position: absolute; display: flex; align-items: center; justify-content: center; gap: 1cqw; color: var(--bd-gold); font: 600 4.8cqw/1 system-ui; letter-spacing: 0.1cqw; text-shadow: 0 0.3cqw 0 #000; pointer-events: none; }
 .bd-val.free { color: #8fe08a; }
 .bd-btn { position: absolute; padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 0.08s, filter 0.15s; }
 .bd-btn img { width: 100%; height: 100%; display: block; pointer-events: none; }
@@ -8380,7 +8380,7 @@ button:is(.modal > .x, .fs-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x,
 .bd-auto.on img { filter: brightness(1.3) drop-shadow(0 0 1.5cqw #ffd75a); }
 .bd-last { position: absolute; display: flex; align-items: center; justify-content: center; gap: 2cqw; pointer-events: none; }
 .bd-last img { height: 60%; filter: drop-shadow(0 0.4cqw 0.4cqw rgba(0, 0, 0, 0.7)); }
-.bd-last b { color: var(--bd-gold); font: 900 7cqw/1 var(--font-display), system-ui; text-shadow: 0 0.4cqw 0 #000; }
+.bd-last b { color: var(--bd-gold); font: 600 5.4cqw/1 system-ui; text-shadow: 0 0.4cqw 0 #000; }
 .bd-back, .bd-table-btn { position: absolute; top: 8px; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; border: 2px solid #6b4a1e; background: rgba(30, 22, 15, 0.85); color: var(--bd-gold); font: 900 20px/1 system-ui; text-decoration: none; z-index: 4; }
 .bd-back { left: 10px; }
 .bd-table-btn { right: 10px; }

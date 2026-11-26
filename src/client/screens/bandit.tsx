@@ -190,7 +190,7 @@ export function BanditScreen() {
           <img src={art("auto")} alt="" draggable={false} />
         </button>
         {/* the last win: left under the balance */}
-        <div className="bd-last" style={u({ x: 138, y: 2560, w: 600, h: 300 })}>
+        <div className="bd-last" style={u({ x: 138, y: 2470, w: 600, h: 200 })}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={pic("matchbox" as BanditSym)} alt="" draggable={false} />
           <b className="num">{shown && res ? fmt(winShown) : 0}</b>
