@@ -41,16 +41,22 @@ const fmt = (n: number) => n.toLocaleString("ru-RU");
 const BLUE = "/assets/bandit/matchbox-blue.webp?v=1";
 
 interface Roulette { left: number; pulls: number; bet: number }
-interface View { free: number; freeBet: number; spins: number; won: number; rub: number; xp: number; lvl: { level: number; into: number; need: number }; boxes: number; blue: number; roulette: Roulette | null }
+interface View { free: number; freeBet: number; spins: number; won: number; rub: number; xp: number; lvl: { level: number; into: number; need: number }; boxes: number; blue: number; bet: number; roulette: Roulette | null }
 /** the machine's state out of an answer */
-const viewOf = (r: View): View => ({ free: r.free, freeBet: r.freeBet, spins: r.spins, won: r.won, rub: r.rub, xp: r.xp, lvl: r.lvl, boxes: r.boxes, blue: r.blue, roulette: r.roulette });
+const viewOf = (r: View): View => ({ free: r.free, freeBet: r.freeBet, spins: r.spins, won: r.won, rub: r.rub, xp: r.xp, lvl: r.lvl, boxes: r.boxes, blue: r.blue, bet: r.bet, roulette: r.roulette });
 type SpinRes = BanditSpin & View & { bet: number; paid: number; wasFree: boolean; freeLeft: number; levelBefore: number };
 
 export function BanditScreen() {
   const { act, state } = useGame();
   const [v, setV] = useState<View | null>(null);
   usePageReady(!!v);
-  const [bet, setBet] = useState(1);
+  // the bet stays until changed: kept on this device at once (and on the server with every spin)
+  const [bet, setBetState] = useState(() => { try { const b = Number(localStorage.getItem("bandit-bet")); return b >= BANDIT_BET_MIN && b <= BANDIT_BET_MAX ? b : 1; } catch { return 1; } });
+  const setBet = (f: number | ((b: number) => number)) => setBetState((b) => {
+    const n = typeof f === "function" ? f(b) : f;
+    try { localStorage.setItem("bandit-bet", String(n)); } catch { /* private mode */ }
+    return n;
+  });
   const [cols, setCols] = useState<BanditCell[][]>(() => Array.from({ length: BANDIT_REELS }, randCol));
   /** each reel: still (its 4 cells), running endlessly, or running down onto its result (the result on top of the strip) */
   const [mode, setMode] = useState<("idle" | "loop" | "stop")[]>(Array(BANDIT_REELS).fill("idle"));
@@ -68,7 +74,7 @@ export function BanditScreen() {
   const timers = useRef<number[]>([]);
 
   // an unfinished roulette (the app was closed during it) opens again
-  const load = useCallback(() => api.get<View>("/api/bandit").then((x) => { setV(x); if (x.roulette) setRoul(true); }).catch(() => {}), []);
+  const load = useCallback(() => api.get<View>("/api/bandit").then((x) => { setV(x); if (x.bet) { let local = 0; try { local = Number(localStorage.getItem("bandit-bet")); } catch { /* */ } if (!local) setBet(x.bet); } if (x.roulette) setRoul(true); }).catch(() => {}), []);
   useEffect(() => { void load(); }, [load]);
   useEffect(() => () => { autoRef.current = false; timers.current.forEach(clearTimeout); }, []);
   const later = (fn: () => void, ms: number) => { timers.current.push(window.setTimeout(fn, ms)); };

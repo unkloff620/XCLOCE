@@ -1940,4 +1940,9 @@ ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS roul_bet INT NOT NULL DEFAULT 
     id: "v2-147-bandit-blue",
     sql: `ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS blue BIGINT NOT NULL DEFAULT 0;`,
   },
+  {
+    // «Бандитский фарт»: the player's last bet (it stays until he changes it)
+    id: "v2-148-bandit-bet",
+    sql: `ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS bet INT NOT NULL DEFAULT 1;`,
+  },
 ];
