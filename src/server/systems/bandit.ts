@@ -3,7 +3,7 @@
  * bet they were won with). Every rouble bet is 1 experience of the machine. A win is matchboxes (bandit_state.boxes),
  * spent on the chest: BANDIT_CHEST_PRICE boxes — a tattoo piece the player has not got yet (the user 2026-11-26).
  * 3+ revolvers open «Русская рулетка»: ROULETTE_PULLS rounds; each pull loads one into the six chambers and spins the
- * drum (decided here: the shot ROULETTE_SHOT), a click gives ROULETTE_PAY × the bet BLUE boxes at once (bandit_state.blue;
+ * drum (decided here: the shot ROULETTE_SHOT), a click gives ROULETTE_PAY BLUE boxes at once (whatever the bet) (bandit_state.blue;
  * the spins give the red ones), the shot ends it. The horseshoes on a line give the machine's experience.
  * No spin while it is open.
  */
@@ -53,7 +53,7 @@ export async function banditSpinAction(ctx: Ctx, body: { bet?: unknown }) {
   return { ...s, ...(await banditView(ctx.q, ctx.pid)), levelBefore, bet, paid: free ? 0 : bet, win: pay, wasFree: free, freeLeft };
 }
 
-/** «Русская рулетка»: a pull of the trigger — a click gives ROULETTE_PAY × the bet boxes, the shot ends the game;
+/** «Русская рулетка»: a pull of the trigger — a click gives ROULETTE_PAY blue boxes, the shot ends the game;
  *  `stop`: he puts the revolver down (keeps what he got) */
 export async function banditPull(ctx: Ctx, body: { stop?: unknown }) {
   const r = await row(ctx.q, ctx.pid);
@@ -65,7 +65,7 @@ export async function banditPull(ctx: Ctx, body: { stop?: unknown }) {
   const pull = Number(r.roul_pulls) + 1;
   // a round in, the drum spun: the shot 1 in 6 (roul_round: a test may fix the pull that shoots)
   const shot = Number(r.roul_round) > 0 ? pull === Number(r.roul_round) : ctx.rng() < ROULETTE_SHOT;
-  const got = shot ? 0 : ROULETTE_PAY * Number(r.roul_bet);
+  const got = shot ? 0 : ROULETTE_PAY;
   const left = shot ? 0 : Number(r.roul_left) - 1;
   await ctx.q.query("UPDATE bandit_state SET roul_left=$2, roul_pulls=$3, blue=blue+$4 WHERE player_id=$1", [ctx.pid, left, pull, got]);
   return { shot, stopped: false, got, pull, ...(await banditView(ctx.q, ctx.pid)) };

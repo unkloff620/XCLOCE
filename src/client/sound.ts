@@ -8,7 +8,7 @@
  * The mute switch is remembered on this device.
  */
 
-export type Sfx = "ink" | "wear" | "spin" | "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" | "upgrade" | "levelup" | "error" | "win" | "step" | "door" | "locked"
+export type Sfx = "ink" | "wear" | "spin" | "gunshot" | "revspin" | "tap" | "hit" | "crit" | "coin" | "buy" | "reward" | "chest" | "upgrade" | "levelup" | "error" | "win" | "step" | "door" | "locked"
   /* mini-games: dice in the cup and on the table, a card flip, a deal, poker chips, a squashed roach, a zonk */
   | "shake" | "dice" | "card" | "deal" | "chips" | "splat" | "zonk"
   /* a profile: «Ништяк!» for a pumped biceps (public/assets/sound/nishtyak-4.mp3, a hoarse prison voice), a spit, a fist fight */
@@ -247,6 +247,10 @@ const SAMPLE_URLS = {
   creak: "/assets/sound/door-creak.mp3",
   // the wheel of «Колесо удачи» turning (the player's recording, tools/sound/source/fortune-spin.mp3, cut to the 1.5 s turn)
   fortunespin: "/assets/sound/fortune-spin.mp3",
+  // «Русская рулетка»: the shot and the drum spinning (the player's recordings, tools/sound/source/gunshot.mp3,
+  // revolver-spin.mp3 — cut to the 2 s spin)
+  gunshot: "/assets/sound/gunshot.mp3",
+  revspin: "/assets/sound/revolver-spin.mp3",
   // a thing put on: one of three recordings of the player's at random (tools/sound/source/wear-1..3.mp3)
   wear1: "/assets/sound/wear-1.mp3",
   wear2: "/assets/sound/wear-2.mp3",
@@ -514,6 +518,12 @@ export function sfx(name: Sfx, power = 0.5) {
       noise(a, t, 0.25, { freq: 1600, type: "bandpass", q: 0.7, vol: 0.25 });
       break;
     }
+    case "gunshot":
+      sample(a, "gunshot", t, 0.9);
+      break;
+    case "revspin":
+      sample(a, "revspin", t, 0.8);
+      break;
     case "spin":
       if (sample(a, "fortunespin", t, 0.7)) break;
       for (let i = 0; i < 14; i++) noise(a, t + 1.4 * (1 - Math.pow(1 - i / 14, 1.6)), 0.02, { freq: 2200, type: "bandpass", q: 3, vol: 0.25 });

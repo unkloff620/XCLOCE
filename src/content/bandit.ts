@@ -40,7 +40,7 @@ export const BANDIT_SCATTER: BanditSym[] = ["bell", "revolver"];
 /**
  * «Русская рулетка» (3+ revolvers anywhere; the user 2026-11-26): ROULETTE_PULLS rounds (the bullets top left of the
  * window); each pull one round goes into the six chambers and the drum is spun — the shot 1 in 6. Every click —
- * ROULETTE_PAY × the bet matchboxes, the shot ends the game (the clicks before it are kept).
+ * ROULETTE_PAY blue matchboxes (not × the bet), the shot ends the game (the clicks before it are kept).
  */
 export const ROULETTE_PAY = 25;
 export const ROULETTE_PULLS = 4;

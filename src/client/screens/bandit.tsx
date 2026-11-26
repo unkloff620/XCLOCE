@@ -185,7 +185,8 @@ export function BanditScreen() {
         {shown && res && res.win > 0 && (
           <div className={`bd-win ${res.win >= res.bet * 20 ? "big" : ""}`}>
             {res.win >= res.bet * 20 && <i>БОЛЬШОЙ ВЫИГРЫШ</i>}
-            <b className="num">+{fmt(winShown)}</b>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <b className="num"><img src={pic("matchbox" as BanditSym)} alt="коробков" draggable={false} />+{fmt(winShown)}</b>
             {res.mult > 1 && <span className="num">×{res.mult}</span>}
           </div>
         )}
@@ -347,7 +348,7 @@ function PayTable({ bet, onClose }: { bet: number; onClose: () => void }) {
         <div className="bd-pay-big">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={pic("revolver")} alt="" />
-          <div><b>Русская рулетка</b><span className="small">3 револьвера в любом месте — бонусная игра: {ROULETTE_PULLS} пули, каждая заряжается в барабан на шесть гнёзд и барабан крутится. Щелчок — {fmt(ROULETTE_PAY * bet)} синих коробков, выстрел — игра окончена.</span></div>
+          <div><b>Русская рулетка</b><span className="small">3 револьвера в любом месте — бонусная игра: {ROULETTE_PULLS} пули, каждая заряжается в барабан на шесть гнёзд и барабан крутится. Щелчок — {fmt(ROULETTE_PAY)} синих коробков, выстрел — игра окончена.</span></div>
         </div>
         <div className="bd-pay-big">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -373,8 +374,8 @@ function PayTable({ bet, onClose }: { bet: number; onClose: () => void }) {
 /**
  * «Русская рулетка» (3+ revolvers; the user 2026-11-26): the player's hero sits with his back to us on the stool in a dark
  * backroom; ROULETTE_PULLS bullets lie top left. A tap: the revolver (the artist's, seen from behind) rises from below to
- * the back of his head, the drum swings out, a bullet flies into a chamber (its place top left goes to a shadow), the drum
- * swings back and spins for 2 s, stops — and the trigger: a click (+ROULETTE_PAY × the bet boxes, the revolver goes down)
+ * the back of his head with its drum behind it, the drum swings out to the left, a bullet flies into a chamber (its place
+ * top left goes to a shadow), the drum snaps back behind the gun and spins for 2 s, stops — and the trigger: a click (+ROULETTE_PAY blue boxes, the revolver goes down)
  * or the shot (a flash, the game is over). The server decides the pull at the tap; the window only plays it out.
  */
 const R = "/assets/bandit/roulette";
@@ -384,7 +385,7 @@ type Phase = "idle" | "rise" | "open" | "load" | "close" | "spin" | "fire" | "lo
 function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Parameters<typeof HeroRig>[0]["look"]; onView: (v: View) => void; onClose: () => void }) {
   const { act, busy } = useGame();
   const [used, setUsed] = useState(r.pulls);
-  const [got, setGot] = useState(r.pulls * ROULETTE_PAY * r.bet);
+  const [got, setGot] = useState(r.pulls * ROULETTE_PAY);
   const [phase, setPhase] = useState<Phase>("idle");
   const [result, setResult] = useState<"click" | "bang" | null>(null);
   const [over, setOver] = useState<"bang" | "max" | null>(null);
@@ -404,12 +405,12 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
     at(RT.load, () => { setPhase("load"); setUsed((u) => u + 1); sfx("tap", 0.3); });
     at(RT.close, () => setPhase("close"));
     // the drum spins 2 s and stops on a chamber (a whole number of turns and a sixth)
-    at(RT.spin, () => { setPhase("spin"); setTurn((t) => t + 360 * 5 + 60 * (1 + Math.floor(Math.random() * 6))); sfx("spin", 0.3); });
+    at(RT.spin, () => { setPhase("spin"); setTurn((t) => t + 360 * 5 + 60 * (1 + Math.floor(Math.random() * 6))); sfx("revspin"); });
     at(RT.fire, () => {
       setPhase("fire");
       setResult(res.shot ? "bang" : "click");
       onView(viewOf(res));
-      if (res.shot) { sfx("hit"); haptic.tap(); setOver("bang"); }
+      if (res.shot) { sfx("gunshot"); haptic.tap(); setOver("bang"); }
       else { sfx("tap"); setGot((g) => g + res.got); if (!res.roulette) setOver("max"); }
     });
     if (!res.shot) at(RT.lower, () => setPhase("lower"));
@@ -439,14 +440,15 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
           <HeroRig size={360} back look={look} />
           {/* the revolver: from below to the back of the head; the drum (with the bullet in it) swings out of it, spins */}
           <span className="bd-roul-gun">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="bd-roul-gun-body" src={`${R}/gun.webp${V}`} alt="" draggable={false} />
+            {/* the drum behind the gun (it rises with it), swung out to the left to be loaded */}
             <span className="bd-roul-drum-w"><span className="bd-roul-drum" style={{ ["--turn" as string]: `${turn}deg` }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`${R}/drum.webp${V}`} alt="" draggable={false} />
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img className="bd-roul-round" src={`${R}/round.webp${V}`} alt="" draggable={false} />
             </span></span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="bd-roul-gun-body" src={`${R}/gun.webp${V}`} alt="" draggable={false} />
             <i className="bd-roul-flash" />
           </span>
         </button>
@@ -466,7 +468,7 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
           </>
         ) : (
           <>
-            <span className="small">Пуль осталось: <b className="num">{left}</b> · щелчок — +{fmt(ROULETTE_PAY * r.bet)}</span>
+            <span className="small">Пуль осталось: <b className="num">{left}</b> · щелчок — +{fmt(ROULETTE_PAY)}</span>
             <button type="button" className="btn block" disabled={!!busy || playing || !!over} onClick={() => void stop()}>{used > 0 ? "Забрать и уйти" : "Уйти"}</button>
           </>
         )}
