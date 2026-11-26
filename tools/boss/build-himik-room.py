@@ -103,7 +103,8 @@ still.alpha_composite(L["stool"])
 for n in ["rack", "still-b", "still-a", "lamp"]:
     still.alpha_composite(L[n])
 still.convert("RGB").resize((1024, round(H * K)), Image.LANCZOS).save("public/assets/arena/himik.webp", quality=84, method=6)
-# the home room: the scene canvas 1060×1484 — the picture ×1060/2000, HOME_TOP px off the top (the lamp stays in)
-HOME_TOP = 60
-home.convert("RGB").resize((1060, round(H * 1060 / W)), Image.LANCZOS).crop((0, HOME_TOP, 1060, HOME_TOP + 1484)).save("tools/scene/source/room-lab.png")
+# the home room: the scene canvas 1060×1484 — the picture ×0.62, 90 px off the left and 430 off the top (content/home-scene.ts
+# LAB_ON_SCENE: the room big round the hero; on the home screen the live room goes on above the canvas — ROOM_TALL)
+HK, HX, HY = 0.62, 90, 430
+home.convert("RGB").resize((round(W * HK), round(H * HK)), Image.LANCZOS).crop((HX, HY, HX + 1060, HY + 1484)).save("tools/scene/source/room-lab.png")
 print(json.dumps(data))

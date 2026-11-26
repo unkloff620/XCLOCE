@@ -22,7 +22,10 @@ function surf(x0: number, x1: number, y: number, bottom: number, amp: number, le
   return { top: d, body: `${d} L${x1 + len} ${bottom} L${x0} ${bottom} Z` };
 }
 
-export function HimikRoom({ uid = "a", stool = true }: { uid?: string; stool?: boolean }) {
+/** the lamp's chains above its body (the top of its picture): repeated above it when it hangs lower */
+const CHAIN = 74;
+
+export function HimikRoom({ uid = "a", stool = true, drop = 0 }: { uid?: string; stool?: boolean; drop?: number }) {
   const s = R.sky, f = R.flask, sm = R["still-mask"];
   const mid = `hmr-m-${uid}`, gid = `hmr-g-${uid}`;
   const vessel = (x: number, w: number, y: number, bottom: number, drop: number, cls: string, i: number) => {
@@ -118,14 +121,20 @@ export function HimikRoom({ uid = "a", stool = true }: { uid?: string; stool?: b
       <rect className="hmr-dark" x={0} y={0} width={1024} height={RH} fill="#0d0710" />
       {/* the hanging lamp swings to and fro round the far wall's vanishing point: towards us it grows and rises; its light
           (the tubes' glow, the light falling down) goes with it and blinks, its copy with the tubes off shows when it's off */}
-      <g className="hmr-lamp" style={at(R.vanish[0], R.vanish[1])}>
+      <g className="hmr-lamp" style={at(R.vanish[0], R.vanish[1])}><g transform={drop ? `translate(0 ${drop})` : undefined}>
+        {/* hanging lower (`drop`, the home's tall room: its picture goes up under the HUD): longer chains */}
+        {Array.from({ length: Math.ceil(drop / CHAIN) }, (_, i) => (
+          <svg key={i} x={R.lamp.x} y={R.lamp.y - CHAIN * (i + 1)} width={R.lamp.w} height={CHAIN} viewBox={`0 0 ${R.lamp.w} ${CHAIN}`} overflow="hidden">
+            <image href={`${A}/lamp.webp`} x={0} y={0} width={R.lamp.w} height={R.lamp.h} />
+          </svg>
+        ))}
         <g className="hmr-light" style={{ mixBlendMode: "screen" }}>
           <polygon points={`${R.tubes[0] - 250},${R.tubes[1] + 20} ${R.tubes[0] + 250},${R.tubes[1] + 20} ${R.tubes[0] + 470},${R.tubes[1] + 1250} ${R.tubes[0] - 470},${R.tubes[1] + 1250}`} fill={`url(#hmr-cone-${uid})`} />
           <ellipse cx={R.tubes[0]} cy={R.tubes[1]} rx={330} ry={110} fill={`url(#hmr-tube-${uid})`} />
         </g>
         <image href={`${A}/lamp.webp`} {...box(R.lamp)} />
         <image className="hmr-lamp-off" href={`${A}/lamp-off.webp`} {...box(R["lamp-off"])} />
-      </g>
+      </g></g>
     </g>
   );
 }

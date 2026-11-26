@@ -8,7 +8,7 @@ import { haptic } from "../telegram.ts";
 import { useGame, useNow } from "../store.tsx";
 import type { RigEdit } from "../art/rig.tsx";
 import { HomeScene } from "../art/home-scene.tsx";
-import { ROOM_BACKDROP } from "../../content/home-scene.ts";
+import { ROOM_BACKDROP, ROOM_TALL, SCENE } from "../../content/home-scene.ts";
 import { Icon, NavIcon } from "../art/icons.tsx";
 import { NAV_TABS } from "../../content/nav.ts";
 import { bossById, thingsFrom, type BossDef } from "../../content/bosses.ts";
@@ -171,8 +171,8 @@ export function HomeScreen() {
     <div className={`fit-page ${f && fb && fightOpen ? "has-fight" : ""} ${editing ? "styling" : ""} ${decorating ? "decorating" : ""} ${top ? "topping" : ""}`}>
       <div className="room">
         <div className={`scene-backdrop ${owned ? "" : "locked"}`} style={{ backgroundImage: `url(/assets/home/${ROOM_BACKDROP[viewRoom.id] ?? ROOM_BACKDROP.basic}.webp)` }} />
-        <div className={`room-view ${owned ? "" : "locked"}`}>
-          <HomeScene room={viewRoom.id} look={styling?.look ?? state.look.body} worn={styling ? (styling.bare && editFocus.mode === "ink" ? Object.fromEntries(Object.entries(styling.worn).filter(([k]) => !BARE_HIDES.includes(k))) : styling.worn) : state.look.equipped}
+        <div className={`room-view ${owned ? "" : "locked"}`} style={ROOM_TALL[viewRoom.id] ? { aspectRatio: `${SCENE.w} / ${SCENE.h + ROOM_TALL[viewRoom.id]}` } : undefined}>
+          <HomeScene tall room={viewRoom.id} look={styling?.look ?? state.look.body} worn={styling ? (styling.bare && editFocus.mode === "ink" ? Object.fromEntries(Object.entries(styling.worn).filter(([k]) => !BARE_HIDES.includes(k))) : styling.worn) : state.look.equipped}
             pieces={decorating ? previewPieces(state.home.pieces ?? {}, decorating) : state.home.pieces} decor={decorating ?? state.home.decor} trophies={state.home.trophies}
             focusHero={!!styling} hideHero={!!decorating} edit={styling ? { ...editFocus, onPick: pickPart } : undefined}
             onHero={owned && !editing ? openWardrobe : undefined} />

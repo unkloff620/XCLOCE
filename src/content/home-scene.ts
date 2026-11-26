@@ -33,6 +33,15 @@ export const CHARACTER = { x: 130, y: 375, scale: 0.78 };
 /** Seat inside the rig canvas (under the hips). */
 export const SEAT = { x: 320, y: 843, w: 360, aspect: 1.2 }; // a low stool: its seat shows under the shorts, the legs end on the floor by his feet (the user 2026-11-26)
 
+/**
+ * The rooms drawn taller than the scene (the artist's tall sheet): the scene's units their picture goes on above the
+ * canvas's top (the home screen's room view grows upward by them, the hero stays where he is).
+ * «Лаборатория Химика»: his 2000×3600 lab ×0.62 — the room bigger round the hero, its lamp still in (tools/boss/build-himik-room.py).
+ */
+export const ROOM_TALL: Record<string, number> = { lab: 430 };
+/** how the tall rooms' live pictures (1024 wide) sit on the scene: x, y, scale */
+// (the lab's lamp hangs lower there, drop in its picture's units: its top goes under the HUD, the lamp stays in sight)
+export const LAB_ON_SCENE = { x: -90, y: -430, k: (0.62 * 2000) / 1024, drop: 230 };
 export const ROOM_BG: Record<string, string> = { basic: "room-basic", freezer: "room-freezer", neon: "room-neon", shark: "room-shark", backroom: "room-backroom", boxing: "room-boxing", izba: "room-izba", ludoman: "room-ludoman", pepe: "room-pepe", vault: "room-vault", office: "room-office", penthouse: "room-penthouse", kitchen: "room-kitchen", cabinet: "room-cabinet", dojo: "room-dojo", acidyard: "room-acidyard", coder: "room-coder", forge: "room-forge", workshop: "room-workshop", lab: "room-lab" };
 /** opaque picture for the blurred backdrop around the scene (a room with a see-through window has a flat copy) */
 export const ROOM_BACKDROP: Record<string, string> = { basic: "room-basic", freezer: "room-freezer", neon: "room-neon", shark: "room-shark", backroom: "room-backroom", boxing: "room-boxing", izba: "room-izba", ludoman: "room-ludoman", pepe: "room-pepe", vault: "room-vault", office: "room-office", penthouse: "room-penthouse-flat", kitchen: "room-kitchen", cabinet: "room-cabinet", dojo: "room-dojo", acidyard: "room-acidyard", coder: "room-coder", forge: "room-forge", workshop: "room-workshop", lab: "room-lab" };

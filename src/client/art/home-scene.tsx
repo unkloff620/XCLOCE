@@ -1,6 +1,6 @@
 "use client";
 /* The player's room: artist's background, the seated character on his chair, the trophies. */
-import { CHARACTER, HERO_HOT, ROOM_BG, ROOM_LIGHTS, ROOM_RGB, ROOM_SKY, SCENE, SCENE_OBJECTS } from "../../content/home-scene.ts";
+import { CHARACTER, HERO_HOT, LAB_ON_SCENE, ROOM_BG, ROOM_LIGHTS, ROOM_RGB, ROOM_SKY, ROOM_TALL, SCENE, SCENE_OBJECTS } from "../../content/home-scene.ts";
 import { RigViewport, type RigEdit, type Worn } from "./rig.tsx";
 import { ART_ASPECT } from "./desk-data.ts";
 import { usedUrl } from "../preload.ts";
@@ -52,13 +52,15 @@ function Obj({ id, art }: { id: ObjId; art: string }) {
  * hideHero: the room editor is open — the hero steps away (his chair stays) so the room behind is seen.
  * pieces / decor: the owned room things and which of them stand (content/home.ts placedOf).
  */
-export function HomeScene({ room = "basic", onHero, still, look, worn, pieces = {}, decor = {}, trophies = [], focusHero, hideHero, edit }: { edit?: RigEdit; room?: string; onHero?: () => void; still?: boolean; look?: Look; worn?: Worn; pieces?: Record<string, number>; decor?: Record<string, number>; trophies?: string[]; focusHero?: boolean; hideHero?: boolean }) {
+export function HomeScene({ room = "basic", onHero, still, look, worn, pieces = {}, decor = {}, trophies = [], focusHero, hideHero, edit, tall }: { tall?: boolean; edit?: RigEdit; room?: string; onHero?: () => void; still?: boolean; look?: Look; worn?: Worn; pieces?: Record<string, number>; decor?: Record<string, number>; trophies?: string[]; focusHero?: boolean; hideHero?: boolean }) {
   const bg = ROOM_BG[room] ?? ROOM_BG.basic;
   const sky = ROOM_SKY[room];
   const lights = ROOM_LIGHTS[room] ?? [];
   const rgb = ROOM_RGB[room];
+  // a tall room on the home screen: the picture goes on above the canvas (the view grows upward, the hero stays)
+  const ext = tall && !still ? ROOM_TALL[room] ?? 0 : 0;
   return (
-    <svg viewBox={`0 0 ${SCENE.w} ${SCENE.h}`} width="100%" style={{ display: "block" }}>
+    <svg viewBox={`0 ${-ext} ${SCENE.w} ${SCENE.h + ext}`} width="100%" style={{ display: "block" }}>
       {focusHero && (
         <defs>
           {/* greyscale, then ~40% brightness */}
@@ -90,8 +92,9 @@ export function HomeScene({ room = "basic", onHero, still, look, worn, pieces = 
         <g transform={`translate(0 -53) scale(${SCENE.w / 1024})`}><NitkaRoom uid="home" /></g>
       ) : room === "lab" && !still ? (
         // «Лаборатория Химика» is Химик's live fight room without his stool (the player's chair stands there): his
-        // 1024×1843 picture ×1060/1024, 60 px off the top (tools/boss/build-himik-room.py)
-        <g transform={`translate(0 -60) scale(${SCENE.w / 1024})`}><HimikRoom uid="home" stool={false} /></g>
+        // 1024×1843 picture bigger than the scene's width (the room big round the hero), going on above the canvas on the
+        // home screen (ROOM_TALL)
+        <g transform={`translate(${LAB_ON_SCENE.x} ${LAB_ON_SCENE.y}) scale(${LAB_ON_SCENE.k})`}><HimikRoom uid="home" stool={false} drop={LAB_ON_SCENE.drop} /></g>
       ) : room === "coder" && !still ? (
         // «Берлога кодера» is Фокус's live fight room, drawn on the scene canvas itself (1060×1484)
         <FokusRoom uid="home" layer="back" />
