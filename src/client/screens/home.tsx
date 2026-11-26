@@ -318,10 +318,13 @@ export function HomeScreen() {
             {state.obshak?.ready && <i className="side-dot" />}
           </button>
           {f && fb && !fightOpen && (
-            <button className="fight-mini" style={{ ["--acc" as string]: fb.theme.accent, ["--hp" as string]: hpPct }} onClick={() => setFightOpen(true)} aria-label={`Идёт бой: ${fb.name}`} title="Идёт бой">
-              <BossRing boss={fb} size={58} />
+            <button className="menu-toggle event-toggle fight-sq" style={{ ["--acc" as string]: fb.theme.accent, ["--hp" as string]: hpPct }} onClick={() => setFightOpen(true)} aria-label={`Идёт бой: ${fb.name}`} title="Идёт бой">
+              {/* the running fight: the boss's face in a square like the other buttons, his HP a bar along its bottom, the time left under it */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {fb.photo.portrait ? <img src={fb.photo.portrait} alt="" draggable={false} /> : null}
+              <i className="fight-sq-hp" />
               <i className="live-dot" />
-              <span className="fight-mini-time num">{clock(f.endsAt - now)}</span>
+              <span className="event-tag fight-sq-time num">{clock(f.endsAt - now)}</span>
             </button>
           )}
         </div>
