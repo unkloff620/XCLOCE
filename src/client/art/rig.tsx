@@ -1052,11 +1052,12 @@ export function RigViewport({ x, y, scale, seat, still, look, worn, seatOnly, ed
   );
 }
 
-/** The hero alone; `seat` (chair level) puts the seat under them so a sitting hero does not hang in the air. */
-export function HeroRig({ size = 300, className, still, look, worn, seat }: { size?: number; className?: string; still?: boolean; look?: Look; worn?: Worn; seat?: boolean | number }) {
+/** The hero alone; `seat` (chair level) puts the seat under them so a sitting hero does not hang in the air; `back`: turned
+ *  round, his back on the stool (the roulette of «Бандитский фарт») */
+export function HeroRig({ size = 300, className, still, look, worn, seat, back }: { size?: number; className?: string; still?: boolean; look?: Look; worn?: Worn; seat?: boolean | number; back?: boolean }) {
   return (
     <svg className={`rig ${still ? "still" : ""} ${className ?? ""}`} viewBox="0 0 1000 1400" width={size * (1000 / 1400)} height={size} aria-hidden="true" style={{ overflow: "visible" }}>
-      <RigBody look={look} worn={worn} seat={seat} />
+      <RigBody look={look} worn={worn} seat={seat} edit={back ? { mode: "body", part: null, back: true } : undefined} />
     </svg>
   );
 }

@@ -1926,4 +1926,13 @@ CREATE TABLE IF NOT EXISTS friends (
     id: "v2-145-bandit-boxes",
     sql: `ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS boxes BIGINT NOT NULL DEFAULT 0;`,
   },
+  {
+    // «Бандитский фарт»: the bonus game «Русская рулетка» (3+ revolvers) — the pulls left, the chamber with the round,
+    // the pulls made, the bet it was won with
+    id: "v2-146-bandit-roulette",
+    sql: `ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS roul_left INT NOT NULL DEFAULT 0;
+ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS roul_round INT NOT NULL DEFAULT 0;
+ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS roul_pulls INT NOT NULL DEFAULT 0;
+ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS roul_bet INT NOT NULL DEFAULT 0;`,
+  },
 ];

@@ -8424,7 +8424,7 @@ body:has(.bd-screen) .hud { background: none; border-bottom: 0; box-shadow: none
 .bd-screen::before { content: ""; position: fixed; inset: 0; z-index: -1; background: #0d0b10 var(--bd-bg) center bottom / cover no-repeat; pointer-events: none; }
 .bd-screen { position: relative; z-index: 0; height: calc(100 * var(--vh) - var(--hud-h) - var(--safe-t) - var(--nav-h) - var(--safe-b)); margin: -8px -12px;
   display: grid; place-items: center; container-type: size; --bd-gold: #f2c14e; }
-.bd-stage { position: relative; width: min(100cqw, calc(100cqh * 2 / 3)); aspect-ratio: 2000 / 3000; container-type: inline-size; }
+.bd-stage { position: relative; width: min(100cqw, calc(100cqh * 2000 / 2693)); aspect-ratio: 2000 / 2693; container-type: inline-size; }
 .bd-l { position: absolute; display: block; pointer-events: none; user-select: none; }
 .bd-reels { position: absolute; inset: 0; pointer-events: none; }
 .bd-reel { position: absolute; overflow: hidden; container-type: inline-size; }
@@ -8433,20 +8433,19 @@ body:has(.bd-screen) .hud { background: none; border-bottom: 0; box-shadow: none
 .bd-strip.loop { animation: bd-loop var(--ms) linear infinite; filter: blur(0.8px); }
 @keyframes bd-loop { from { transform: translateY(-50%); } to { transform: translateY(0); } }
 .bd-strip.stop { animation: bd-stop var(--ms) cubic-bezier(0.25, 0.6, 0.45, 1) forwards; filter: blur(0.4px); }
-@keyframes bd-stop { from { transform: translateY(calc(-100% * var(--n) / (var(--n) + 4))); } to { transform: translateY(0); } }
-.bd-strip.land { animation: bd-land 0.32s cubic-bezier(0.3, 1.6, 0.5, 1); }
-@keyframes bd-land { from { transform: translateY(-9%); } to { transform: translateY(0); } }
+@keyframes bd-stop { from { transform: translateY(calc(-100% * var(--n) / (var(--n) + 3))); } to { transform: translateY(0); } }
+/* the reel stops dead on its result: no bounce */
 /* a cell: the column's quarter (4 cells of the artist's ~306 px in 1231) */
-.bd-cell { flex: none; width: 100cqw; height: calc(100cqw * 1231 / 4 / 297); display: grid; place-items: center; padding: 13%; background: center / 100% calc(100% * 309 / 307.75) no-repeat; transition: filter 0.25s, opacity 0.25s; }
+.bd-cell { flex: none; width: 100cqw; height: calc(100cqw * 925 / 3 / 297); display: grid; place-items: center; padding: 13%; background: center / 100% calc(100% * 309 / 307.75) no-repeat; transition: filter 0.25s, opacity 0.25s; }
 .bd-cell img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); }
 .bd-cell.dim { opacity: 0.35; filter: saturate(0.5); }
 .bd-cell.lit img { animation: bd-lit 0.7s ease-in-out infinite alternate; }
 @keyframes bd-lit { from { transform: scale(1); filter: drop-shadow(0 0 2px #ffd75a); } to { transform: scale(1.12); filter: drop-shadow(0 0 9px #ffd75a) brightness(1.15); } }
 /* the wild bandit: one tall piece of the strip, as tall as the four cells; he falls in with the reel */
-.bd-wild { position: relative; flex: none; width: 100cqw; height: calc(100cqw * 1231 / 297); }
+.bd-wild { position: relative; flex: none; width: 100cqw; height: calc(100cqw * 925 / 297); overflow: hidden; }
 .bd-strip.land .bd-wild { animation: bd-wild-glow 0.9s ease-in-out infinite alternate; }
 @keyframes bd-wild-glow { from { filter: drop-shadow(0 0 1cqw rgba(255, 190, 60, 0.5)); } to { filter: drop-shadow(0 0 5cqw rgba(255, 190, 60, 0.95)) brightness(1.08); } }
-.bd-wild > img:first-child { position: absolute; inset: 0; width: 100%; height: 100%; }
+.bd-wild > img:first-child { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
 @keyframes bd-wild-in { from { transform: scaleY(0.1); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }
 .bd-wild-word { position: absolute; animation: bd-word 0.9s ease-in-out 0.4s infinite alternate; }
 @keyframes bd-word { to { transform: scale(1.08); filter: brightness(1.25); } }
@@ -8496,6 +8495,9 @@ body:has(.bd-screen) .hud { background: none; border-bottom: 0; box-shadow: none
 .bd-lvl { position: absolute; display: flex; align-items: center; gap: 2cqw; padding: 0 2.5cqw; border-radius: 3cqw; background: rgba(15, 10, 6, 0.72); border: 0.4cqw solid #6b4a1e; }
 .bd-lvl b { color: var(--bd-gold); font: 800 3.6cqw/1 system-ui; white-space: nowrap; }
 .bd-lvl small { color: #d8c49a; font: 600 2.8cqw/1 system-ui; white-space: nowrap; }
+.bd-lvlup { position: absolute; left: 50%; top: -1cqw; transform: translateX(-50%); font: 900 6cqw/1 var(--font-display), system-ui; font-style: normal; color: #8fe08a;
+  text-shadow: 0 0.4cqw 0 #0d2a0f, 0 0 2cqw rgba(143, 224, 138, 0.8); pointer-events: none; animation: bd-lvlup 1.6s ease-out forwards; }
+@keyframes bd-lvlup { 0% { transform: translate(-50%, 0) scale(0.6); opacity: 0; } 15% { transform: translate(-50%, -3cqw) scale(1.15); opacity: 1; } 70% { opacity: 1; } 100% { transform: translate(-50%, -11cqw) scale(1); opacity: 0; } }
 .bd-lvl-bar { flex: 1; height: 1.8cqw; border-radius: 1cqw; background: #120b07; overflow: hidden; border: 0.3cqw solid #3b2410; }
 .bd-lvl-bar i { display: block; height: 100%; background: linear-gradient(90deg, #c8861e, #ffd75a); transition: width 0.4s; }
 .bd-chest:not(:disabled) { animation: bd-chest 2.4s ease-in-out infinite; transform-origin: 50% 90%; }
@@ -8557,3 +8559,40 @@ body:has(.bd-screen) .hud { background: none; border-bottom: 0; box-shadow: none
 .rig-hm { --lR: 0; --lL: 0; }
 .rig-hm .hm-loose-r { transform: rotate(calc(var(--lR) * 1deg)); }
 .rig-hm .hm-loose-l { transform: rotate(calc(var(--lL) * 1deg)); }
+
+/* «Русская рулетка» (bandit.tsx RouletteWindow): a dark backroom, the hero's back on the stool, the revolver at his nape */
+.bd-roul { position: fixed; inset: 0; z-index: 300; display: flex; flex-direction: column; background: rgba(5, 3, 2, 0.92); padding: calc(var(--safe-t) + 12px) 12px calc(var(--safe-b) + 14px); }
+.bd-roul-scene { position: relative; flex: 1; min-height: 0; border-radius: 18px; overflow: hidden; border: 3px solid #6b4a1e;
+  background: radial-gradient(ellipse 55% 45% at 50% 30%, rgba(255, 196, 110, 0.32), transparent 70%), linear-gradient(#2a1d14, #120b07 70%); }
+.bd-roul-scene::before { content: ""; position: absolute; left: 50%; top: 0; width: 2px; height: 14%; background: #000; }
+.bd-roul-scene::after { content: ""; position: absolute; left: 50%; top: 13%; width: 34px; height: 34px; margin-left: -17px; border-radius: 50%;
+  background: radial-gradient(#fff6d0, #ffbf5a 45%, rgba(255, 160, 60, 0) 72%); animation: bd-roul-bulb 3.1s steps(1) infinite; }
+@keyframes bd-roul-bulb { 0%, 100% { opacity: 1; } 47% { opacity: 0.4; } 48% { opacity: 1; } 81% { opacity: 0.6; } 82% { opacity: 1; } }
+.bd-roul-scene.bang { animation: bd-roul-bang 0.9s ease-out; }
+@keyframes bd-roul-bang { 0% { background-color: #fff; filter: brightness(3); transform: translate(6px, -4px); } 10% { transform: translate(-6px, 4px); } 20% { transform: translate(3px, 0); filter: brightness(1.5); } 100% { filter: none; transform: none; } }
+.bd-roul-title { position: absolute; top: 3%; left: 0; right: 0; text-align: center; font: 900 clamp(22px, 7vw, 34px)/1 var(--font-display), system-ui; color: #f2c14e; text-shadow: 0 3px 0 #3b2410; z-index: 2; }
+.bd-roul-hero { position: absolute; left: 50%; bottom: 2%; transform: translateX(-50%); width: min(78%, 330px); }
+.bd-roul-hero svg { width: 100%; height: auto; }
+.bd-roul-gun { position: absolute; left: 47%; top: 39%; width: min(40%, 180px); aspect-ratio: 1; padding: 0; border: 0; background: none; cursor: pointer; z-index: 3;
+  transform: rotate(8deg); transform-origin: 85% 70%; animation: bd-roul-aim 2.2s ease-in-out infinite; -webkit-tap-highlight-color: transparent; }
+.bd-roul-gun img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.7)); pointer-events: none; }
+.bd-roul-gun:disabled { cursor: default; }
+@keyframes bd-roul-aim { 50% { transform: rotate(5deg) translate(3px, 2px); } }
+.bd-roul-gun.click { animation: bd-roul-kick 0.35s ease-out; }
+.bd-roul-gun.bang { animation: bd-roul-recoil 0.6s ease-out; }
+@keyframes bd-roul-kick { 30% { transform: rotate(14deg) translate(-4px, -3px); } }
+@keyframes bd-roul-recoil { 15% { transform: rotate(34deg) translate(22px, -18px); filter: brightness(2.5); } }
+.bd-roul-click, .bd-roul-bang { position: absolute; left: 50%; top: 18%; transform: translateX(-50%); font: 900 clamp(26px, 9vw, 44px)/1 var(--font-display), system-ui; font-style: normal; z-index: 4; animation: bd-x 0.35s cubic-bezier(0.2, 1.6, 0.4, 1); }
+.bd-roul-click { color: #fff6cf; text-shadow: 0 3px 0 #3b2410; }
+.bd-roul-bang { color: #ff3b2e; text-shadow: 0 3px 0 #2a0503, 0 0 20px #ff9a2e; }
+.bd-roul-drum { position: absolute; left: 6%; top: 16%; width: 64px; height: 64px; border-radius: 50%; background: radial-gradient(#5b5f66, #2b2e33); border: 3px solid #121315; z-index: 2;
+  transform: rotate(var(--turn)); transition: transform 0.35s cubic-bezier(0.3, 1.5, 0.5, 1); }
+.bd-roul-drum i { position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px; border-radius: 50%; background: #c9a24a; border: 2px solid #121315;
+  transform: rotate(var(--a)) translateY(-19px); }
+.bd-roul-drum i.done { background: #121315; }
+.bd-roul-drum i.shot { background: #ff3b2e; box-shadow: 0 0 8px #ff3b2e; }
+.bd-roul-panel { flex: none; display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 12px; color: #f3e3c3; text-align: center; }
+.bd-roul-got { display: inline-flex; align-items: center; gap: 8px; font: 900 26px/1 system-ui; color: #f2c14e; }
+.bd-roul-got img { width: 34px; height: 34px; }
+.bd-roul-end { font-size: 18px; }
+@media (prefers-reduced-motion: reduce) { .bd-roul-gun, .bd-roul-scene::after { animation: none; } }
