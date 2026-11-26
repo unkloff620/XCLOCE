@@ -8451,15 +8451,24 @@ body:has(.bd-screen) .hud { background: none; border-bottom: 0; box-shadow: none
 @keyframes bd-word { to { transform: scale(1.08); filter: brightness(1.25); } }
 .bd-wild-x { position: absolute; left: 0; right: 0; top: 3%; text-align: center; font: 900 26cqw/1 var(--font-display), system-ui; color: #fff6cf; text-shadow: 0 0.3cqw 0 #7a2d07, 0 0 1.4cqw #ffb100; animation: bd-x 0.6s cubic-bezier(0.2, 1.6, 0.4, 1); }
 @keyframes bd-x { from { transform: scale(2.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.bd-win { position: absolute; left: 50%; top: 49%; translate: -50% -50%; display: flex; flex-direction: column; align-items: center; gap: 0.5cqw; padding: 2cqw 5cqw; border-radius: 3cqw;
-  background: rgba(20, 12, 6, 0.86); border: 0.6cqw solid var(--bd-gold); box-shadow: 0 0 5cqw rgba(255, 190, 60, 0.6); pointer-events: none; animation: bd-x 0.4s cubic-bezier(0.2, 1.4, 0.4, 1); z-index: 3; }
-.bd-win b { display: inline-flex; align-items: center; gap: 1.5cqw; font: 900 9cqw/1 var(--font-display), system-ui; color: var(--bd-gold); text-shadow: 0 0.4cqw 0 #3b2410; }
+/* the win: no plate — it pops up in the middle, hangs a moment, then flies down into the red boxes' counter (bottom left
+   of the panel) and melts into it; the counter's «+N» shows as it lands */
+.bd-win { position: absolute; left: 50%; top: 49%; translate: -50% -50%; display: flex; flex-direction: column; align-items: center; gap: 0.5cqw;
+  pointer-events: none; z-index: 3; animation: bd-win-fly 1.9s cubic-bezier(0.3, 0, 0.3, 1) forwards; }
+@keyframes bd-win-fly {
+  0% { transform: scale(0.2); opacity: 0; }
+  14% { transform: scale(1.18); opacity: 1; }
+  22% { transform: scale(1); }
+  62% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(-36cqw, 45cqw) scale(0.22); opacity: 0; }
+}
+.bd-win b { display: inline-flex; align-items: center; gap: 1.5cqw; font: 900 9cqw/1 var(--font-display), system-ui; color: var(--bd-gold);
+  text-shadow: 0 0.5cqw 0 #3b2410, 0 0 2cqw rgba(0, 0, 0, 0.9), 0 0 5cqw rgba(255, 190, 60, 0.6); }
 .bd-win b img { height: 0.95em; width: auto; filter: drop-shadow(0 0.4cqw 0.4cqw rgba(0, 0, 0, 0.6)); }
-.bd-win span { font: 900 4.5cqw/1 system-ui; color: #ffb55a; }
-.bd-win i { font: 900 3.8cqw/1 system-ui; font-style: normal; color: #fff; letter-spacing: 0.3cqw; }
-.bd-win.big { animation: bd-x 0.5s cubic-bezier(0.2, 1.4, 0.4, 1), bd-big 0.6s ease-in-out 0.5s infinite alternate; }
+.bd-win span { font: 900 4.5cqw/1 system-ui; color: #ffb55a; text-shadow: 0 0.4cqw 0 #000, 0 0 1.5cqw #000; }
+.bd-win i { font: 900 3.8cqw/1 system-ui; font-style: normal; color: #fff; letter-spacing: 0.3cqw; text-shadow: 0 0.4cqw 0 #000, 0 0 1.5cqw #000; }
+.bd-win.big { animation-duration: 2.8s; }
 .bd-win.big b { font-size: 12cqw; }
-@keyframes bd-big { to { box-shadow: 0 0 9cqw rgba(255, 210, 90, 0.95); } }
 .bd-free-got { position: absolute; left: 50%; top: 66%; translate: -50% 0; padding: 1.2cqw 3cqw; border-radius: 2cqw; background: #1f5a24; border: 0.5cqw solid #8fe08a; color: #eaffd9; font: 900 4cqw/1.2 system-ui; animation: bd-x 0.4s ease; white-space: nowrap; z-index: 3; }
 .bd-val { position: absolute; display: flex; align-items: center; justify-content: center; gap: 1cqw; color: var(--bd-gold); font: 600 4.8cqw/1 system-ui; letter-spacing: 0.1cqw; text-shadow: 0 0.3cqw 0 #000; pointer-events: none; }
 .bd-val.free { color: #8fe08a; }
@@ -8478,7 +8487,7 @@ body:has(.bd-screen) .hud { background: none; border-bottom: 0; box-shadow: none
 .bd-last-row { position: relative; display: flex; align-items: center; gap: 1.4cqw; }
 .bd-last img { width: 5.4cqw; height: 5.4cqw; object-fit: contain; filter: drop-shadow(0 0.4cqw 0.4cqw rgba(0, 0, 0, 0.7)); }
 .bd-last b { color: var(--bd-gold); font: 600 3.8cqw/1 system-ui; text-shadow: 0 0.4cqw 0 #000; }
-.bd-last-plus { position: absolute; left: 100%; margin-left: 1.5cqw; white-space: nowrap; font-style: normal; color: #8fe08a; font: 800 3.4cqw/1 system-ui; text-shadow: 0 0.3cqw 0 #000; animation: bd-x 0.4s ease; }
+.bd-last-plus { position: absolute; left: 100%; margin-left: 1.5cqw; white-space: nowrap; font-style: normal; color: #8fe08a; font: 800 3.4cqw/1 system-ui; text-shadow: 0 0.3cqw 0 #000; animation: bd-x 0.4s ease 1.7s backwards; }
 .bd-back, .bd-table-btn { position: absolute; top: 8px; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; border: 2px solid #6b4a1e; background: rgba(30, 22, 15, 0.85); color: var(--bd-gold); font: 900 20px/1 system-ui; text-decoration: none; z-index: 4; }
 .bd-back { left: 10px; }
 .bd-table-btn { right: 10px; }
