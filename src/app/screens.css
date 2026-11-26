@@ -8273,16 +8273,20 @@ button:is(.modal > .x, .fs-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x,
 .route-loader .boot-tw-area { bottom: calc(var(--nav-h) + var(--safe-b) + 5%); }
 .route-loader .route-spin { position: relative; z-index: 2; }
 
-/* ── Кедр (art/boss-kedr.tsx, boss-poses.ts POSES.kedr): the pose engine sets --jaw --brw --px --py --fg ── */
-.rig-kedr { --jaw: 0; --brw: 0; --px: 0; --py: 0; --fg: 0; }
-/* the mouth: the chin and the lower teeth drop */
-.rig-kedr .kd-jaw { transform: translateY(calc(var(--jaw) * 6px)); }
+/* ── Кедр (art/boss-kedr.tsx, boss-poses.ts POSES.kedr): the pose engine sets --jaw --brw --bru --px --py --fg ── */
+.rig-kedr { --jaw: 0; --brw: 0; --bru: 0; --px: 0; --py: 0; --fg: 0; }
+/* the mouth (closed as drawn): the chin and the lower teeth drop — at most the artist's «2 × Shift + ↓» (20 px of the
+   face sheet ×1.15, 11.5 rig px) */
+.rig-kedr .kd-jaw { transform: translateY(calc(var(--jaw) * 11.5px)); }
 .rig-kedr .kd-pupils { transform: translate(calc(var(--px) * 2.4px), calc(var(--py) * 1.3px)); }
 /* the frown: the brows down and in */
 .rig-kedr .kd-brows { transform: translateY(calc(var(--brw) * 1.8px)) scaleX(calc(1 - var(--brw) * 0.035)); }
-/* the left hand clenches: its fingers turn in round the knuckles and get shorter (they curl under the palm) — the puppet
-   bends the hand's picture by this empty bone */
-.rig-kedr .kd-fingers { transform: rotate(calc(var(--fg) * 58deg)) scale(calc(1 - var(--fg) * 0.12), calc(1 - var(--fg) * 0.42)); }
+/* the brows up (surprise, a sneer: --bru) — they rise and arch a little */
+.rig-kedr .kd-brows-u { transform: translateY(calc(var(--bru) * -3px)) scaleY(calc(1 + var(--bru) * 0.12)); }
+/* the left hand works its fingers: the fingers turn towards the thumb round the knuckles, the thumb towards the fingers
+   round its root, and they part again — the puppet bends the hand's picture by these empty bones */
+.rig-kedr .kd-fingers { transform: rotate(calc(var(--fg) * 13deg)) scale(1, calc(1 - var(--fg) * 0.06)); }
+.rig-kedr .kd-thumb { transform: rotate(calc(var(--fg) * -24deg)); }
 .rig-kedr .kd-lids > g { transform: scaleY(0); animation: fk-blink 4.1s linear infinite; }
 @media (prefers-reduced-motion: reduce) { .rig-kedr .kd-lids > g { animation: none; } }
 /* below half HP his own shift from foot to foot (the pose engine), not the shared sway and limp */

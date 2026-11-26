@@ -2,11 +2,12 @@
 /*
  * Кедр (the new model 2026-11-26, tools/boss/assemble-kedr.py): the artist's layers on soft joints — the puppet
  * (boss-puppet.ts) bends the legs (only the feet stay: a crouch bends the knees), the body and the arms at the
- * shoulders, the elbows and the wrists; his open left hand also bends at the knuckles (an empty bone, .kd-fingers: the
- * hand clenches into a fist — --fg); the face is plain SVG over the body. The pose engine (boss-poses.ts POSES.kedr) runs
+ * shoulders, the elbows and the wrists; in his open left hand the fingers and the thumb (two empty bones, .kd-fingers and
+ * .kd-thumb) come together and part again all the time — he works his fingers (--fg); the face is plain SVG over the body. The pose engine (boss-poses.ts POSES.kedr) runs
  * everything: three quick blows of the hammer, the third one sticks and he yanks it out, the arm springs back smoothly;
- * while he hammers the left arm bends to the body, its fist clenched; both arms rise a little with every breath in; the
- * mouth opens on a blow (--jaw: the chin and the lower teeth drop), the brows frown (--brw), the pupils look about
+ * while he hammers the left arm bends to the body; both arms rise with every breath in; the mouth (closed as drawn)
+ * opens on a blow (--jaw: the chin and the lower teeth drop, at most the artist's «2 × Shift + ↓»), the brows move all
+ * the time — up, a frown, one twitch (--brw, --bru), the pupils look about
  * (--px, --py), the lids blink.
  */
 import type { CSSProperties, ReactNode, RefObject } from "react";
@@ -22,8 +23,10 @@ const LID_LINE = "#5a2a18";
 const WAIST = [408, 700] as const;
 /** the left hand's knuckles: its fingers bend round them when it clenches */
 const KNUCKLES = [616, 782] as const;
-/** where the fingers end (between the fingertips and the thumb's tip): from the knuckles to here the fingers' bone takes over */
+/** where the fingers end: from the knuckles to here the fingers' bone takes over */
 const FINGERTIPS = [586, 836] as const;
+/** the thumb: its root and its tip */
+const THUMB = { root: [584, 757], tip: [559, 794] } as const;
 
 export function KedrRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, puppet, viewBox }: {
   id: string; look: string; rig: Rig; bust: boolean; dazed: boolean; dying: boolean; svgRef: RefObject<SVGSVGElement | null>; wrapRef: RefObject<HTMLDivElement | null>; puppet: boolean; viewBox: string;
@@ -82,7 +85,7 @@ export function KedrRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, pu
             <g className="kd-pupils">{pic("pupils")}</g>
             {lids}
             {pic("head")}
-            <g className="kd-brows" style={box("brows", 0.5, 0.5)}>{pic("brows")}</g>
+            <g className="kd-brows" style={box("brows", 0.5, 0.5)}><g className="kd-brows-u" style={box("brows", 0.5, 0.5)}>{pic("brows")}</g></g>
           </>, 150)}
           {/* his left arm over the body: the sleeve, the forearm, the open hand — its fingers bend at the knuckles */}
           {bone("br-arm br-arm-l", "armL", <>
@@ -91,7 +94,8 @@ export function KedrRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, pu
               {pic("lowL", "front")}
               {bone("br-hand br-hand-l", "handL", <>
                 {pic("handL", "front")}
-                <g className="kd-fingers" data-pivot={`${KNUCKLES[0]},${KNUCKLES[1]}`} data-pp-dangle={`${FINGERTIPS[0]},${FINGERTIPS[1]},46`} style={at(KNUCKLES[0], KNUCKLES[1])} />
+                <g className="kd-fingers" data-pivot={`${KNUCKLES[0]},${KNUCKLES[1]}`} data-pp-dangle={`${FINGERTIPS[0]},${FINGERTIPS[1]},19`} style={at(KNUCKLES[0], KNUCKLES[1])} />
+                <g className="kd-thumb" data-pivot={`${THUMB.root[0]},${THUMB.root[1]}`} data-pp-dangle={`${THUMB.tip[0]},${THUMB.tip[1]},24`} style={at(THUMB.root[0], THUMB.root[1])} />
               </>, 60)}
             </>, 110)}
           </>, 130)}

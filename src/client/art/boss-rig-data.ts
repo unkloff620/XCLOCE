@@ -344,10 +344,10 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
       },
       "teeth-low": {
         "x": 381.5,
-        "y": 245.5,
+        "y": 234.5,
         "w": 52,
-        "h": 10,
-        "v": "541a2fa7"
+        "h": 11,
+        "v": "e33163c8"
       },
       "eyes": {
         "x": 354.5,
@@ -372,10 +372,10 @@ export const BOSS_RIGS: Record<string, { w: number; h: number; parts: Record<str
       },
       "chin": {
         "x": 372.5,
-        "y": 249.0,
+        "y": 238.0,
         "w": 70,
         "h": 52,
-        "v": "3c40c01e"
+        "v": "aa47de90"
       }
     }
   },
