@@ -51,7 +51,8 @@ export function actionText(type: string, body: Row, result: unknown): string | n
       const reels = Array.isArray(r.reels) ? `[${(r.reels as string[]).map((s) => SYMBOLS[s] ?? s).join(" ")}]` : "";
       return join(`${r.title ?? r.outcome ?? "?"} ${reels}`.trim(), grantedText(r.reward) || "без выигрыша");
     }
-    case "bandit_spin": return `«Бандитский фарт»: ${r.wasFree ? "бесплатный спин" : `ставка ${fmt(r.bet)} руб.`}${n(r.win) > 0 ? ` · +${fmt(r.win)} коробков (опыт)` : " · мимо"}${n(r.mult) > 1 ? ` · ×${fmt(r.mult)}` : ""}${n(r.free) > 0 ? ` · +${fmt(r.free)} бесплатных` : ""}`;
+    case "bandit_chest": return `«Бандитский фарт»: сундук за коробки · ${item(r.tattoo)}`;
+    case "bandit_spin": return `«Бандитский фарт»: ${r.wasFree ? "бесплатный спин" : `ставка ${fmt(r.bet)} руб.`}${n(r.win) > 0 ? ` · +${fmt(r.win)} коробков` : " · мимо"}${n(r.mult) > 1 ? ` · ×${fmt(r.mult)}` : ""}${n(r.free) > 0 ? ` · +${fmt(r.free)} бесплатных` : ""}`;
     case "buy": {
       const o = offerById(String(body.offerId));
       const paid = r.paid as { currency?: string; amount?: number } | undefined;

@@ -12,10 +12,12 @@ import { api } from "../api.ts";
 import { usePageReady } from "../route-loader.tsx";
 import { Modal } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
+import { ItemArt } from "../art/items.tsx";
+import { itemById } from "../../content/items.ts";
 import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
 import { BANDIT_UI as UI } from "../art/bandit-ui-data.ts";
-import { BANDIT_BET_MAX, BANDIT_BET_MIN, BANDIT_FREE, BANDIT_REELS, BANDIT_ROWS, BANDIT_SYMS, BANDIT_WILD, type BanditCell, type BanditSpin, type BanditSym } from "../../content/bandit.ts";
+import { BANDIT_CHEST_PRICE, BANDIT_BET_MAX, BANDIT_BET_MIN, BANDIT_FREE, BANDIT_REELS, BANDIT_ROWS, BANDIT_SYMS, BANDIT_WILD, type BanditCell, type BanditSpin, type BanditSym } from "../../content/bandit.ts";
 
 const V = "?v=1";
 const pic = (s: BanditSym) => `/assets/bandit/${s}.webp${V}`;
@@ -29,7 +31,7 @@ const LOOP = 12, LOOP_MS = 380;
 const TAIL = 8, STOP_MS = 520, MIN_RUN = 650, STOP_GAP = 230;
 const fmt = (n: number) => n.toLocaleString("ru-RU");
 
-interface View { free: number; freeBet: number; spins: number; won: number; rub: number; xp: number; lvl: { level: number; into: number; need: number } }
+interface View { free: number; freeBet: number; spins: number; won: number; rub: number; xp: number; lvl: { level: number; into: number; need: number }; boxes: number }
 type SpinRes = BanditSpin & View & { bet: number; paid: number; wasFree: boolean; freeLeft: number; levelBefore: number };
 
 export function BanditScreen() {
@@ -81,7 +83,7 @@ export function BanditScreen() {
     const end = wait + (BANDIT_REELS - 1) * STOP_GAP + STOP_MS + 250;
     later(() => {
       setRes(r); setShown(true);
-      setV({ free: r.freeLeft, freeBet: r.freeBet, spins: r.spins, won: r.won, rub: r.rub, xp: r.xp, lvl: r.lvl });
+      setV({ free: r.freeLeft, freeBet: r.freeBet, spins: r.spins, won: r.won, rub: r.rub, xp: r.xp, lvl: r.lvl, boxes: r.boxes });
       if (r.lvl.level > r.levelBefore) { sfx("levelup"); setLvlUp(r.lvl.level); later(() => setLvlUp(null), 2600); }
       if (r.win > 0) {
         sfx(r.win >= r.bet * 20 ? "bigwin" : "coin");
@@ -200,22 +202,13 @@ export function BanditScreen() {
         <div className="bd-last" style={u({ x: 138, y: 2470, w: 600, h: 200 })}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={pic("matchbox" as BanditSym)} alt="" draggable={false} />
-          <b className="num">{shown && res ? fmt(winShown) : 0}</b>
+          <b className="num">{v ? fmt(v.boxes) : 0}</b>
+          {shown && res && res.win > 0 && <i className="bd-last-plus num">+{fmt(winShown)}</i>}
         </div>
       </div>
       <Link href="/yard" className="bd-back" aria-label="Назад во двор">‹</Link>
       <button type="button" className="bd-table-btn" onClick={() => { haptic.tap(); setTable(true); }} aria-label="Таблица выплат">?</button>
-      {chest && v && (
-        <Modal title="Сундук автомата" onClose={() => setChest(false)}>
-          <div className="bd-chest-in">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`/assets/bandit/ui/chest.webp${V}`} alt="" draggable={false} />
-            <b className="num">Уровень {v.lvl.level}</b>
-            <span className="bd-lvl-bar"><i style={{ width: `${v.lvl.need ? (v.lvl.into / v.lvl.need) * 100 : 100}%` }} /></span>
-            <span className="small num">{v.lvl.need ? `${fmt(v.lvl.into)} / ${fmt(v.lvl.need)} опыта` : "Максимальный уровень"}</span>
-          </div>
-        </Modal>
-      )}
+      {chest && v && <ChestWindow v={v} onClose={() => setChest(false)} onView={setV} />}
       {table && <PayTable bet={shownBet} onClose={() => setTable(false)} />}
     </div>
   );
@@ -255,6 +248,47 @@ function Cell({ c, lit, dim }: { c: BanditCell; lit?: boolean; dim?: boolean }) 
   );
 }
 
+/** the chest: the machine's level, and a tattoo piece for BANDIT_CHEST_PRICE matchboxes */
+function ChestWindow({ v, onClose, onView }: { v: View; onClose: () => void; onView: (v: View) => void }) {
+  const { act, busy } = useGame();
+  const [got, setGot] = useState<string | null>(null);
+  const open = async () => {
+    haptic.tap();
+    const r = await act<View & { tattoo: string }>("bandit_chest", {});
+    if (!r) return;
+    sfx("casedrop");
+    setGot(r.tattoo);
+    onView({ free: r.free, freeBet: r.freeBet, spins: r.spins, won: r.won, rub: r.rub, xp: r.xp, lvl: r.lvl, boxes: r.boxes });
+  };
+  return (
+    <Modal title="Сундук" onClose={onClose}>
+      <div className="bd-chest-in">
+        {got ? (
+          <div className="bd-chest-got">
+            <ItemArt id={got} size={96} />
+            <b>{itemById(got)?.name ?? "Наколка"}</b>
+          </div>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={`/assets/bandit/ui/chest.webp${V}`} alt="" draggable={false} />
+        )}
+        <span className="bd-chest-boxes num">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={pic("matchbox" as BanditSym)} alt="коробков" /> {fmt(v.boxes)}
+        </span>
+        <button type="button" className="btn gold block" disabled={v.boxes < BANDIT_CHEST_PRICE || !!busy} onClick={() => void open()}>
+          Открыть за {fmt(BANDIT_CHEST_PRICE)}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="bd-chest-btn-box" src={pic("matchbox" as BanditSym)} alt="коробков" />
+        </button>
+        <b className="num">Уровень автомата {v.lvl.level}</b>
+        <span className="bd-lvl-bar"><i style={{ width: `${v.lvl.need ? (v.lvl.into / v.lvl.need) * 100 : 100}%` }} /></span>
+        <span className="small num">{v.lvl.need ? `${fmt(v.lvl.into)} / ${fmt(v.lvl.need)} опыта` : "Максимальный уровень"}</span>
+      </div>
+    </Modal>
+  );
+}
+
 /** the rules and prices in the old machine's manner: the special symbols with their words on the left, the prices on the right */
 function PayTable({ bet, onClose }: { bet: number; onClose: () => void }) {
   const mults = BANDIT_WILD.mult.map(([m]) => `×${m}`).join(", ");
@@ -267,7 +301,7 @@ function PayTable({ bet, onClose }: { bet: number; onClose: () => void }) {
         <li>Выигрыш считается от левого края.</li>
         <li>Игра идёт по 4 линиям — по каждому ряду.</li>
         <li>Выигрыш каждой линии умножается на ставку ({bet}).</li>
-        <li>Выигрыш — коробки: 1 коробок = 1 опыт автомата. Каждый поставленный рубль — ещё 1 опыт.</li>
+        <li>Выигрыш — коробки спичек: за {BANDIT_CHEST_PRICE} коробков сундук даёт наколку. Каждый поставленный рубль — 1 опыт автомата.</li>
       </ul>
       <div className="bd-paygrid">
         <div className="bd-pay-big">

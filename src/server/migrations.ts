@@ -1921,4 +1921,9 @@ CREATE TABLE IF NOT EXISTS friends (
     id: "v2-144-bandit-xp",
     sql: `ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS xp BIGINT NOT NULL DEFAULT 0;`,
   },
+  {
+    // «Бандитский фарт»: the matchboxes won (spent on the chest for a tattoo)
+    id: "v2-145-bandit-boxes",
+    sql: `ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS boxes BIGINT NOT NULL DEFAULT 0;`,
+  },
 ];

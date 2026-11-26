@@ -3,7 +3,7 @@
  * each row a line: a symbol on reels 1, 2, 3… of the row from the left pays its 3/4/5 price × the bet. A wild reel (reels 2–4): the bandit standing the whole reel (4 cells), standing in
  * for every symbol but the bell, with a multiplier; all the multipliers on the screen add up and multiply the whole
  * spin's win. 3+ bells anywhere: free spins at the same bet (wild reels fall oftener in them).
- * Paid by lines: each of the 4 rows from the left, its price × the bet, in matchboxes — the machine's experience.
+ * Paid by lines: each of the 4 rows from the left, its price × the bet, in matchboxes — they open the chest (a tattoo).
  */
 export const BANDIT_ROWS = 4;
 export const BANDIT_REELS = 5;
@@ -43,10 +43,12 @@ export const BANDIT_MAX_X = 5000;
 export const BANDIT_FREE: Record<number, number> = { 3: 10, 4: 12, 5: 15 };
 
 /**
- * The machine's own level (the user 2026-11-26): every rouble bet is 1 experience (free spins give none), every matchbox won 1 more.
+ * The machine's own level (the user 2026-11-26): every rouble bet is 1 experience (free spins give none).
  * 10 experience from level 0 to 1, then 100 000 in all from level 1 to 100, each next level a bit dearer.
  */
 export const BANDIT_LEVEL_MAX = 100;
+/** the chest: so many matchboxes for a tattoo piece */
+export const BANDIT_CHEST_PRICE = 500;
 const _w = Array.from({ length: BANDIT_LEVEL_MAX - 1 }, (_, i) => (i + 1) ** 1.5);
 const _k = 100_000 / _w.reduce((a, b) => a + b, 0);
 /** the experience from level L to L+1 (L = 0…99) */

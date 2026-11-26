@@ -114,7 +114,7 @@ export const ACTIONS = [
   "quest_claim", "quest_chest", "notify_set", "achievement_claim", "achievement_claim_all", "ach_box_open", "prize_claim", "clan_edit",
   "game_start", "zonk_move", "zonk_give_up", "zonk_hints", "zonk_choice", "roach_squash", "pigeon_scare", "poker_play", "poker_swap", "poker_stand", "bj_open", "bj_invite", "bj_join", "bj_decline", "bj_leave", "bj_bet", "bj_unbet", "bj_insure", "bj_move", "upgrade", "up_sell", "up_take", "craft_put", "craft_take", "craft_make", "craft_box_buy", "dealer_buy", "toolbox_spin", "craft_split", "dealer_talk", "part_buy", "shave", "tosya_buy", "newbie_claim", "heist_pick", "heist_rush", "heist_open", "heist_auto", "auto_set", "craft_preset_save", "craft_preset_apply", "craft_preset_delete", "van_exchange", "van_pack", "fortune_buy", "fortune_spin", "fortune_cups", "fortune_prize_take", "fortune_cup_pick", "fortune_bag", "raid_start", "raid_attack", "raid_flee", "raid_bag", "raid_camp", "raid_claim", "raid_fort", "shod_take", "shod_slot", "shod_boost", "poker_reset", "poker_case", "fight_slots", "shod_boost_on",
   "clan_cancel", "clan_accept", "clan_reject", "clan_boss_hit", "duel_create", "duel_answer", "duel_play", "stash_collect", "stash_wish", "stash_gift", "stash_accept", "social_pump", "social_fight", "social_spit", "notes_read", "month_buy", "month_claim",
-  "bandit_spin", "zarub_start", "zarub_skip", "zarub_close", "zarub_melt", "zarub_bag", "master_buy", "master_step", "obshak_buy", "obshak_claim", "baul_open", "friend_add", "friend_answer", "friend_remove",
+  "bandit_spin", "bandit_chest", "zarub_start", "zarub_skip", "zarub_close", "zarub_melt", "zarub_bag", "master_buy", "master_step", "obshak_buy", "obshak_claim", "baul_open", "friend_add", "friend_answer", "friend_remove",
 ] as const;
 export type ActionType = (typeof ACTIONS)[number];
 
@@ -227,6 +227,7 @@ function perform(ctx: Ctx, type: ActionType, body: Record<string, unknown>): Pro
     case "rename": return extras.rename(ctx, str(body.name, "name", 60));
     case "slots_spin": return extras.spinSlots(ctx);
     case "bandit_spin": return bandit.banditSpinAction(ctx, body);
+    case "bandit_chest": return bandit.banditChest(ctx);
     case "equipment_upgrade": return home.upgradeEquipment(ctx, str(body.id, "id", 40));
     case "talent_up": return home.upgradeTalent(ctx, str(body.weapon, "weapon", 40), str(body.branch, "branch", 10));
     case "talent_reset": return home.resetTalents(ctx);

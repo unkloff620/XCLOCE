@@ -8416,7 +8416,13 @@ body:has(.bd-screen) .hud { background: none; border-bottom: 0; box-shadow: none
 @keyframes bd-chest { 0%, 80%, 100% { transform: rotate(0); } 85% { transform: rotate(-4deg); } 90% { transform: rotate(3deg); } 95% { transform: rotate(-2deg); } }
 .bd-chest-in { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .bd-chest-in img { width: 60%; }
-.bd-chest-in b { font-size: 20px; }
+.bd-chest-in b { font-size: 18px; }
+.bd-chest-in .btn img.bd-chest-btn-box { width: 20px; height: 20px; margin-left: 4px; }
+.bd-chest-boxes { display: inline-flex; align-items: center; gap: 6px; font: 900 20px/1 system-ui; }
+.bd-chest-boxes img { width: 28px; }
+.bd-chest-got { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px; animation: bd-x 0.5s cubic-bezier(0.2, 1.4, 0.4, 1); }
+.bd-last { flex-wrap: wrap; }
+.bd-last-plus { font-style: normal; color: #8fe08a; font: 800 4cqw/1 system-ui; animation: bd-x 0.4s ease; }
 .bd-chest-in .bd-lvl-bar { width: 100%; flex: none; height: 12px; border-radius: 6px; }
 .bd-lvlup { position: absolute; left: 50%; top: 24%; transform: translateX(-50%); padding: 2cqw 4cqw; border-radius: 3cqw; background: rgba(20, 12, 6, 0.9); border: 0.5cqw solid var(--bd-gold); color: #fff; font: 700 4cqw/1.2 system-ui; white-space: nowrap; z-index: 4; animation: bd-x 0.4s ease; }
 .bd-lvlup b { color: var(--bd-gold); }

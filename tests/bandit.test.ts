@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { act, freshDb, newPlayer, setMoney, wallet } from "./helpers.ts";
+import { act, freshDb, newPlayer, qty, setMoney, wallet } from "./helpers.ts";
 import { BANDIT_RTP, banditLevel, banditPay, banditSpin, type BanditCell } from "../src/content/bandit.ts";
 
 const lcg = (seed: number) => () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
@@ -45,15 +45,28 @@ describe("«Бандитский фарт»", () => {
     const r = await act(db, p, "bandit_spin", { bet: 10 });
     expect(r.result.paid).toBe(10);
     expect(await wallet(db, p, "RUB")).toBe(90);
-    expect(r.result.xp).toBe(10 + r.result.win);
+    expect(r.result.xp).toBe(10);
+    expect(r.result.boxes).toBe(r.result.win);
     await db.query("UPDATE bandit_state SET free=2, free_bet=7 WHERE player_id=$1", [p]);
     const before = await wallet(db, p, "RUB");
     const f = await act(db, p, "bandit_spin", { bet: 1 });
     expect(f.result).toMatchObject({ wasFree: true, bet: 7, paid: 0 });
-    expect(f.result.xp).toBe(r.result.xp + f.result.win);
+    expect(f.result.xp).toBe(10);
+    expect(f.result.boxes).toBe(r.result.win + f.result.win);
     expect(await wallet(db, p, "RUB")).toBe(before);
     await setMoney(db, p, "RUB", 0);
     await db.query("UPDATE bandit_state SET free=0 WHERE player_id=$1", [p]);
     await expect(act(db, p, "bandit_spin", { bet: 1 })).rejects.toMatchObject({ code: "no_money" });
+  });
+
+  it("the chest: 500 matchboxes for a tattoo piece not got yet", async () => {
+    const db = await freshDb();
+    const p = await newPlayer(db);
+    await expect(act(db, p, "bandit_chest")).rejects.toMatchObject({ code: "no_boxes" });
+    await db.query("INSERT INTO bandit_state (player_id, boxes) VALUES ($1, 600)", [p]);
+    const r = await act(db, p, "bandit_chest");
+    expect(r.result.tattoo).toMatch(/^tat-/);
+    expect(r.result.boxes).toBe(100);
+    expect(await qty(db, p, r.result.tattoo)).toBe(1);
   });
 });
