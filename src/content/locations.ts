@@ -301,10 +301,12 @@ const LOC_PAY: [pap: number, xp: number, knife: number, pistol: number, auto: nu
   [1050, 820, 1, 2, 0], [1350, 1000, 0, 0, 1], [1750, 1230, 1, 0, 1], [2250, 1500, 1, 1, 1], [2850, 1830, 1, 0, 2],
   [3700, 2240, 1, 1, 2], [4700, 2740, 2, 1, 2], [6100, 3350, 1, 0, 3], [7800, 4100, 2, 0, 3], [10000, 5000, 2, 1, 3],
 ];
+/** слитки for every pass, day or night (the user 2026-11-26): 1 for the first location, 15 for the last, growing faster towards the end */
+const LOC_GOLD = [1, 1, 2, 2, 3, 4, 4, 5, 6, 7, 8, 9, 11, 13, 15];
 const payOf = (order: number, cur: "PAP" | "TOOTH"): Reward => {
   const [pap, xp, knife, pistol, auto] = LOC_PAY[order - 1];
   const items = [["rug-pull-gun", auto], ["keyboard", knife], ["gpu", pistol]].filter(([, n]) => (n as number) > 0).map(([id, qty]) => ({ id: id as string, qty: qty as number }));
-  return { currencies: { [cur]: pap } as Reward["currencies"], xp, items };
+  return { currencies: { [cur]: pap, GOLD: LOC_GOLD[order - 1] } as Reward["currencies"], xp, items };
 };
 /** the reward of a full pass by day / by night */
 export const locReward = (l: LocationDef, mode: "day" | "night" = "day"): Reward => payOf(l.order, mode === "night" ? "TOOTH" : "PAP");
