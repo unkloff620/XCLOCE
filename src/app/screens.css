@@ -4151,6 +4151,9 @@ body.has-full .modal-back:not(.full) { z-index: 88; }
 
 /* ── the exchange kiosk in the yard (client/art/kiosk.tsx): the artist's layers on one box (1237×1244) ── */
 .yard-stage2 .yard-kiosk.closed { animation: none; }
+/* «Бандитский фарт»: a plain button right of the exchange, until its machine is drawn */
+.yard-stage2 .yard-bandit { left: 60%; bottom: 24%; z-index: 6; }
+.yard-bandit .btn { padding: 10px 18px; font-size: 16px; }
 .kz { position: relative; display: block; width: 100%; aspect-ratio: 1237 / 1244; container-type: inline-size; }
 .kz-l { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
 .kz-crop { position: absolute; display: block; pointer-events: none; }
@@ -8327,3 +8330,8 @@ button:is(.modal > .x, .fs-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x,
 .rig-dz .dz-hairtip { will-change: transform; }
 @media (prefers-reduced-motion: reduce) { .rig-dz .dz-lids > g { animation: none; } }
 .rig-dz.boss-rig.dazed, .rig-dz.boss-rig.dazed :is(.br-arm-l, .br-arm-r, .br-low-l, .br-low-r, .br-head) { animation: none; }
+
+/* «Бандитский фарт» (screens/bandit.tsx): the 5×4 reels */
+.bd-screen { padding: 10px 12px; display: flex; flex-direction: column; gap: 12px; }
+.bd-reels { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; padding: 8px; border-radius: 14px; background: linear-gradient(180deg, #2a221b, #1a1511); border: 3px solid #6b4a1e; }
+.bd-sym { width: 100%; aspect-ratio: 1; object-fit: contain; border-radius: 8px; background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.3)); }

@@ -218,6 +218,8 @@ export function YardScreen() {
           <Link href="/exchange" className={`yard-obj yard-kiosk kiosk-live ${exOpen ? "" : "closed"}`} aria-label={exOpen ? "Обменник" : "Обменник (закрыт)"} title={exOpen ? "Обменник" : "Обменник закрыт"} tabIndex={page === 1 ? 0 : -1}>
             <KioskArt open={exOpen} night={tod === "night"} />
           </Link>
+          {/* «Бандитский фарт» (screens/bandit.tsx): a plain button right of the exchange until the artist's machine is drawn */}
+          <Link href="/yard/bandit" className="yard-obj yard-bandit" aria-label="Бандитский фарт" title="Бандитский фарт" tabIndex={page === 1 ? 0 : -1}><span className="btn gold">Слоты</span></Link>
         </div>
         {page > -1 && <button type="button" className="yard-pager prev" onClick={() => turn(page - 1)} aria-label={page === 0 ? "Задний двор" : "Назад во двор"}>‹{onLeft > 0 && <span className="yard-pager-n num">{onLeft}</span>}</button>}
         {page < 1 && <button type="button" className="yard-pager next" onClick={() => turn(page + 1)} aria-label={page === 0 ? "Дальше по двору" : "Назад во двор"}>›{onRight > 0 && <span className="yard-pager-n num">{onRight}</span>}</button>}
