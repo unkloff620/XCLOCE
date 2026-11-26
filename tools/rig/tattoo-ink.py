@@ -169,7 +169,12 @@ def main(sid, sparse=False, back=False):
     ta, tb = figure(a), figure(b0)
     ha, hb = np.ptp(np.nonzero(ta)[0]), np.ptp(np.nonzero(tb)[0])
     iou = (ta & tb).sum() / max(1, (ta | tb).sum())  # the edit must keep the hero's figure (the mask): kuznya 0.99, a smeared one 0.90
-    if (abs(hb / ha - 1) > 0.06 or iou < 0.92) and "--force" not in sys.argv:  # --force: the old sets made before the mask
+    # the edit often comes a few % bigger or shifted with the same figure (2026-11-27: «Дискета», «Паутина», «Яд» at 0.90–0.91):
+    # its box fitted onto the base's first, the figure must then match closely (0.94: «Дискета») — a drawn head or a squeezed body still fails
+    fitted = fit_box(ta, tb, b0)[0]
+    iou_fit = (ta & fitted).sum() / max(1, (ta | fitted).sum())
+    print(sid, f"figure {hb / ha:.0%}, overlap {iou:.2f}, after the box fit {iou_fit:.2f}")
+    if (abs(hb / ha - 1) > (0.06 if iou >= 0.92 else 0.10) or (iou < 0.92 and iou_fit < 0.94)) and "--force" not in sys.argv:  # --force: the old sets made before the mask
         raise SystemExit(f"{sid}: the edit's figure is {hb / ha:.0%} of the base's height, overlap {iou:.2f} — it drew a head or moved the body; "
                          "redo the edit of the headless _base/in.png (with the skin mask), never ask to keep a head")
     b, bm = warp_onto(ta, tb, b0, with_mask=True)

@@ -37,7 +37,9 @@ SOLID = ["ice", "king", "taiga", "roots", "shark", "kraken", "cash", "gold", "ri
          # «Зарубы» (content/zarub.ts): 27 sets from the bags
          "zr-barak", "zr-bones", "zr-ash", "zr-deep", "zr-gasmask", "zr-gears", "zr-bratva", "zr-totem", "zr-kush",
          "zr-sakura", "zr-ghost", "zr-wings", "zr-crest", "zr-katana", "zr-clock", "zr-amphora", "zr-abyss", "zr-anchor",
-         "zr-plague", "zr-jaguar", "zr-peak", "zr-chronicle", "zr-fog", "zr-corsair", "zr-heaven", "zr-grin", "zr-ball"]
+         "zr-plague", "zr-jaguar", "zr-peak", "zr-chronicle", "zr-fog", "zr-corsair", "zr-heaven", "zr-grin", "zr-ball",
+         # the mentors and Фокус (2026-11-27): Фокус «Дискета», «Паутина»; Химик «Яд», «Формула»; Псих «Порезы», «Безумие»
+         "disketa", "pautina", "yad", "formula", "porezy", "bezumie"]
 _body = np.array(Image.open(os.path.join(ROOT, "tools", "rig", "source", "v2", "torso.png")).convert("RGBA").resize((1000, 1400), Image.LANCZOS))[..., 3] > 20
 UPPER_BODY = np.array(Image.open(os.path.join(ROOT, "tools", "rig", "source", "v2", "body.png")).convert("RGBA").resize((1000, 1400), Image.LANCZOS))[..., 3] > 40
 _layer = {z: np.array(Image.open(os.path.join(SRC, "_zones", f"{z}.png")).convert("L").resize((1000, 1400), Image.LANCZOS)) > 127 for z in ZONE_IDS}

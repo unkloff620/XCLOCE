@@ -77,10 +77,6 @@ export const bonusPieces = (s: TattooSet) => s.pieces;
 export const BOX_TATTOO_CHANCE = 0.2;
 const boxSet = (id: string, name: string, weapon: string, damage: number): TattooSet => ({ ...solid(id, name, "box", "pacan", weapon, damage) });
 
-/**
- * The user's table (2026-11-23) also gives the bonuses of the sets Фокус will get (none drawn yet):
- * Фокус — «Пацанский» +420 Rug Pull Gun, «Авторитетный» +270 Пистолет.
- */
 export const TATTOO_SETS: TattooSet[] = [
   ...DATSIK_SETS(),
   solid("taiga", "Тайга", "kedr", "pacan", "gpu", 30), solid("roots", "Корни", "kedr", "avtor", "gpu", 25),
@@ -105,6 +101,14 @@ export const TATTOO_SETS: TattooSet[] = [
   { ...solid("igla", "Игла", "nitka", "pacan", "gpu", 30), extra: [{ weapon: "keyboard", damage: 50 }] },
   { ...solid("shov", "Шов", "nitka", "blat", "gpu", 55), extra: [{ weapon: "keyboard", damage: 40 }] },
   { ...solid("portnoy", "Портной", "nitka", "avtor", "rug-pull-gun", 100), extra: [{ weapon: "keyboard", damage: 40 }] },
+  // Фокус (the user's table 2026-11-23: «Пацанский» +420 Пушка, «Авторитетный» +270 Ствол; drawn 2026-11-27 as 90s prison ink)
+  solid("disketa", "Дискета", "fokus", "pacan", "rug-pull-gun", 420), solid("pautina", "Паутина", "fokus", "avtor", "gpu", 270),
+  // Химик (the mentor, the user 2026-11-27): «Яд» (~85% of the skin), «Формула» — a light net of molecules on bare skin
+  { ...solid("yad", "Яд", "himik", "pacan", "gpu", 400), extra: [{ weapon: "keyboard", damage: 100 }] },
+  { ...solid("formula", "Формула", "himik", "avtor", "rug-pull-gun", 600), extra: [{ weapon: "keyboard", damage: 150 }] },
+  // Псих (the mentor, the user 2026-11-27): «Порезы» in «Пацанский», «Безумие» in «Авторитетный»
+  { ...solid("porezy", "Порезы", "psih", "pacan", "gpu", 500), extra: [{ weapon: "keyboard", damage: 200 }] },
+  { ...solid("bezumie", "Безумие", "psih", "avtor", "rug-pull-gun", 1500), extra: [{ weapon: "keyboard", damage: 300 }] },
   // Тося's sets (boss "tosya"): every pie he sells holds one piece (content/tosya.ts)
   solid("oven", "Пирожковая", "tosya", "pacan", "gpu", 200), solid("maid", "Горничная", "tosya", "pacan", "keyboard", 150),
   solid("yakuza", "Кухня якудзы", "tosya", "pacan", "rug-pull-gun", 300),
