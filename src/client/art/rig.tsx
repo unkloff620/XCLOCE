@@ -960,8 +960,8 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
             <Ol><HandFrames /></Ol>
           </Joint>
         </Joint>
-        {/* «Ворон»'s far wing: behind the head when he spreads it */}
-        {worn?.SPECIAL === "raven" && <Raven layer="back" />}
+        {/* «Ворон» on the right shoulder (slot «Особое»: the poker's royal flush): under the head — his spread wings go behind it */}
+        {worn?.SPECIAL === "raven" && <><Raven layer="back" /><Raven layer="front" /></>}
         <Ol>
           <Bone p="head" className="rig-head">
             <Face />
@@ -975,8 +975,6 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
             <Wear slot="HEAD" hat="over" />
           </Bone>
         </Ol>
-        {/* «Ворон» on the right shoulder (slot «Особое»: the poker's royal flush) */}
-        {worn?.SPECIAL === "raven" && <Raven />}
       </g>
       {edit && edit.mode !== "body" && <PreloadPlaces grid={edit.mode === "ink" ? "zone" : "slot"} />}
       {/* the tattoo grid and the chosen place lie under the head and the beard (they hang over the neck and the traps) */}
