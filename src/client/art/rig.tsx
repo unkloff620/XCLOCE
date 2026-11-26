@@ -675,7 +675,7 @@ const FLASK_ID = "flask-himik";
 /**
  * «Колба Химика» (tools/rig/build-flask.py, the artist's layers and his video): the hand holds the round flask by its
  * neck between the fingers; the hand rocks a little at the wrist, the flask hangs from the grip and swings under it as a
- * pendulum (the hand's rocking keeps it going), and the pink liquid inside keeps level, lagging behind the swings and
+ * pendulum (the hand's rocking keeps it going), and the green poison inside keeps level, lagging behind the swings and
  * sloshing (its surface tilts against the flask and ripples), small bubbles rise through it. The glass is drawn twice:
  * solid under the liquid, see-through over it.
  */
@@ -751,9 +751,9 @@ function FlaskHand() {
           <image href={src("inside")} x={ins.x} y={ins.y} width={ins.w} height={ins.h} preserveAspectRatio="none" />
         </mask>
         <linearGradient id={`fl-liq-${uid}`} gradientUnits="userSpaceOnUse" x1={cx} y1={LV} x2={cx} y2={cy + r}>
-          <stop offset="0" stopColor="#ff5ce0" />
-          <stop offset="0.45" stopColor="#f01ec8" />
-          <stop offset="1" stopColor="#a8088f" />
+          <stop offset="0" stopColor="#9dff3a" />
+          <stop offset="0.45" stopColor="#46d10f" />
+          <stop offset="1" stopColor="#167a0a" />
         </linearGradient>
       </defs>
       {img("fingers-back", true)}
@@ -762,14 +762,14 @@ function FlaskHand() {
         <g mask={`url(#fl-in-${uid})`}>
           <g ref={liqRef}>
             <path ref={waveRef} d={`${wave(0, 0.6)} L${cx + r * 2} ${cy + r * 2.4} L${cx - r * 2} ${cy + r * 2.4} Z`} fill={`url(#fl-liq-${uid})`} />
-            <rect x={cx - r * 2} y={LV - 0.6} width={r * 4} height={1.6} fill="#ffd6f7" opacity={0.85} />
+            <rect x={cx - r * 2} y={LV - 0.6} width={r * 4} height={1.6} fill="#e2ffa8" opacity={0.85} />
             {[0, 1, 2, 3, 4].map((i) => (
-              <circle key={i} className="rig-flask-bub" cx={cx - r * 0.5 + i * r * 0.25} cy={cy + r * 0.75} r={0.9 + (i % 3) * 0.5} fill="rgba(255,230,250,0.85)"
+              <circle key={i} className="rig-flask-bub" cx={cx - r * 0.5 + i * r * 0.25} cy={cy + r * 0.75} r={0.9 + (i % 3) * 0.5} fill="rgba(230,255,200,0.85)"
                 style={{ animationDelay: `${(i * 0.53) % 2.2}s`, ["--rise" as string]: `${(cy + r * 0.75 - LV - 2).toFixed(1)}px` }} />
             ))}
           </g>
         </g>
-        {/* the see-through glass over the liquid: lighter still, so the pink shows bright as in the artist's video */}
+        {/* the see-through glass over the liquid: lighter still, so the poison shows bright */}
         <g opacity={0.28}>{img("glass-front")}</g>
       </g>
       {img("hand", true)}

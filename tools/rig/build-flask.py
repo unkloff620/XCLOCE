@@ -109,7 +109,7 @@ yy = np.mgrid[0:2800, 0:2000][0]
 lvl = bulb_c[1] - bulb_r * 0.1
 m = (inside > 0) & (yy > lvl)
 t = np.clip((yy - lvl) / (bottom - lvl), 0, 1)[..., None]
-col = (np.array([255, 120, 230]) * (1 - t) + np.array([200, 20, 170]) * t)
+col = (np.array([157, 255, 58]) * (1 - t) + np.array([22, 122, 10]) * t)
 liq[..., :3] = col.astype(np.uint8); liq[..., 3] = m * 235
 ic.alpha_composite(Image.fromarray(liq))
 ic.alpha_composite(Image.fromarray(L["glass-front"]))
