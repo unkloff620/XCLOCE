@@ -816,17 +816,17 @@ const hmSplash = (amp = 1, slow = 1): Action => {
   keys.push({ at: 0, pose: hold, stiff: 0.8 / slow });
   let t = hmShake(keys, 0.3 * slow, hold, "handR", 10 * amp, 9, 0.1 * slow, 3.8);
   // held out to the side and tipped on its side (the mouth towards him, a little down): it pours
-  const tip: Pose = { armR: 15 * amp, lowR: 24 * amp, handR: 84 * amp, head: -3, px: -1, py: 0.8, brw: 0.4, jaw: 0.35, x: 2 };
-  keys.push({ at: t, pose: { ...tip, handR: 40 * amp }, stiff: 0.9 / slow });
+  const tip: Pose = { armR: 24 * amp, lowR: 50 * amp, handR: 20 * amp, head: -3, px: -1, py: 0.8, brw: 0.4, jaw: 0.35, x: 2 };
+  keys.push({ at: t, pose: { ...tip, lowR: 26 * amp, handR: -10 * amp }, stiff: 0.9 / slow });
   keys.push({ at: t + 0.35 * slow, pose: tip, stiff: 0.8 / slow });
   face.push({ cls: "hm-pour", at: t + 0.55 * slow, dur: 0.9 * slow });
-  keys.push({ at: t + 0.6 * slow, pose: { ...tip, handR: 92 * amp, lvR: 0.45 }, stiff: 0.25 / slow });
+  keys.push({ at: t + 0.6 * slow, pose: { ...tip, handR: 36 * amp, lvR: 0.45 }, stiff: 0.25 / slow });
   t += 1.55 * slow;
   // upright again, drawn back to the shoulder — the wind-up
   keys.push({ at: t, pose: { armR: 6 * amp, lowR: 30 * amp, handR: -18 * amp, up: -2, x: 4, y: 4, head: -2, jaw: 0.7, brw: 0.9, px: -0.4, py: -0.3, lvR: 0.45 }, stiff: 1.1 / slow });
   t += 0.5 * slow;
   // the flick at the screen: the flask comes at us and grows, the poison flies out
-  keys.push({ at: t, pose: { armR: -6 * amp, lowR: 14 * amp, handR: 12 * amp, zR: 30 * amp, up: 2.5, x: -6, y: 9, head: 2.5, jaw: 1, brw: 1, px: 0, py: 0.2, lvR: 0.8 }, stiff: 5.5 });
+  keys.push({ at: t, pose: { armR: 2 * amp, lowR: 14 * amp, handR: 12 * amp, zR: 30 * amp, up: 2.5, x: -6, y: 9, head: 2.5, jaw: 1, brw: 1, px: 0, py: 0.2, lvR: 0.8 }, stiff: 5.5 });
   face.push({ cls: "hm-splash", at: t + 0.1, dur: 0.12 });
   t += 0.3 * slow;
   keys.push({ at: t, pose: { armR: 3 * amp, lowR: 18 * amp, handR: 6 * amp, zR: 6, y: 4, jaw: 0.6, brw: 0.5, lvR: 0.8 }, stiff: 1.4 });
@@ -901,7 +901,7 @@ const POSES: Record<string, Spec> = {
         up: 0.7 * Math.sin(t * 0.8) + 0.3 * Math.sin(t * 2 + 1), x: 2.2 * Math.sin(t * 0.6),
         y: 1.2 * (0.5 - 0.5 * Math.cos(t * 1.9)),
         head: 1.3 * Math.sin(t * 1.1 + 1) + 0.6 * Math.sin(t * 0.45),
-        armR: 1.2 * Math.sin(t * 1.3 + 2), lowR: 1.6 * Math.sin(t * 1.6 + 1) + 2.5 * eR * Math.sin(t * 17),
+        armR: 1.6 + 1.2 * Math.sin(t * 1.3 + 2), lowR: 1.6 * Math.sin(t * 1.6 + 1) + 2.5 * eR * Math.sin(t * 17),
         handR: 2 * Math.sin(t * 1.4) + 6 * eR * Math.sin(t * 17 + 0.6),
         armL: 1.2 * Math.sin(t * 1.4), lowL: 1.8 * Math.sin(t * 1.8 + 0.5) + 5 * eL * Math.sin(t * 15 + 1),
         jaw: 0.08 + 0.08 * (0.5 - 0.5 * Math.cos(t * 2)),
@@ -910,11 +910,11 @@ const POSES: Record<string, Spec> = {
     },
     actions: [{ a: hmTube(), w: 2 }, { a: hmSplash(), w: 2 }, { a: join(hmTube(0.8), hmSplash()), w: 1 }],
     rest: [1.8, 3.4],
-    hit: { head: -280, up: -80, x: -60, y: -50, armL: 100, lowL: -120, armR: -100, lowR: 120, handR: 60, jaw: 5 },
+    hit: { head: -280, up: -80, x: -60, y: -50, armL: 100, lowL: -120, armR: 60, lowR: 120, handR: 60, jaw: 5 },
     strike: hmSplash(1.1, 0.8),
     // below half (the mask on his ear): slower, he sways from foot to foot; below a quarter: slower still
-    dazed: { pose: { armL: 5, armR: -5, head: 3, jaw: 0.3 }, act: true, sway: hmShift(1.7, 1), actions: [{ a: hmTube(0.85, 1.4), w: 1 }, { a: hmSplash(0.85, 1.4), w: 1 }], rest: [3, 5], strike: hmSplash(0.9, 1.3), speed: 0.75 },
-    dying: { pose: { armL: 12, armR: -12, head: 6, up: -2, jaw: 0.45 }, act: true, sway: hmShift(1.1, 1.2), actions: [{ a: hmSplash(0.6, 2), w: 1 }, { a: hmTube(0.6, 2), w: 1 }], rest: [4, 7], strike: hmSplash(0.6, 2), speed: 0.55 },
+    dazed: { pose: { armL: 5, armR: 3, head: 3, jaw: 0.3 }, act: true, sway: hmShift(1.7, 1), actions: [{ a: hmTube(0.85, 1.4), w: 1 }, { a: hmSplash(0.85, 1.4), w: 1 }], rest: [3, 5], strike: hmSplash(0.9, 1.3), speed: 0.75 },
+    dying: { pose: { armL: 12, armR: 5, head: 6, up: -2, jaw: 0.45 }, act: true, sway: hmShift(1.1, 1.2), actions: [{ a: hmSplash(0.6, 2), w: 1 }, { a: hmTube(0.6, 2), w: 1 }], rest: [4, 7], strike: hmSplash(0.6, 2), speed: 0.55 },
     breath: (t, dazed) => { const b = 0.5 - 0.5 * Math.cos((t / (dazed ? 1.4 : 1.15)) * Math.PI * 2); return [1 + 0.012 * b, 1 + 0.024 * b, -3.5 * b]; },
     // the lab coat's tails: they lag behind his moves and flutter a little
     hem: { sel: ".hm-hem", k: 40, c: 4, up: 0.9, x: 0.22, flutter: (t) => 0.8 * Math.sin(t * 1.6) + 0.4 * Math.sin(t * 3.1 + 1) },
