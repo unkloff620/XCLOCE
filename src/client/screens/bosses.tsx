@@ -1,6 +1,7 @@
 "use client";
 import { NitkaCardSew } from "../art/nitka-card.tsx";
 import { HimikCardFx } from "../art/himik-card.tsx";
+import { PsihCardSlash } from "../art/psih-card.tsx";
 import { FokusCardCode } from "../art/fokus-screens.tsx";
 import { FIGHT_MODES } from "../../content/medals.ts";
 import Link from "next/link";
@@ -104,6 +105,8 @@ export function BossesScreen() {
               {b.id === "nitka" && <NitkaCardSew />}
               {/* Химик's card: the poison bubbles in the flasks in the corners, the molecule gets written on the paper */}
               {b.id === "himik" && <HimikCardFx />}
+              {/* Псих's card: the knife slashes the card, the slashes heal slowly, and again */}
+              {b.id === "psih" && <PsihCardSlash />}
               {/* the boss stands on the left and fades into the card */}
               <div className="bcard-art" aria-hidden="true">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
