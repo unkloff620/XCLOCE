@@ -14,6 +14,7 @@ import { Modal } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
 import { haptic } from "../telegram.ts";
 import { sfx } from "../sound.ts";
+import { BANDIT_UI as UI } from "../art/bandit-ui-data.ts";
 import { BANDIT_BET_MAX, BANDIT_BET_MIN, BANDIT_FREE, BANDIT_REELS, BANDIT_ROWS, BANDIT_SCALE, BANDIT_SYMS, BANDIT_WILD, type BanditCell, type BanditSpin, type BanditSym } from "../../content/bandit.ts";
 
 const V = "?v=1";
@@ -102,21 +103,28 @@ export function BanditScreen() {
   const anyWin = shown && !!res && (res.wins.length > 0 || res.bells > 0);
   const shownBet = free > 0 ? v?.freeBet ?? bet : bet;
 
-  return (
-    <div className="bd-screen">
-      <div className="bd-head">
-        <Link href="/yard" className="bd-back" aria-label="Назад во двор">‹</Link>
-        <h2 className="bd-title display">Бандитский фарт</h2>
-        <button type="button" className="bd-table-btn" onClick={() => { haptic.tap(); setTable(true); }}>Таблица выплат</button>
-      </div>
+  const u = (b: { x: number; y: number; w: number; h: number }) => ({ left: `${(b.x / 20).toFixed(3)}%`, top: `${(b.y / 30).toFixed(3)}%`, width: `${(b.w / 20).toFixed(3)}%`, height: `${(b.h / 30).toFixed(3)}%` });
+  const art = (name: keyof typeof UI.boxes) => `/assets/bandit/ui/${name}.webp${V}`;
+  const reelTop = UI.cellY[0], reelH = UI.cellY[3] + UI.boxes.cell.h - UI.cellY[0];
 
-      <div className={`bd-machine ${anyWin ? "won" : ""}`}>
-        <div className="bd-reels">
-          {Array.from({ length: BANDIT_REELS }, (_, r) => {
+  return (
+    <div className="bd-screen" style={{ backgroundImage: `url(/assets/bandit/ui/bg.webp${V})` }}>
+      <div className="bd-stage">
+        {/* the artist's machine on its 2000×3000 canvas */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="bd-l" style={u(UI.boxes.title)} src={art("title")} alt="Бандитский фарт" draggable={false} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="bd-l" style={u(UI.boxes.frame)} src={art("frame")} alt="" draggable={false} />
+        {UI.cellX.map((x) => UI.cellY.map((y) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={`${x}-${y}`} className="bd-l" style={u({ x, y, w: UI.boxes.cell.w, h: UI.boxes.cell.h })} src={art("cell")} alt="" draggable={false} />
+        )))}
+        <div className={`bd-reels ${anyWin ? "won" : ""}`}>
+          {UI.cellX.map((x, r) => {
             const strip = strips?.[r];
             const wildMult = shown && res ? res.wilds[r] : undefined;
             return (
-              <div key={r} className="bd-reel">
+              <div key={r} className="bd-reel" style={u({ x, y: reelTop, w: UI.boxes.cell.w, h: reelH })}>
                 {strip && !stopped[r] ? (
                   <div className="bd-strip run" style={{ ["--n" as string]: strip.length - BANDIT_ROWS, ["--ms" as string]: `${SPIN_MS + r * STOP_GAP}ms` }}>
                     {strip.map((c, i) => <Cell key={i} c={c} />)}
@@ -126,14 +134,20 @@ export function BanditScreen() {
                 ) : (
                   <div className="bd-strip">{cols[r].map((c, i) => <Cell key={i} c={c} lit={lit(r, i)} dim={anyWin && !lit(r, i)} />)}</div>
                 )}
-                {wildMult !== undefined && (
-                  <div className="bd-wild" aria-label={`Дикий барабан ×${wildMult}`}>
-                    <b className="bd-wild-x num">×{wildMult}</b>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={pic("cap")} alt="" draggable={false} />
-                    <span className="bd-wild-w">WILD</span>
-                  </div>
-                )}
+              </div>
+            );
+          })}
+          {/* the wild reels: the artist's bandit over the column, «WILD» on his plate, the multiplier over his head */}
+          {shown && res && Object.entries(res.wilds).map(([k, m]) => {
+            const dx = UI.cellX[Number(k)] - UI.cellX[3];
+            const w = UI.boxes.wild, ww = UI.boxes["wild-word"];
+            return (
+              <div key={k} className="bd-wild" style={u({ ...w, x: w.x + dx })} aria-label={`Дикий барабан ×${m}`}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={art("wild")} alt="" draggable={false} />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="bd-wild-word" style={{ left: `${((ww.x - w.x) / w.w) * 100}%`, top: `${((ww.y - w.y) / w.h) * 100}%`, width: `${(ww.w / w.w) * 100}%` }} src={art("wild-word")} alt="" draggable={false} />
+                <b className="bd-wild-x num">×{m}</b>
               </div>
             );
           })}
@@ -146,32 +160,44 @@ export function BanditScreen() {
           </div>
         )}
         {shown && res && res.free > 0 && <div className="bd-free-got">+{res.free} бесплатных!</div>}
-      </div>
 
-      <div className="bd-panel">
-        <div className="bd-box">
-          <span>Баланс</span>
-          <b className="num"><Icon name="RUB" size={16} /> {v ? fmt(v.rub) : "…"}</b>
-        </div>
-        <div className="bd-box">
-          <span>{free > 0 ? "Ставка (бесплатно)" : "Ставка"}</span>
-          <div className="bd-bet">
-            <button type="button" disabled={spinning || free > 0 || bet <= BANDIT_BET_MIN} onClick={() => { haptic.tap(); setBet((b) => Math.max(BANDIT_BET_MIN, b - 1)); }} aria-label="Меньше">−</button>
-            <b className="num">{shownBet}</b>
-            <button type="button" disabled={spinning || free > 0 || bet >= BANDIT_BET_MAX} onClick={() => { haptic.tap(); setBet((b) => Math.min(BANDIT_BET_MAX, b + 1)); }} aria-label="Больше">+</button>
-          </div>
-        </div>
-        <div className="bd-box">
-          <span>Выигрыш</span>
+        {/* the panel */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="bd-l" style={u(UI.boxes.panel)} src={art("panel")} alt="" draggable={false} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="bd-l" style={u(UI.boxes["balance-box"])} src={art("balance-box")} alt="" draggable={false} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="bd-l" style={u(UI.boxes["balance-word"])} src={art("balance-word")} alt="Баланс" draggable={false} />
+        <b className="bd-val num" style={u(UI.boxes["balance-box"])}><Icon name="RUB" size={18} />{v ? fmt(v.rub) : "…"}</b>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="bd-l" style={u(UI.boxes["bet-box"])} src={art("bet-box")} alt="" draggable={false} />
+        <b className={`bd-val num ${free > 0 ? "free" : ""}`} style={u(UI.boxes["bet-box"])}>{shownBet}</b>
+        <button type="button" className="bd-btn" style={u(UI.boxes.minus)} disabled={spinning || free > 0 || bet <= BANDIT_BET_MIN} onClick={() => { haptic.tap(); setBet((b) => Math.max(BANDIT_BET_MIN, b - 1)); }} aria-label="Ставка меньше">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <b className="num"><img className="bd-match" src={pic("matchbox" as BanditSym)} alt="" /> {shown && res ? fmt(winShown) : 0}</b>
-        </div>
-        <button type="button" className={`bd-spin ${free > 0 ? "free" : ""}`} disabled={spinning || !v} onClick={() => void spin()}>
-          {free > 0 ? <>Бесплатно<small className="num">{free}</small></> : "Крути"}
+          <img src={art("minus")} alt="" draggable={false} />
         </button>
-        <button type="button" className={`bd-auto ${auto ? "on" : ""}`} onClick={toggleAuto} aria-pressed={auto}>{auto ? "Стоп" : "Авто"}</button>
+        <button type="button" className="bd-btn" style={u(UI.boxes.plus)} disabled={spinning || free > 0 || bet >= BANDIT_BET_MAX} onClick={() => { haptic.tap(); setBet((b) => Math.min(BANDIT_BET_MAX, b + 1)); }} aria-label="Ставка больше">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={art("plus")} alt="" draggable={false} />
+        </button>
+        <button type="button" className={`bd-btn bd-spin ${free > 0 ? "free" : ""}`} style={u(UI.boxes.spin)} disabled={spinning || !v} onClick={() => void spin()} aria-label={free > 0 ? `Бесплатный спин, осталось ${free}` : "Крутить"}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={art("spin")} alt="" draggable={false} />
+          {free > 0 && <span className="bd-free num">{free}</span>}
+        </button>
+        <button type="button" className={`bd-btn bd-auto ${auto ? "on" : ""}`} style={u(UI.boxes.auto)} onClick={toggleAuto} aria-pressed={auto} aria-label={auto ? "Остановить автоигру" : "Автоигра"}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={art("auto")} alt="" draggable={false} />
+        </button>
+        {/* the last win: left under the balance */}
+        <div className="bd-last" style={u({ x: 138, y: 2560, w: 600, h: 300 })}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={pic("matchbox" as BanditSym)} alt="" draggable={false} />
+          <b className="num">{shown && res ? fmt(winShown) : 0}</b>
+        </div>
       </div>
-
+      <Link href="/yard" className="bd-back" aria-label="Назад во двор">‹</Link>
+      <button type="button" className="bd-table-btn" onClick={() => { haptic.tap(); setTable(true); }} aria-label="Таблица выплат">?</button>
       {table && <PayTable bet={shownBet} onClose={() => setTable(false)} />}
     </div>
   );
