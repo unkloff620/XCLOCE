@@ -8277,6 +8277,40 @@ button:is(.modal > .x, .fs-x, .bbox-x, .acx-x, .zb-res-x, .combo-done-x, .sty-x,
   86% { transform: translate(1.5px, -0.9px); } 88% { transform: translate(-1.8px, 1.2px); } 90% { transform: translate(1.2px, -1.5px); } 92% { transform: translate(0, 0); }
 }
 @media (prefers-reduced-motion: reduce) { .ntr-trees, .ntr-lamp, .ntr-light, .ntr-desk, .ntr-machine { animation: none; } }
+/* Химик's lab (art/arena-himik.tsx): the sky drifts, the poison boils and flows into the cone flasks and back, the lamps blink */
+.hmr-sky { animation: hmr-sky 90s linear infinite; }
+@keyframes hmr-sky { from { transform: translateX(0); } to { transform: translateX(var(--tile)); } }
+.hmr-lvl-cone { animation: hmr-fill 18s ease-in-out infinite; }
+@keyframes hmr-fill { 0%, 100% { transform: translateY(var(--d)); } 80% { transform: translateY(0); } }
+.hmr-lvl-flask { animation: hmr-empty 18s ease-in-out infinite; }
+@keyframes hmr-empty { 0%, 100% { transform: translateY(0); } 80% { transform: translateY(var(--d)); } }
+.hmr-wave-f { animation: hmr-wave-f 1.3s linear infinite; }
+.hmr-wave-b { animation: hmr-wave-b 1.9s linear infinite; }
+@keyframes hmr-wave-f { from { transform: translateX(0); } to { transform: translateX(-9px); } }
+@keyframes hmr-wave-b { from { transform: translateX(-7px); } to { transform: translateX(0); } }
+.hmr-flow { animation: hmr-flow 18s linear infinite; }
+@keyframes hmr-flow { 0%, 2%, 78% { opacity: 0.95; } 81%, 99% { opacity: 0; } }
+.hmr-run { animation: hmr-run 0.55s linear infinite; }
+@keyframes hmr-run { from { stroke-dashoffset: 0; } to { stroke-dashoffset: -12; } }
+.hmr-bub { animation: hmr-bub 1.6s ease-in infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes hmr-bub { 0% { transform: translateY(0) scale(0.6); opacity: 0; } 15% { opacity: 1; } 85% { opacity: 0.9; } 100% { transform: translateY(calc(var(--rise) * -1)) scale(1.2); opacity: 0; } }
+.hmr-flame { animation: hmr-flame 0.45s ease-in-out infinite alternate; }
+@keyframes hmr-flame { from { transform: scale(1, 1); opacity: 0.85; } to { transform: scale(0.9, 1.25); opacity: 1; } }
+.hmr-pois-glow { animation: hmr-pois 2.2s ease-in-out infinite alternate; }
+@keyframes hmr-pois { from { opacity: 0.35; } to { opacity: 0.8; } }
+.hmr-lamp { animation: hmr-swing 3.8s ease-in-out infinite; }
+@keyframes hmr-swing { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.055); } }
+.hmr-light { animation: hmr-on 7.3s steps(1, end) infinite; }
+.hmr-lamp-off { opacity: 0; animation: hmr-off 7.3s steps(1, end) infinite; }
+.hmr-dark { opacity: 0; animation: hmr-dark 7.3s steps(1, end) infinite; }
+@keyframes hmr-on { 0%, 100% { opacity: 1; } 30% { opacity: 0; } 31% { opacity: 1; } 32.5% { opacity: 0; } 35% { opacity: 1; } 68% { opacity: 0.25; } 69% { opacity: 1; } 88% { opacity: 0; } 88.8% { opacity: 1; } }
+@keyframes hmr-off { 0%, 100% { opacity: 0; } 30% { opacity: 1; } 31% { opacity: 0; } 32.5% { opacity: 1; } 35% { opacity: 0; } 68% { opacity: 0.75; } 69% { opacity: 0; } 88% { opacity: 1; } 88.8% { opacity: 0; } }
+@keyframes hmr-dark { 0%, 100% { opacity: 0; } 30% { opacity: 0.3; } 31% { opacity: 0; } 32.5% { opacity: 0.3; } 35% { opacity: 0; } 68% { opacity: 0.2; } 69% { opacity: 0; } 88% { opacity: 0.3; } 88.8% { opacity: 0; } }
+.hmr-desk { animation: hmr-desk 5.3s steps(1, end) infinite -1.7s; }
+.hmr-desk-off { opacity: 0; animation: hmr-desk-off 5.3s steps(1, end) infinite -1.7s; }
+@keyframes hmr-desk { 0%, 100% { opacity: 1; } 22% { opacity: 0.15; } 23.5% { opacity: 1; } 57% { opacity: 0.6; } 58% { opacity: 0; } 61% { opacity: 1; } }
+@keyframes hmr-desk-off { 0%, 100% { opacity: 0; } 22% { opacity: 0.6; } 23.5% { opacity: 0; } 57% { opacity: 0.25; } 58% { opacity: 0.7; } 61% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .hmr-live * { animation: none !important; } }
 
 /* the fight: the HP and the time bars short, in the upper left (the user 2026-11-25) */
 .arena.full .arena-bars { width: min(46%, 210px); }

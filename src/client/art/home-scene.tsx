@@ -6,6 +6,7 @@ import { ART_ASPECT } from "./desk-data.ts";
 import { usedUrl } from "../preload.ts";
 import { KnyazRoom, SunRoom, UtilizatorRoom } from "./arena-bg.tsx";
 import { NitkaRoom } from "./arena-nitka.tsx";
+import { HimikRoom } from "./arena-himik.tsx";
 import { BOTSMAN_ROOM } from "./arena-botsman-data.ts";
 import { FokusRoom } from "./arena-fokus.tsx";
 import { placedOf, type Look } from "../../content/home.ts";
@@ -87,6 +88,10 @@ export function HomeScene({ room = "basic", onHero, still, look, worn, pieces = 
       ) : room === "workshop" && !still ? (
         // «Мастерская Нитки» is Нитка's live fight room (the trees sway, the lamps flicker, the machine sews), scaled the same way
         <g transform={`translate(0 -53) scale(${SCENE.w / 1024})`}><NitkaRoom uid="home" /></g>
+      ) : room === "lab" && !still ? (
+        // «Лаборатория Химика» is Химик's live fight room without his stool (the player's chair stands there): his
+        // 1024×1843 picture ×1060/1024, 60 px off the top (tools/boss/build-himik-room.py)
+        <g transform={`translate(0 -60) scale(${SCENE.w / 1024})`}><HimikRoom uid="home" stool={false} /></g>
       ) : room === "coder" && !still ? (
         // «Берлога кодера» is Фокус's live fight room, drawn on the scene canvas itself (1060×1484)
         <FokusRoom uid="home" layer="back" />

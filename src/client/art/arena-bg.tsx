@@ -5,6 +5,7 @@
  * gold light spills out of the vault, the leaves behind the window stir in the wind.
  */
 import { NitkaRoom } from "./arena-nitka.tsx";
+import { HimikRoom } from "./arena-himik.tsx";
 import { arenaOf } from "../../content/bosses.ts";
 import { KNYAZ_ROOM } from "./arena-knyaz-data.ts";
 import { BOTSMAN_ROOM } from "./arena-botsman-data.ts";
@@ -222,6 +223,14 @@ export function ArenaBg({ bossId, className, focus = "bottom" }: { bossId: strin
     return (
       <svg className={`arena-live ${className ?? ""}`} viewBox="0 0 1024 1536" preserveAspectRatio={focus === "bottom" ? "xMidYMax slice" : "xMidYMid slice"} aria-hidden="true">
         <NitkaRoom uid={focus} />
+      </svg>
+    );
+  }
+  if (bossId === "himik") {
+    // Химик's lab is taller (1024×1843): the artist's 2000×3600 sheet
+    return (
+      <svg className={`arena-live ${className ?? ""}`} viewBox="0 0 1024 1843" preserveAspectRatio={focus === "bottom" ? "xMidYMax slice" : "xMidYMid slice"} aria-hidden="true">
+        <HimikRoom uid={focus} />
       </svg>
     );
   }
