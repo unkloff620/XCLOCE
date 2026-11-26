@@ -30,6 +30,10 @@ const FACE = [45, 672] as const;
 /** the thumb: its root and its tip */
 const THUMB = { root: [584, 757], tip: [559, 794] } as const;
 
+/** the parts drawn beaten below half HP (tools/boss/beaten-blood.py), and their pictures" version */
+const BEATEN = new Set(["armL", "armR", "body", "chin", "handL", "handR", "head", "legs", "lowL", "lowR"]);
+const BEATEN_V = 1;
+
 export function KedrRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, puppet, viewBox }: {
   id: string; look: string; rig: Rig; bust: boolean; dazed: boolean; dying: boolean; svgRef: RefObject<SVGSVGElement | null>; wrapRef: RefObject<HTMLDivElement | null>; puppet: boolean; viewBox: string;
 }) {
@@ -37,7 +41,8 @@ export function KedrRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, pu
   const hand = useRef<SVGGElement>(null);
   const blood = useRef<SVGGElement>(null);
   useHammerBlood(svgRef, hand, blood, !bust);
-  const src = (p: string) => `/bosses/${id}/rig/${p}.webp${P[p]?.v ? `?v=${P[p].v}` : ""}`;
+  // below half HP: beaten — blood, cuts, bruises, torn clothes (tools/boss/beaten-blood.py, <part>-blood.webp)
+  const src = (p: string) => dazed && !bust && BEATEN.has(p) ? `/bosses/${id}/rig/${p}-blood.webp?v=${BEATEN_V}` : `/bosses/${id}/rig/${p}.webp${P[p]?.v ? `?v=${P[p].v}` : ""}`;
   const pic = (p: string, pp?: "back" | "front") => {
     const r = P[p];
     if (!r) return null;

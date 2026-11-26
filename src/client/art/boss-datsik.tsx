@@ -19,11 +19,16 @@ const LID_LINE = "#5a2a18";
 /** the waist: the upper body leans and bends round it */
 const WAIST = [280, 600] as const;
 
+/** the parts drawn beaten below half HP (tools/boss/beaten-blood.py), and their pictures" version */
+const BEATEN = new Set(["armL", "armR", "body", "chin", "head", "legs", "lowL", "lowR"]);
+const BEATEN_V = 1;
+
 export function DatsikRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, puppet, viewBox }: {
   id: string; look: string; rig: Rig; bust: boolean; dazed: boolean; dying: boolean; svgRef: RefObject<SVGSVGElement | null>; wrapRef: RefObject<HTMLDivElement | null>; puppet: boolean; viewBox: string;
 }) {
   const P = rig.parts;
-  const src = (p: string) => `/bosses/${id}/rig/${p}.webp${P[p]?.v ? `?v=${P[p].v}` : ""}`;
+  // below half HP: beaten — blood, cuts, bruises, torn clothes (tools/boss/beaten-blood.py, <part>-blood.webp)
+  const src = (p: string) => dazed && !bust && BEATEN.has(p) ? `/bosses/${id}/rig/${p}-blood.webp?v=${BEATEN_V}` : `/bosses/${id}/rig/${p}.webp${P[p]?.v ? `?v=${P[p].v}` : ""}`;
   const pic = (p: string, pp?: "back" | "front", follow?: [string, string]) => {
     const r = P[p];
     if (!r) return null;

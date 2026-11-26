@@ -32,6 +32,10 @@ const GRIP = { R: [92, 700], L: [548, 700] } as const;
 const LEVEL = { R: 738, L: 708 } as const;
 const POISON = { top: "#9dff3a", mid: "#46d10f", deep: "#167a0a", line: "#e2ffa8" };
 
+/** the parts drawn beaten below half HP (tools/boss/beaten-blood.py), and their pictures" version */
+const BEATEN = new Set(["armL", "armR", "body", "chin", "coatL", "coatR", "fingersR", "handR", "head", "legs", "lowL", "lowR", "neck", "thumbR"]);
+const BEATEN_V = 1;
+
 export function HimikRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, puppet, viewBox }: {
   id: string; look: string; rig: Rig; bust: boolean; dazed: boolean; dying: boolean; svgRef: RefObject<SVGSVGElement | null>; wrapRef: RefObject<HTMLDivElement | null>; puppet: boolean; viewBox: string;
 }) {
@@ -40,7 +44,8 @@ export function HimikRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
   const handR = useRef<SVGGElement>(null);
   const splash = useRef<SVGGElement>(null);
   useSplash(svgRef, handR, splash, !bust);
-  const src = (p: string) => `/bosses/${id}/rig/${p}.webp${P[p]?.v ? `?v=${P[p].v}` : ""}`;
+  // below half HP: beaten — blood, cuts, bruises, torn clothes (tools/boss/beaten-blood.py, <part>-blood.webp)
+  const src = (p: string) => dazed && !bust && BEATEN.has(p) ? `/bosses/${id}/rig/${p}-blood.webp?v=${BEATEN_V}` : `/bosses/${id}/rig/${p}.webp${P[p]?.v ? `?v=${P[p].v}` : ""}`;
   // a picture: plain SVG, or warped by the puppet on the back / front canvas; follow: [the groups, their bands]
   const pic = (p: string, pp?: "back" | "front", follow?: [string, string]) => {
     const r = P[p];

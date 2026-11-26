@@ -28,6 +28,10 @@ const HEM = [395, 700] as const;
 /** the waist: the upper body leans and bends round it */
 const WAIST = [395, 730] as const;
 
+/** the parts drawn beaten below half HP (tools/boss/beaten-blood.py), and their pictures" version */
+const BEATEN = new Set(["armL", "armR", "body", "chin", "coat", "coatBack", "handL", "handR", "head", "hoodBack", "hoodFront", "legs", "lowL", "lowR", "neck"]);
+const BEATEN_V = 1;
+
 export function FokusRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, puppet, viewBox }: {
   id: string; look: string; rig: Rig; bust: boolean; dazed: boolean; dying: boolean; svgRef: RefObject<SVGSVGElement | null>; wrapRef: RefObject<HTMLDivElement | null>; puppet: boolean; viewBox: string;
 }) {
@@ -35,7 +39,8 @@ export function FokusRig({ id, look, rig, bust, dazed, dying, svgRef, wrapRef, p
   const fist = useRef<SVGGElement>(null);
   const blood = useRef<SVGGElement>(null);
   useFistBlood(svgRef, fist, blood, !bust);
-  const src = (p: string) => `/bosses/${id}/rig/${p}.webp${P[p]?.v ? `?v=${P[p].v}` : ""}`;
+  // below half HP: beaten — blood, cuts, bruises, torn clothes (tools/boss/beaten-blood.py, <part>-blood.webp)
+  const src = (p: string) => dazed && !bust && BEATEN.has(p) ? `/bosses/${id}/rig/${p}-blood.webp?v=${BEATEN_V}` : `/bosses/${id}/rig/${p}.webp${P[p]?.v ? `?v=${P[p].v}` : ""}`;
   const pic = (p: string, pp?: "back" | "front", follow?: [string, string]) => {
     const r = P[p];
     if (!r) return null;

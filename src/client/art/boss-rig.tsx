@@ -216,7 +216,7 @@ export function BossRig({ id: asked, hpShare = 1, bust = false, outfit: wanted }
   const dying = hpShare < DYING_BELOW;
   // Фокус below half: his legs are rigged anew (fixed at the feet only — he sways from leg to leg): the puppet and the
   // poses start over on the new look
-  const look = (baseId === "fokus" || baseId === "psih" || baseId === "solntse" || baseId === "nitka") && dazed ? `${id}:${dying ? "dying" : "dazed"}` : id;
+  const look = ["fokus", "psih", "solntse", "nitka", "datsik", "himik", "kedr", "garkusha"].includes(baseId) && dazed ? `${id}:${dying ? "dying" : "dazed"}` : id;
   const svgRef = useRef<SVGSVGElement>(null);
   useDazed(svgRef, dazed);
   // the puppet warp (soft joints) for the full boss; the small busts on the list stay plain SVG
