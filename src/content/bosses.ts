@@ -301,7 +301,10 @@ export function passLook(bossId: string): PassLook {
   const opens = BOSSES.find((b) => b.order === (droppers[i]?.order ?? 0) + 1);
   const k = i - (droppers.length - PASS_CARDS.length);
   if (i >= 0 && k < 0) return { opens, kind: "key", art: `pass-key-${opens?.id ?? bossId}` };
-  // Солнце's pass (it piles up for the bosses still to come) is the diamond card; a mentor's — the bronze one
+  // a mentor's («Отморозки»): his own key — the artist's rusty key in his colour (tools/items/mentor-keys.py)
+  const mentor = MENTORS.find((m) => m.id === bossId);
+  if (mentor) return { opens: nextInClass(mentor), kind: "key", art: `mentor-key-${mentor.id}` };
+  // Солнце's pass (it piles up for the bosses still to come) is the diamond card
   if (i < 0) return { opens: MENTORS.find((m) => m.id === bossId) && nextInClass(MENTORS.find((m) => m.id === bossId)!), kind: "card", tier: BOSSES.some((b) => b.id === bossId) ? "diamond" : "bronze", art: `card-${BOSSES.some((b) => b.id === bossId) ? "diamond" : "bronze"}` };
   const tier = PASS_CARDS[Math.max(0, k)];
   return { opens, kind: "card", tier, art: `card-${tier}` };
