@@ -792,55 +792,72 @@ const KNIFE_ID = "knife-psih";
 
 /**
  * «Нож Психа» (tools/rig/build-knife.py, the artist's layers and his video): the hand rests with the knife under its
- * fingers; every few seconds it dips, flicks up and opens (the fingers turn back at their roots), the knife flies up,
- * spins over once in the air and drops back, the fingers close on it and the hand gives a little with the catch. In
- * between the fingers and the thumb fidget, each on its own beat. In the air the knife is drawn over the hand (it flies
- * in front of the fingers), at rest under it.
+ * fingers; every few seconds it dips, flicks up and the fingers lift (they turn up at their roots), the knife is thrown
+ * up — a real throw: it flies on gravity, spinning at the speed the flick gave it, one full turn by the time it falls back
+ * — and the hand catches it: the catch knocks the hand down a little and the knife rocks in the fingers before it
+ * settles (springs). In between the fingers lift and drop and the thumb rubs, each on its own beat. The knife is always
+ * behind the whole hand (its own layer under the fingers and the palm).
  */
 function KnifeHand() {
   const { skin } = useContext(LookCtx);
-  const handRef = useRef<SVGGElement>(null), restRef = useRef<SVGGElement>(null), flyRef = useRef<SVGGElement>(null);
+  const handRef = useRef<SVGGElement>(null), knifeRef = useRef<SVGGElement>(null);
   const frontRef = useRef<SVGGElement>(null), backRef = useRef<SVGGElement>(null), thumbRef = useRef<SVGGElement>(null);
   const P = KNIFE_PIVOTS;
   useEffect(() => {
     if (typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const gate = frameGate();
-    // one toss every LOOP s (a little later now and then), the toss's beats (s from its start)
-    const LOOP = 3.2, DIP = 0.12, FLICK = 0.24, LAND = 0.84, SETTLE = 1.1;
-    const ease = (x: number) => { const k = Math.min(1, Math.max(0, x)); return k * k * (3 - 2 * k); };
-    let raf = 0;
-    const t0 = performance.now();
+    // the throw: up HIGH rig px on gravity G; it turns once while in the air
+    const G = 1500, HIGH = 150, VY = Math.sqrt(2 * G * HIGH), AIR = (2 * VY) / G, SPIN = 360 / AIR;
+    // the hand's wrist angle and the fingers' lift on springs (they chase the targets the toss sets)
+    const hand = { a: 0, v: 0 }, open = { a: 0, v: 0 };
+    // the knife: in the hand it rocks on a spring (its angle off the rest), in the air it flies
+    const knife = { air: false, x: 0, y: 0, vx: 0, vy: 0, r: 0, w: 0 };
+    let next = 1.2, phase: "rest" | "dip" | "flick" = "rest", phaseAt = 0, t = 0, last = performance.now(), raf = 0;
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
-      if (!gate(now)) return;
-      const t = (now - t0) / 1000;
-      const k = t % LOOP;
-      let hand = 0, open = 0, flying = false, kx = 0, ky = 0, kr = 0;
-      if (k < DIP) hand = 3 * ease(k / DIP);                                      // the dip before the flick
-      else if (k < FLICK) { const f = ease((k - DIP) / (FLICK - DIP)); hand = 3 - 13 * f; open = f; }
-      else if (k < LAND) {
-        // in the air: up and down on a throw's curve, one full turn (the blade's tip goes up first)
-        const f = (k - FLICK) / (LAND - FLICK);
-        flying = true;
-        kx = -8 * Math.sin(Math.PI * f); ky = -62 * 4 * f * (1 - f); kr = 360 * (f * 0.85 + 0.15 * ease(f));
-        hand = -10 + 6 * ease(f * 1.4); open = 1 - 0.4 * ease((f - 0.6) / 0.4);
-      } else if (k < SETTLE) {
-        // the catch: the fingers close on it, the hand gives a little and comes back
-        const f = (k - LAND) / (SETTLE - LAND);
-        hand = -4 + 9 * Math.sin(Math.PI * f) * (1 - f) + 4 * ease(f); open = 0.6 * (1 - ease(f * 1.6)) - 0.15 * Math.sin(Math.PI * f);
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      const n = Math.ceil(dt / 0.004), h = dt / n;
+      for (let i = 0; i < n; i++) {
+        t += h;
+        // the toss's beats: dip (0.14 s), flick (0.12 s: the knife leaves at its end), then back to rest
+        if (phase === "rest" && !knife.air && t >= next) { phase = "dip"; phaseAt = t; }
+        if (phase === "dip" && t - phaseAt >= 0.14) { phase = "flick"; phaseAt = t; }
+        if (phase === "flick" && t - phaseAt >= 0.12) {
+          phase = "rest";
+          Object.assign(knife, { air: true, x: 0, y: 0, vx: -14 / AIR, vy: -VY, r: knife.r, w: SPIN });
+          hand.v -= 60; // the throw's kick back up
+        }
+        const handTarget = phase === "dip" ? 5 : phase === "flick" ? -12 : knife.air ? -6 : 0;
+        const openTarget = phase === "flick" ? 1 : knife.air ? 0.85 : 0;
+        hand.v += (220 * (handTarget - hand.a) - 16 * hand.v) * h; hand.a += hand.v * h;
+        open.v += (260 * (openTarget - open.a) - 18 * open.v) * h; open.a += open.v * h;
+        if (knife.air) {
+          knife.vy += G * h; knife.x += knife.vx * h; knife.y += knife.vy * h; knife.r += knife.w * h;
+          if (knife.vy > 0 && knife.y >= 0) {
+            // caught: the turn it still owes to a full one becomes a rock in the fingers; the hand gives with the weight
+            const off = ((knife.r % 360) + 540) % 360 - 180;
+            Object.assign(knife, { air: false, x: 0, y: 0, vx: 0, vy: 0, r: off, w: knife.w * 0.12 });
+            hand.v += 90;
+            open.v -= 4;
+            next = t + 2.4 + Math.random() * 1.6;
+          }
+        } else {
+          knife.w += (-300 * knife.r - 14 * knife.w) * h; knife.r += knife.w * h;
+        }
       }
-      // the fidget, always (small, under the toss): the front finger taps, the back one a beat after, the thumb rubs
-      const tap = (ph: number) => -(Math.max(0, Math.sin(ph)) ** 3);
-      const fFront = -30 * open + 6 * tap(t * 4.4) * (k > SETTLE ? 1 : 0.3);
-      const fBack = -24 * open + 5 * tap(t * 4.4 - 1.3) * (k > SETTLE ? 1 : 0.3);
-      const fThumb = 10 * open + 4 * Math.sin(t * 2.6 + 0.5);
-      handRef.current?.setAttribute("transform", `rotate(${hand.toFixed(2)} ${P.wrist[0]} ${P.wrist[1]})`);
+      if (!gate(now)) return;
+      // the fingers lift (up, at their roots) with the toss, and on their own beats in between; the thumb rubs
+      const lift = (ph: number) => Math.max(0, Math.sin(ph)) ** 3;
+      const idle = knife.air ? 0.2 : 1;
+      const fFront = 32 * open.a + 9 * lift(t * 2.9) * idle;
+      const fBack = 26 * open.a + 8 * lift(t * 2.9 - 1.2) * idle;
+      const fThumb = 12 * open.a + 4 * Math.sin(t * 2.4 + 0.5);
+      handRef.current?.setAttribute("transform", `rotate(${hand.a.toFixed(2)} ${P.wrist[0]} ${P.wrist[1]})`);
       frontRef.current?.setAttribute("transform", `rotate(${fFront.toFixed(2)} ${P["finger-front"][0]} ${P["finger-front"][1]})`);
       backRef.current?.setAttribute("transform", `rotate(${fBack.toFixed(2)} ${P["finger-back"][0]} ${P["finger-back"][1]})`);
       thumbRef.current?.setAttribute("transform", `rotate(${fThumb.toFixed(2)} ${P.thumb[0]} ${P.thumb[1]})`);
-      restRef.current?.setAttribute("opacity", flying ? "0" : "1");
-      flyRef.current?.setAttribute("opacity", flying ? "1" : "0");
-      flyRef.current?.setAttribute("transform", `translate(${kx.toFixed(1)} ${ky.toFixed(1)}) rotate(${kr.toFixed(1)} ${P.knife[0]} ${P.knife[1]})`);
+      knifeRef.current?.setAttribute("transform", `translate(${knife.x.toFixed(1)} ${knife.y.toFixed(1)}) rotate(${knife.r.toFixed(1)} ${P.knife[0]} ${P.knife[1]})`);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
@@ -854,12 +871,11 @@ function KnifeHand() {
   };
   return (
     <g className="rig-hand rig-knife" ref={handRef}>
-      <g ref={restRef}>{img("knife")}</g>
+      <g ref={knifeRef}>{img("knife")}</g>
       <g ref={thumbRef}>{img("thumb", true)}</g>
       {img("hand", true)}
       <g ref={backRef}>{img("finger-back", true)}</g>
       <g ref={frontRef}>{img("finger-front", true)}</g>
-      <g ref={flyRef} opacity={0}>{img("knife")}</g>
     </g>
   );
 }
