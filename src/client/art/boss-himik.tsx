@@ -34,7 +34,7 @@ const POISON = { top: "#9dff3a", mid: "#46d10f", deep: "#167a0a", line: "#e2ffa8
 
 /** the parts drawn beaten below half HP (tools/boss/beaten-blood.py), and their pictures" version */
 const BEATEN = new Set(["armL", "armR", "body", "chin", "coatL", "coatR", "fingersR", "handR", "head", "legs", "lowL", "lowR", "neck", "thumbR"]);
-const BEATEN_V = 1;
+const BEATEN_V = 2;
 
 /** the brows: the gap between them (rig x), each one's outer end (it turns round it) */
 const BROW_GAP = 395.5;
