@@ -30,6 +30,12 @@ export const HELD_FIT: Record<string, { x: number; y: number; w: number; h: numb
     "y": 732.5,
     "w": 190,
     "h": 200
+  },
+  "flask-himik": {
+    "x": 574.5,
+    "y": 740.0,
+    "w": 180,
+    "h": 198
   }
 };
 /** what hangs from the fist and swings (drawn behind the hand, in order): the pivot and the parts */

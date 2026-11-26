@@ -9,6 +9,7 @@
  * Animations (CSS, see screens.css): breathing, looking around, drumming fingers, a held thing turning at the wrist.
  */
 import { ART_VER, usedUrl } from "../preload.ts";
+import { frameGate } from "../eco.ts";
 import type { PointerEvent as ReactPointerEvent, ReactNode } from "react";
 import { createContext, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
 import { RIG } from "./rig-data.ts";
@@ -19,6 +20,7 @@ import { GLOVES, GLOVES_ID } from "./gloves-data.ts";
 import { MetalGlint } from "./glint.tsx";
 import { KEYS_ORDER, KEYS_PARTS, KEYS_PIVOTS } from "./keys-data.ts";
 import { VIALS_PARTS, VIALS_PIVOTS } from "./vials-data.ts";
+import { FLASK_PARTS, FLASK_PIVOTS, FLASK_SHAPE } from "./flask-data.ts";
 import { TATTOO_FIT } from "./tattoo-data.ts";
 import { PLACES } from "./places-data.ts";
 import { SEAT } from "../../content/home-scene.ts";
@@ -274,7 +276,7 @@ function InkHeadCut() {
 function Highlight({ edit }: { edit: RigEdit }) {
   const look = useContext(LookCtx), worn = useContext(WornCtx);
   // the hand with the keys shows its own place (KeysHand)
-  if (edit.mode === "ink" && edit.part === "hand-r" && (worn.HAND === KEYS_ID || worn.HAND === VIALS_ID)) return null;
+  if (edit.mode === "ink" && edit.part === "hand-r" && (worn.HAND === KEYS_ID || worn.HAND === VIALS_ID || worn.HAND === FLASK_ID)) return null;
   const shapes = partShapes(edit, look, worn);
   return (
     <g pointerEvents="none" className="rig-hl-part">
@@ -538,6 +540,7 @@ function HandFrames() {
   if (heldId === GLOVES_ID) return <GloveHand />;
   if (heldId === KEYS_ID) return <KeysHand />;
   if (heldId === VIALS_ID) return <VialsHand />;
+  if (heldId === FLASK_ID) return <FlaskHand />;
   if (heldId && heldId in HELD_FIT) {
     const f = HELD_FIT[heldId];
     const sw = HELD_SWING[heldId];
@@ -663,6 +666,115 @@ function VialsHand() {
       </g>
       {img("hand", true)}
       {["finger-m", "finger-r", "finger-p"].map((f, i) => <g key={f} ref={fingerRefs[i]}>{img(f, true)}</g>)}
+    </g>
+  );
+}
+
+const FLASK_ID = "flask-himik";
+
+/**
+ * «Колба Химика» (tools/rig/build-flask.py, the artist's layers and his video): the hand holds the round flask by its
+ * neck between the fingers; the hand rocks a little at the wrist, the flask hangs from the grip and swings under it as a
+ * pendulum (the hand's rocking keeps it going), and the pink liquid inside keeps level, lagging behind the swings and
+ * sloshing (its surface tilts against the flask and ripples), small bubbles rise through it. The glass is drawn twice:
+ * solid under the liquid, see-through over it.
+ */
+function FlaskHand() {
+  const { skin } = useContext(LookCtx);
+  const uid = useId().replace(/:/g, "");
+  const handRef = useRef<SVGGElement>(null), flaskRef = useRef<SVGGElement>(null), liqRef = useRef<SVGGElement>(null), waveRef = useRef<SVGPathElement>(null);
+  const [gx, gy] = FLASK_PIVOTS.grip, [cx, cy] = FLASK_PIVOTS.bulb, [wx, wy] = FLASK_PIVOTS.wrist;
+  const r = FLASK_SHAPE.bulbR;
+  // the liquid's surface (in the bulb's own frame, level at LV): a wavy top, the body down past the bottom
+  const LV = cy - r * 0.12;
+  const wave = (ph: number, amp: number) => {
+    let d = `M${cx - r * 2} ${LV}`;
+    for (let i = 0; i <= 16; i++) {
+      const x = cx - r * 2 + (i * r * 4) / 16;
+      d += ` L${x.toFixed(1)} ${(LV + amp * Math.sin(ph + i * 0.9) + amp * 0.5 * Math.sin(ph * 1.7 + i * 1.6)).toFixed(2)}`;
+    }
+    return d;
+  };
+  useEffect(() => {
+    if (typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const gate = frameGate();
+    // the pendulum: the flask's angle in the world (rad) round the grip; the liquid's surface angle in the world (lags)
+    const LEN = Math.hypot(cx - gx, cy - gy), W2 = 26, DAMP = 0.55;
+    let th = 0, thV = 0, su = 0, suV = 0, last = performance.now(), t = 0, raf = 0;
+    let pgx = gx, pgy = gy, pvx = 0;
+    const tick = (now: number) => {
+      raf = requestAnimationFrame(tick);
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      t += dt;
+      // the hand rocks at the wrist, a little slower than the flask's own swing (so it keeps swinging without growing wild)
+      const hand = 3.6 * Math.sin(t * 4.6) * (0.75 + 0.25 * Math.sin(t * 0.7)) + 1.2 * Math.sin(t * 1.7 + 1.1);
+      const ha = (hand * Math.PI) / 180;
+      // where the grip is now (it rides on the hand round the wrist): its sideways speed and pull drive the pendulum
+      const dx = gx - wx, dy = gy - wy;
+      const ngx = wx + dx * Math.cos(ha) - dy * Math.sin(ha), ngy = wy + dx * Math.sin(ha) + dy * Math.cos(ha);
+      const vx = (ngx - pgx) / Math.max(dt, 1e-3), ax = (vx - pvx) / Math.max(dt, 1e-3);
+      pgx = ngx; pgy = ngy; pvx = vx;
+      const n = Math.ceil(dt / 0.004), h = dt / n;
+      for (let k = 0; k < n; k++) {
+        const acc = -W2 * Math.sin(th) - DAMP * thV - (Math.max(-900, Math.min(900, ax)) / LEN) * Math.cos(th) * 0.9;
+        thV += acc * h;
+        th += thV * h;
+        // the liquid wants to stay level (0) and lags: the flask's swing kicks it the other way, it rocks back on a spring
+        suV += (-38 * su - 2.2 * suV - acc * 0.35) * h;
+        su += suV * h;
+      }
+      const deg = (v: number) => (v * 180) / Math.PI;
+      if (!gate(now)) return;
+      handRef.current?.setAttribute("transform", `rotate(${hand.toFixed(2)} ${wx} ${wy})`);
+      // the flask's group is inside the hand's: its own turn is the world angle minus the hand's
+      flaskRef.current?.setAttribute("transform", `rotate(${(deg(th) - hand).toFixed(2)} ${gx} ${gy})`);
+      // the liquid (inside the flask's group): turned back to the world's level, plus its own lag
+      liqRef.current?.setAttribute("transform", `rotate(${(deg(su) - deg(th)).toFixed(2)} ${cx} ${cy})`);
+      waveRef.current?.setAttribute("d", `${wave(t * 7, 0.6 + Math.min(2.2, Math.abs(suV) * 0.6))} L${cx + r * 2} ${cy + r * 2.4} L${cx - r * 2} ${cy + r * 2.4} Z`);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const src = (part: string, tinted = false) =>
+    `${tinted && skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${skin}/held-${FLASK_ID}` : `/assets/hero/held/${FLASK_ID}`}-${part}.webp?v=${ART_VER.heroPart}`;
+  const img = (part: string, tinted = false) => {
+    const b = FLASK_PARTS[part];
+    return <image href={src(part, tinted)} x={b.x} y={b.y} width={b.w} height={b.h} preserveAspectRatio="none" />;
+  };
+  const ins = FLASK_PARTS.inside;
+  return (
+    <g className="rig-hand rig-flask" ref={handRef}>
+      <defs>
+        <mask id={`fl-in-${uid}`} maskUnits="userSpaceOnUse" x={ins.x} y={ins.y} width={ins.w} height={ins.h}>
+          <image href={src("inside")} x={ins.x} y={ins.y} width={ins.w} height={ins.h} preserveAspectRatio="none" />
+        </mask>
+        <linearGradient id={`fl-liq-${uid}`} gradientUnits="userSpaceOnUse" x1={cx} y1={LV} x2={cx} y2={cy + r}>
+          <stop offset="0" stopColor="#ff5ce0" />
+          <stop offset="0.45" stopColor="#f01ec8" />
+          <stop offset="1" stopColor="#a8088f" />
+        </linearGradient>
+      </defs>
+      {img("fingers-back", true)}
+      <g ref={flaskRef}>
+        {img("glass")}
+        <g mask={`url(#fl-in-${uid})`}>
+          <g ref={liqRef}>
+            <path ref={waveRef} d={`${wave(0, 0.6)} L${cx + r * 2} ${cy + r * 2.4} L${cx - r * 2} ${cy + r * 2.4} Z`} fill={`url(#fl-liq-${uid})`} />
+            <rect x={cx - r * 2} y={LV - 0.6} width={r * 4} height={1.6} fill="#ffd6f7" opacity={0.85} />
+            {[0, 1, 2, 3, 4].map((i) => (
+              <circle key={i} className="rig-flask-bub" cx={cx - r * 0.5 + i * r * 0.25} cy={cy + r * 0.75} r={0.9 + (i % 3) * 0.5} fill="rgba(255,230,250,0.85)"
+                style={{ animationDelay: `${(i * 0.53) % 2.2}s`, ["--rise" as string]: `${(cy + r * 0.75 - LV - 2).toFixed(1)}px` }} />
+            ))}
+          </g>
+        </g>
+        {/* the see-through glass over the liquid: lighter still, so the pink shows bright as in the artist's video */}
+        <g opacity={0.28}>{img("glass-front")}</g>
+      </g>
+      {img("hand", true)}
+      {img("fingers", true)}
+      {img("thumb", true)}
     </g>
   );
 }

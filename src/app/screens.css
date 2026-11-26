@@ -8633,3 +8633,6 @@ body:has(.bd-screen) .hud { background: none; border-bottom: 0; box-shadow: none
 .bd-roul-got img { width: 34px; height: 34px; }
 .bd-roul-end { font-size: 18px; }
 @media (prefers-reduced-motion: reduce) { .bd-roul-scene::after { animation: none; } }
+/* «Колба Химика» in the hero's hand (rig.tsx FlaskHand): bubbles rise through the liquid */
+.rig-flask-bub { animation: hmr-bub 2.2s ease-in infinite; transform-box: fill-box; transform-origin: center; }
+html.eco .rig-flask-bub { animation-iteration-count: 1; }

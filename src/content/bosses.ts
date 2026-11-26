@@ -246,6 +246,8 @@ export const EVENT_FIGHTS: BossDef[] = [
     id: "himik", order: 15, card: "platinum", name: "Химик", title: "Ментор", event: true, mentor: true, modes: true,
     story: "Сорок лет в подвальной лаборатории. Маску носит не от заразы — чтобы не узнали. Колбы не роняет никогда.",
     hp: 30_000_000, reward: { xp: 4_500, currencies: { TOOTH: 3_500, PAP: 3_500 } },
+    // his things («Блатной», the user 2026-11-27): the flask in the hand (rig.tsx FlaskHand)
+    wear: { items: ["flask-himik"], chance: 0.1, pity: 10 },
     theme: { a: "#16351f", b: "#06120a", accent: "#7dff4a" }, photo: photo("himik", true),
     keysToUnlock: 1,
   },
