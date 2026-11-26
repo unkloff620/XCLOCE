@@ -322,27 +322,11 @@ export const BLAT_THING_CHANCE = 0.7;
 export const BOTH_DROP_CHANCE = 0.05;
 
 /**
- * The road to a boss (the user 2026-11-22): from the second boss on, a boss is open only after his location is cleared
- * (all five tasks, the day road) so many times — the weak ones once, the stronger two or three times. Then his passes
- * (the previous boss's) let you in, as before. The first boss is always open; the event bosses need no road.
+ * The road to a boss: a boss opened only after his location was cleared so many times (the user 2026-11-22) — taken
+ * away (the user 2026-11-26: «не надо проходить локации»): every boss is open, the previous boss's passes still let you in.
+ * A boss put here again gets his road back (loc: the location, times: how many clears, night: its night road).
  */
-/** the road to a boss: his location cleared so many times; night — the night road of it (the mentors, the user 2026-11-25) */
-export const BOSS_ROAD: Record<string, { loc: string; times: number; night?: boolean }> = {
-  nitka: { loc: "openspace", times: 1, night: true },
-  kedr: { loc: "openspace", times: 1 },
-  mugo: { loc: "market", times: 1 },
-  garkusha: { loc: "serverroom", times: 2 },
-  bebyakyan: { loc: "basement", times: 2 },
-  babafey: { loc: "board", times: 2 },
-  vodovoz: { loc: "accounting", times: 2 },
-  knyaz: { loc: "hr", times: 3 },
-  vadim: { loc: "party", times: 3 },
-  botsman: { loc: "offshore", times: 3 },
-  utilizator: { loc: "yacht", times: 3 },
-  fokus: { loc: "moonbase", times: 3 },
-  psih: { loc: "moonbase", times: 1, night: true },
-  solntse: { loc: "mars", times: 3 },
-};
+export const BOSS_ROAD: Record<string, { loc: string; times: number; night?: boolean }> = {};
 
 /** How many keys of the previous boss open this one. */
 export function keysNeeded(b: BossDef, defaultKeys: number): number {
