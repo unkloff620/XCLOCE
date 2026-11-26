@@ -258,6 +258,8 @@ export const EVENT_FIGHTS: BossDef[] = [
     id: "psih", order: 16, card: "diamond", name: "Псих", title: "Ментор", event: true, mentor: true, modes: true,
     story: "Сорвался с катушек прямо за клавиатурой. Теперь у него в руке нож, а не мышка.",
     hp: 100_000_000, reward: { xp: xp(11), currencies: { TOOTH: 12_000, PAP: 12_000 } },
+    // his things («Блатной», the user 2026-11-27): the knife in the hand (rig.tsx KnifeHand)
+    wear: { items: ["knife-psih"], chance: 0.1, pity: 10 },
     theme: { a: "#401624", b: "#16060c", accent: "#ff6b9a" }, photo: photo("psih", true),
     keysToUnlock: 1,
   },

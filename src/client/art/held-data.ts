@@ -36,6 +36,12 @@ export const HELD_FIT: Record<string, { x: number; y: number; w: number; h: numb
     "y": 740.0,
     "w": 180,
     "h": 198
+  },
+  "knife-psih": {
+    "x": 526.5,
+    "y": 730.0,
+    "w": 230,
+    "h": 96
   }
 };
 /** what hangs from the fist and swings (drawn behind the hand, in order): the pivot and the parts */

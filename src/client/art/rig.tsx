@@ -21,6 +21,7 @@ import { MetalGlint } from "./glint.tsx";
 import { KEYS_ORDER, KEYS_PARTS, KEYS_PIVOTS } from "./keys-data.ts";
 import { VIALS_PARTS, VIALS_PIVOTS } from "./vials-data.ts";
 import { FLASK_PARTS, FLASK_PIVOTS, FLASK_SHAPE } from "./flask-data.ts";
+import { KNIFE_PARTS, KNIFE_PIVOTS } from "./knife-data.ts";
 import { TATTOO_FIT } from "./tattoo-data.ts";
 import { PLACES } from "./places-data.ts";
 import { SEAT } from "../../content/home-scene.ts";
@@ -276,7 +277,7 @@ function InkHeadCut() {
 function Highlight({ edit }: { edit: RigEdit }) {
   const look = useContext(LookCtx), worn = useContext(WornCtx);
   // the hand with the keys shows its own place (KeysHand)
-  if (edit.mode === "ink" && edit.part === "hand-r" && (worn.HAND === KEYS_ID || worn.HAND === VIALS_ID || worn.HAND === FLASK_ID)) return null;
+  if (edit.mode === "ink" && edit.part === "hand-r" && (worn.HAND === KEYS_ID || worn.HAND === VIALS_ID || worn.HAND === FLASK_ID || worn.HAND === KNIFE_ID)) return null;
   const shapes = partShapes(edit, look, worn);
   return (
     <g pointerEvents="none" className="rig-hl-part">
@@ -541,6 +542,7 @@ function HandFrames() {
   if (heldId === KEYS_ID) return <KeysHand />;
   if (heldId === VIALS_ID) return <VialsHand />;
   if (heldId === FLASK_ID) return <FlaskHand />;
+  if (heldId === KNIFE_ID) return <KnifeHand />;
   if (heldId && heldId in HELD_FIT) {
     const f = HELD_FIT[heldId];
     const sw = HELD_SWING[heldId];
@@ -782,6 +784,82 @@ function FlaskHand() {
       {img("hand", true)}
       <g ref={lowRef}>{img("fingers", true)}</g>
       <g ref={topRef}>{img("thumb", true)}</g>
+    </g>
+  );
+}
+
+const KNIFE_ID = "knife-psih";
+
+/**
+ * «Нож Психа» (tools/rig/build-knife.py, the artist's layers and his video): the hand rests with the knife under its
+ * fingers; every few seconds it dips, flicks up and opens (the fingers turn back at their roots), the knife flies up,
+ * spins over once in the air and drops back, the fingers close on it and the hand gives a little with the catch. In
+ * between the fingers and the thumb fidget, each on its own beat. In the air the knife is drawn over the hand (it flies
+ * in front of the fingers), at rest under it.
+ */
+function KnifeHand() {
+  const { skin } = useContext(LookCtx);
+  const handRef = useRef<SVGGElement>(null), restRef = useRef<SVGGElement>(null), flyRef = useRef<SVGGElement>(null);
+  const frontRef = useRef<SVGGElement>(null), backRef = useRef<SVGGElement>(null), thumbRef = useRef<SVGGElement>(null);
+  const P = KNIFE_PIVOTS;
+  useEffect(() => {
+    if (typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const gate = frameGate();
+    // one toss every LOOP s (a little later now and then), the toss's beats (s from its start)
+    const LOOP = 3.2, DIP = 0.12, FLICK = 0.24, LAND = 0.84, SETTLE = 1.1;
+    const ease = (x: number) => { const k = Math.min(1, Math.max(0, x)); return k * k * (3 - 2 * k); };
+    let raf = 0;
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      raf = requestAnimationFrame(tick);
+      if (!gate(now)) return;
+      const t = (now - t0) / 1000;
+      const k = t % LOOP;
+      let hand = 0, open = 0, flying = false, kx = 0, ky = 0, kr = 0;
+      if (k < DIP) hand = 3 * ease(k / DIP);                                      // the dip before the flick
+      else if (k < FLICK) { const f = ease((k - DIP) / (FLICK - DIP)); hand = 3 - 13 * f; open = f; }
+      else if (k < LAND) {
+        // in the air: up and down on a throw's curve, one full turn (the blade's tip goes up first)
+        const f = (k - FLICK) / (LAND - FLICK);
+        flying = true;
+        kx = -8 * Math.sin(Math.PI * f); ky = -62 * 4 * f * (1 - f); kr = 360 * (f * 0.85 + 0.15 * ease(f));
+        hand = -10 + 6 * ease(f * 1.4); open = 1 - 0.4 * ease((f - 0.6) / 0.4);
+      } else if (k < SETTLE) {
+        // the catch: the fingers close on it, the hand gives a little and comes back
+        const f = (k - LAND) / (SETTLE - LAND);
+        hand = -4 + 9 * Math.sin(Math.PI * f) * (1 - f) + 4 * ease(f); open = 0.6 * (1 - ease(f * 1.6)) - 0.15 * Math.sin(Math.PI * f);
+      }
+      // the fidget, always (small, under the toss): the front finger taps, the back one a beat after, the thumb rubs
+      const tap = (ph: number) => -(Math.max(0, Math.sin(ph)) ** 3);
+      const fFront = -30 * open + 6 * tap(t * 4.4) * (k > SETTLE ? 1 : 0.3);
+      const fBack = -24 * open + 5 * tap(t * 4.4 - 1.3) * (k > SETTLE ? 1 : 0.3);
+      const fThumb = 10 * open + 4 * Math.sin(t * 2.6 + 0.5);
+      handRef.current?.setAttribute("transform", `rotate(${hand.toFixed(2)} ${P.wrist[0]} ${P.wrist[1]})`);
+      frontRef.current?.setAttribute("transform", `rotate(${fFront.toFixed(2)} ${P["finger-front"][0]} ${P["finger-front"][1]})`);
+      backRef.current?.setAttribute("transform", `rotate(${fBack.toFixed(2)} ${P["finger-back"][0]} ${P["finger-back"][1]})`);
+      thumbRef.current?.setAttribute("transform", `rotate(${fThumb.toFixed(2)} ${P.thumb[0]} ${P.thumb[1]})`);
+      restRef.current?.setAttribute("opacity", flying ? "0" : "1");
+      flyRef.current?.setAttribute("opacity", flying ? "1" : "0");
+      flyRef.current?.setAttribute("transform", `translate(${kx.toFixed(1)} ${ky.toFixed(1)}) rotate(${kr.toFixed(1)} ${P.knife[0]} ${P.knife[1]})`);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const src = (part: string, tinted = false) =>
+    `${tinted && skin !== SKIN_ORIGINAL ? `/assets/hero/skin-${skin}/held-${KNIFE_ID}` : `/assets/hero/held/${KNIFE_ID}`}-${part}.webp?v=${ART_VER.heroPart}`;
+  const img = (part: string, tinted = false) => {
+    const b = KNIFE_PARTS[part];
+    return <image href={src(part, tinted)} x={b.x} y={b.y} width={b.w} height={b.h} preserveAspectRatio="none" />;
+  };
+  return (
+    <g className="rig-hand rig-knife" ref={handRef}>
+      <g ref={restRef}>{img("knife")}</g>
+      <g ref={thumbRef}>{img("thumb", true)}</g>
+      {img("hand", true)}
+      <g ref={backRef}>{img("finger-back", true)}</g>
+      <g ref={frontRef}>{img("finger-front", true)}</g>
+      <g ref={flyRef} opacity={0}>{img("knife")}</g>
     </g>
   );
 }

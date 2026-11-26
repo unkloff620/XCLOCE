@@ -35,7 +35,9 @@ HELD = {"bottle-komandate": {"grip": (1300, 1810), "far": (1110, 2000)},
         # «Колбы Утилизатора» (build-vials.py): skin above the ring, the green vials below stay as drawn
         "vials-utilizator": {"grip": (1240, 1630), "far": (1184, 1858)},
         # «Колба Химика» (build-flask.py): skin above the flask's neck, the glass below stays as drawn
-        "flask-himik": {"grip": (1252, 1600), "far": (1252, 1872)}}
+        "flask-himik": {"grip": (1252, 1600), "far": (1252, 1872)},
+        # «Нож Психа» (build-knife.py): skin right of the knife's handle, the blade left of it stays as drawn
+        "knife-psih": {"grip": (1300, 1580), "far": (1060, 1580)}}
 # things that hang from the fist and swing as a pendulum (rig.tsx HeldSwing): their own pictures, not tinted, and the
 # point they hang from (source-canvas pixels) — <item>-rope.png, <item>-anchor.png
 SWING = {"anchor-mugo": {"pivot": (1328, 1748), "parts": ["rope", "anchor"]}}
