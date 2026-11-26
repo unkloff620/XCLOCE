@@ -419,7 +419,7 @@ export async function pokerView(q: Queryable, pid: number, now: number) {
     // the one-of-a-kind prizes the player has already: a repeat of their hand pays gold bars instead (the table shows it)
     owned: {
       keys: (await itemQty(q, pid, "keys-bundle")) > 0,
-      raven: (await q.query("SELECT 1 FROM promises WHERE player_id=$1 AND what='raven'", [pid])).length > 0,
+      raven: (await itemQty(q, pid, "raven")) > 0,
     },
   };
 }
@@ -467,9 +467,10 @@ async function settlePoker(ctx: Ctx, gameId: number | null, cards: Card[], swapp
   const def = pokerHandDef(hand);
   const before = pokerLevel(Number(p?.poker_xp ?? 0));
   // the keys and «Ворон» are one of a kind: had (or promised) already — gold bars instead
+  const one = (def.pay.items ?? []).find((x) => x.id === "keys-bundle" || x.id === "raven");
   const unique = def.promise
     ? (await ctx.q.query("SELECT 1 FROM promises WHERE player_id=$1 AND what=$2", [ctx.pid, def.promise])).length > 0
-    : (def.pay.items ?? []).some((x) => x.id === "keys-bundle") && (await itemQty(ctx.q, ctx.pid, "keys-bundle")) > 0;
+    : !!one && (await itemQty(ctx.q, ctx.pid, one.id)) > 0;
   const repeat = !!def.repeat && unique;
   const base = repeat ? def.repeat! : pokerPay(hand, before.level);
   // a paying hand: a craft part or two on top

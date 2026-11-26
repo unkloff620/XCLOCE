@@ -151,6 +151,7 @@ const WEARABLES: ItemDef[] = ([
   // Кедр's set (cut from the hero on tools/rig/source/wear)
   { id: "tee-actclose", name: "Футболка ActClose", slot: "SHIRT", rarity: "rare", description: "Чёрная, с красным actclose на груди. Сайт лежит — футболка стоит.", sources: ["Победа: Кедр (Блатной)"] },
   { id: "shorts-actclose", name: "Шорты ActClose", slot: "PANTS", rarity: "rare", description: "Чёрные, с белыми шнурками. Дежурить по сайту можно и в шортах.", sources: ["Победа: Кедр (Блатной)"] },
+  { id: "raven", name: "Ворон", slot: "SPECIAL", rarity: "legendary", description: "Чёрный ворон сидит на левом плече: машет крыльями и косится по сторонам. Только за роял-флеш в покере.", sources: ["Покер: роял-флеш"] },
   { id: "badge-actclose", name: "Бейдж ActClose", slot: "ACCESSORY", rarity: "epic", description: "ACTCLOSE · ADMIN. Пускает в серверную и в любую очередь без очереди.", sources: ["Победа: Кедр (Блатной)"] },
   // Командате's tracksuit: the drawn set (tools/rig/source/wear, icons in tools/items/source)
   { id: "jacket-komandate", name: "Олимпийка Командате", slot: "SHIRT", rarity: "epic", description: "Молния до горла — так командуют с района.", sources: ["Победа: Командате"] },

@@ -38,11 +38,11 @@ export interface StyleDraft {
 /** the slots hidden by «Без одежды» in the tattoo tab: what covers the skin */
 export const BARE_HIDES: string[] = ["HEAD", "ACCESSORY", "SHIRT", "PANTS", "SHOES"];
 
-const CLOTHES: Slot[] = ["HEAD", "FACE", "MOUTH", "TEETH", "ACCESSORY", "SHIRT", "PANTS", "SHOES", "HAND"];
-const ITEM_PART: Record<string, string> = { HEAD: "Голова", FACE: "Лицо", MOUTH: "Рот", TEETH: "Зубы", ACCESSORY: "Аксессуар", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть" };
+const CLOTHES: Slot[] = ["HEAD", "FACE", "MOUTH", "TEETH", "ACCESSORY", "SHIRT", "PANTS", "SHOES", "HAND", "SPECIAL"];
+const ITEM_PART: Record<string, string> = { HEAD: "Голова", FACE: "Лицо", MOUTH: "Рот", TEETH: "Зубы", ACCESSORY: "Аксессуар", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть", SPECIAL: "На плечо" };
 /** the slot buttons: a picture (public/assets/ui/slot-*.webp) and a short word under it */
 const SLOT_ICON: Record<string, string> = { MOUTH: "slot-mouth", TEETH: "slot-teeth", HEAD: "slot-head", ACCESSORY: "slot-accessory", SHIRT: "slot-shirt", PANTS: "slot-pants", SHOES: "slot-shoes" };
-const SHORT_PART: Record<string, string> = { HEAD: "Голова", FACE: "Лицо", MOUTH: "Рот", TEETH: "Зубы", ACCESSORY: "Шея", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть" };
+const SHORT_PART: Record<string, string> = { HEAD: "Голова", FACE: "Лицо", MOUTH: "Рот", TEETH: "Зубы", ACCESSORY: "Шея", SHIRT: "Верх", PANTS: "Низ", SHOES: "Обувь", HAND: "Кисть", SPECIAL: "Плечо" };
 // «левое / правое» — as seen on the screen
 
 /** the picture on each room button in the hero editor */
@@ -369,7 +369,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
                   {/* the same slot pictures as the shop's filter row; the hand has none — a hand thing stands for it */}
                   {SLOT_ICON[s]
                     ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={`/assets/ui/${SLOT_ICON[s]}.webp`} alt="" draggable={false} />
-                    : <ItemArt id={s === "FACE" ? "laser-eyes" : "hand-drum"} size={30} />}
+                    : <ItemArt id={s === "FACE" ? "laser-eyes" : s === "SPECIAL" ? "raven" : "hand-drum"} size={30} />}
                   <small>{SHORT_PART[s]}</small>
                   {n > 0 && <i className="num">{n}</i>}
                 </button>

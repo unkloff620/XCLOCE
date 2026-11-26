@@ -24,6 +24,7 @@ import { PLACES } from "./places-data.ts";
 import { SEAT } from "../../content/home-scene.ts";
 import { CHAIR_FIT } from "./desk-data.ts";
 import { JAW } from "./jaw-data.ts";
+import { Raven } from "./raven.tsx";
 import { MOUTH_HELD } from "./mouth-held-data.ts";
 import { DEFAULT_LOOK, equipmentById, type Look } from "../../content/home.ts";
 
@@ -959,6 +960,8 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
             <Ol><HandFrames /></Ol>
           </Joint>
         </Joint>
+        {/* «Ворон»'s far wing: behind the head when he spreads it */}
+        {worn?.SPECIAL === "raven" && <Raven layer="back" />}
         <Ol>
           <Bone p="head" className="rig-head">
             <Face />
@@ -972,6 +975,8 @@ function RigBody({ seat, look, worn, seatOnly, edit }: { seat?: boolean | number
             <Wear slot="HEAD" hat="over" />
           </Bone>
         </Ol>
+        {/* «Ворон» on the left shoulder (slot «Особое»: the poker's royal flush) */}
+        {worn?.SPECIAL === "raven" && <Raven />}
       </g>
       {edit && edit.mode !== "body" && <PreloadPlaces grid={edit.mode === "ink" ? "zone" : "slot"} />}
       {/* the tattoo grid and the chosen place lie under the head and the beard (they hang over the neck and the traps) */}

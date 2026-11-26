@@ -1952,4 +1952,11 @@ ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS roul_bet INT NOT NULL DEFAULT 
     sql: `ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS gifts INT NOT NULL DEFAULT 12;
 ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS gifts_at TIMESTAMPTZ NOT NULL DEFAULT now();`,
   },
+  {
+    // «Ворон» came into the game (the user 2026-11-27): who got the royal flush before and was promised him gets him now
+    id: "v2-150-raven-promised",
+    sql: `INSERT INTO inventory (player_id, item_id, qty, source)
+SELECT DISTINCT p.player_id, 'raven', 1, 'promise:raven' FROM promises p WHERE p.what = 'raven'
+ON CONFLICT (player_id, item_id) DO UPDATE SET qty = GREATEST(inventory.qty, 1);`,
+  },
 ];

@@ -808,23 +808,14 @@ const qtyText = (v: number) => (v >= 1000 ? `${Math.round(v / 100) / 10}K` : Str
 /** a combination's prize as icons only, the amount at the icon's top right */
 function PrizeIcons({ hand, level, owned }: { hand: PokerHand; level: number; owned?: { keys: boolean; raven: boolean } }) {
   const pay = pokerPay(hand, level);
-  // the royal flush's «Ворон» is not in the game yet: his picture with «скоро»
   // a one-of-a-kind prize the player has already (the keys, «Ворон»): only the gold bars of the repeat
   const def = pokerHandDef(hand);
-  if (def.repeat && (def.promise ? owned?.raven : owned?.keys)) {
+  const isRaven = (def.pay.items ?? []).some((x) => x.id === "raven");
+  if (def.repeat && (isRaven ? owned?.raven : owned?.keys)) {
     const gold = def.repeat.currencies?.GOLD ?? 0;
     return (
       <>
         <span className="pkt-cell" title={`Уже есть — ${gold} слитков`}><Icon name="GOLD" size={22} /><b className="num">{qtyText(gold)}</b></span>
-        <span className="pkt-cell empty" /><span className="pkt-cell empty" />
-      </>
-    );
-  }
-  if (def.promise) {
-    return (
-      <>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <span className="pkt-cell one" title="Ворон — придёт в игру позже, выбивший получит его сразу"><img src="/assets/items/raven.webp" alt="Ворон" draggable={false} /><b className="num">скоро</b></span>
         <span className="pkt-cell empty" /><span className="pkt-cell empty" />
       </>
     );

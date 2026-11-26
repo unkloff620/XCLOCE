@@ -276,8 +276,8 @@ export interface PokerHandDef { id: PokerHand; name: string; xp: number; pay: Re
 const cs = (s: string): Card[] => s.split(" ").map((t) => ({ r: RANKS.indexOf(t.slice(0, -1) as (typeof RANKS)[number]), s: "shdc".indexOf(t.slice(-1)) }));
 /** from the best down; the sample is what the row in the table shows */
 export const POKER_HANDS: PokerHandDef[] = [
-  // «Ворон» comes into the game later: who gets a royal flush is promised him (the promises table), he is given then
-  { id: "royal", name: "Роял-флеш", xp: 100, pay: {}, promise: "raven", repeat: { currencies: { GOLD: 1500 } }, sample: cs("10s Js Qs Ks As") },
+  // «Ворон» (the hero's shoulder, slot «Особое»): one of a kind — had already, gold bars instead
+  { id: "royal", name: "Роял-флеш", xp: 100, pay: { items: [{ id: "raven", qty: 1 }] }, repeat: { currencies: { GOLD: 1500 } }, sample: cs("10s Js Qs Ks As") },
   { id: "sflush", name: "Стрит-флеш", xp: 60, pay: { items: [{ id: "keys-bundle", qty: 1 }] }, repeat: { currencies: { GOLD: 1000 } }, sample: cs("5h 6h 7h 8h 9h") },
   { id: "quads", name: "Каре", xp: 30, pay: { currencies: { GOLD: 600 } }, sample: cs("9s 9h 9d 9c Ks") },
   { id: "full", name: "Фулл-хаус", xp: 16, pay: { items: [{ id: "rug-pull-gun", qty: 40 }] }, sample: cs("Qh Qs Qd 7c 7h") },
