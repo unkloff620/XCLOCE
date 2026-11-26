@@ -1918,6 +1918,31 @@ button.bjt-stack { cursor: pointer; }
    that corner (.ncs: the corner's own 400×200 pixels, at the same scale 0.34) */
 .bcard.bcard-boss-nitka { --ink-c: #172238; --mute-c: #3e4f6e; border-image: url("/assets/ui/boss-card-frame-nitka.webp?v=1") 200 400 240 200 fill / 68px 136px 81.6px 68px stretch; }
 .bcard.bcard-boss-nitka .ncs { position: absolute; right: 0; top: 0; width: 136px; height: 68px; z-index: 2; pointer-events: none; overflow: visible; }
+/* Химик's card: the green frame with the slime and his lab coat's collar (tools/ui/himik-card.py, 1200×520). The corners are
+   cut big (276 470 240 320, at 0.37) so his flasks and the slime are never stretched; the glass with the poison is drawn
+   over each corner on the corner's own pixels (art/himik-card.tsx), the molecule gets written on the paper behind the text */
+.bcard.bcard-boss-himik { --ink-c: #1d2a12; --mute-c: #4a5e2c; border-image: url("/assets/ui/boss-card-frame-himik.webp?v=1") 276 470 240 320 fill / 102.1px 173.9px 88.8px 118.4px stretch; }
+.bcard.bcard-boss-himik .bcard-name { text-shadow: 0 1px 0 rgba(255, 250, 225, 0.7); }
+.bcard.bcard-boss-himik .bcard-reward { background: rgba(60, 90, 20, 0.12); box-shadow: inset 0 0 0 1.5px rgba(40, 70, 10, 0.3); }
+.hmc-glass { position: absolute; z-index: 2; pointer-events: none; overflow: hidden; }
+.hmc-tl { left: 0; top: 0; width: 118.4px; height: 102.1px; }
+.hmc-bl { left: 0; bottom: 0; width: 118.4px; height: 88.8px; }
+.hmc-tr { right: 0; top: 0; width: 173.9px; height: 102.1px; }
+.hmc-br { right: 0; bottom: 0; width: 173.9px; height: 88.8px; }
+.hmc-mol { position: absolute; z-index: 0; left: 38.4%; top: 19.6%; width: 42.75%; height: 53.5%; pointer-events: none; }
+.hmc-sway { animation: hmc-sway 3.2s ease-in-out infinite; }
+@keyframes hmc-sway { 0%, 100% { transform: rotate(-2.5deg); } 50% { transform: rotate(2.5deg); } }
+.hmc-wave-f { animation: hmc-wave-f 1.4s linear infinite; }
+.hmc-wave-b { animation: hmc-wave-b 2s linear infinite; }
+.hmc-wave-f.big { animation-name: hmc-wave-fb; }
+.hmc-wave-b.big { animation-name: hmc-wave-bb; }
+@keyframes hmc-wave-f { from { transform: translateX(0); } to { transform: translateX(-14px); } }
+@keyframes hmc-wave-b { from { transform: translateX(-11px); } to { transform: translateX(0); } }
+@keyframes hmc-wave-fb { from { transform: translateX(0); } to { transform: translateX(-26px); } }
+@keyframes hmc-wave-bb { from { transform: translateX(-20px); } to { transform: translateX(0); } }
+.hmc-bub { animation: hmc-bub 2.2s ease-in infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes hmc-bub { 0% { transform: translateY(0) scale(0.5); opacity: 0; } 15% { opacity: 1; } 85% { opacity: 0.9; } 100% { transform: translateY(calc(var(--rise) * -1)) scale(1.15); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .hmc-sway, .hmc-wave-f, .hmc-wave-b, .hmc-bub { animation: none; } }
 .bcard.bcard-boss-fokus { --ink-c: #f6e6df; --mute-c: #d29a8c; border-image: url("/assets/ui/boss-card-frame-fokus.webp?v=2") 215 fill / 64px stretch;
   animation: fk-card-short 7s steps(1) infinite; }
 .bcard.bcard-boss-fokus .bcard-name { text-shadow: 0 2px 0 rgba(0, 0, 0, 0.7), 0 0 12px rgba(255, 40, 30, 0.45); }
