@@ -77,6 +77,7 @@ export const ASSET_FILES: string[] = [
  "/assets/bandit/ui/bet-box.webp",
  "/assets/bandit/ui/bg.webp",
  "/assets/bandit/ui/cell.webp",
+ "/assets/bandit/ui/chest.webp",
  "/assets/bandit/ui/frame.webp",
  "/assets/bandit/ui/minus.webp",
  "/assets/bandit/ui/panel.webp",

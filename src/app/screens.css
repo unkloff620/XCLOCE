@@ -8412,5 +8412,11 @@ body:has(.bd-screen) .hud { background: none; border-bottom: 0; box-shadow: none
 .bd-lvl small { color: #d8c49a; font: 600 2.8cqw/1 system-ui; white-space: nowrap; }
 .bd-lvl-bar { flex: 1; height: 1.8cqw; border-radius: 1cqw; background: #120b07; overflow: hidden; border: 0.3cqw solid #3b2410; }
 .bd-lvl-bar i { display: block; height: 100%; background: linear-gradient(90deg, #c8861e, #ffd75a); transition: width 0.4s; }
+.bd-chest:not(:disabled) { animation: bd-chest 2.4s ease-in-out infinite; transform-origin: 50% 90%; }
+@keyframes bd-chest { 0%, 80%, 100% { transform: rotate(0); } 85% { transform: rotate(-4deg); } 90% { transform: rotate(3deg); } 95% { transform: rotate(-2deg); } }
+.bd-chest-in { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.bd-chest-in img { width: 60%; }
+.bd-chest-in b { font-size: 20px; }
+.bd-chest-in .bd-lvl-bar { width: 100%; flex: none; height: 12px; border-radius: 6px; }
 .bd-lvlup { position: absolute; left: 50%; top: 24%; transform: translateX(-50%); padding: 2cqw 4cqw; border-radius: 3cqw; background: rgba(20, 12, 6, 0.9); border: 0.5cqw solid var(--bd-gold); color: #fff; font: 700 4cqw/1.2 system-ui; white-space: nowrap; z-index: 4; animation: bd-x 0.4s ease; }
 .bd-lvlup b { color: var(--bd-gold); }

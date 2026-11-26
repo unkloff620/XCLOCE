@@ -49,6 +49,7 @@ export function BanditScreen() {
   const autoRef = useRef(false);
   const [table, setTable] = useState(false);
   const [lvlUp, setLvlUp] = useState<number | null>(null);
+  const [chest, setChest] = useState(false);
   const timers = useRef<number[]>([]);
 
   const load = useCallback(() => api.get<View>("/api/bandit").then(setV).catch(() => {}), []);
@@ -122,12 +123,17 @@ export function BanditScreen() {
       <div className="bd-stage">
         {/* the artist's machine on its 2000×3000 canvas */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="bd-l" style={u(UI.boxes.title)} src={art("title")} alt="Бандитский фарт" draggable={false} />
+        <img className="bd-l" style={u({ ...UI.boxes.title, y: UI.boxes.title.y - 150 })} src={art("title")} alt="Бандитский фарт" draggable={false} />
+        {/* the chest up on the left: the machine's level */}
+        <button type="button" className="bd-btn bd-chest" style={u({ x: 40, y: 400, w: 330, h: 248 })} onClick={() => { haptic.tap(); setChest(true); }} aria-label="Сундук автомата">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={`/assets/bandit/ui/chest.webp${V}`} alt="" draggable={false} />
+        </button>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="bd-l" style={u(UI.boxes.frame)} src={art("frame")} alt="" draggable={false} />
         {/* the machine's level: 1 experience per rouble bet */}
         {v && (
-          <div className="bd-lvl" style={u({ x: 520, y: 640, w: 960, h: 92 })} title={`Опыт: ${fmt(v.xp)}`}>
+          <div className="bd-lvl" style={u({ x: 520, y: 590, w: 960, h: 92 })} title={`Опыт: ${fmt(v.xp)}`}>
             <b className="num">Ур. {v.lvl.level}</b>
             <span className="bd-lvl-bar"><i style={{ width: `${v.lvl.need ? (v.lvl.into / v.lvl.need) * 100 : 100}%` }} /></span>
             <small className="num">{v.lvl.need ? `${fmt(v.lvl.into)} / ${fmt(v.lvl.need)}` : "макс."}</small>
@@ -199,6 +205,17 @@ export function BanditScreen() {
       </div>
       <Link href="/yard" className="bd-back" aria-label="Назад во двор">‹</Link>
       <button type="button" className="bd-table-btn" onClick={() => { haptic.tap(); setTable(true); }} aria-label="Таблица выплат">?</button>
+      {chest && v && (
+        <Modal title="Сундук автомата" onClose={() => setChest(false)}>
+          <div className="bd-chest-in">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`/assets/bandit/ui/chest.webp${V}`} alt="" draggable={false} />
+            <b className="num">Уровень {v.lvl.level}</b>
+            <span className="bd-lvl-bar"><i style={{ width: `${v.lvl.need ? (v.lvl.into / v.lvl.need) * 100 : 100}%` }} /></span>
+            <span className="small num">{v.lvl.need ? `${fmt(v.lvl.into)} / ${fmt(v.lvl.need)} опыта` : "Максимальный уровень"}</span>
+          </div>
+        </Modal>
+      )}
       {table && <PayTable bet={shownBet} onClose={() => setTable(false)} />}
     </div>
   );
