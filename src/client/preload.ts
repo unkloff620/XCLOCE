@@ -74,9 +74,21 @@ function otherRoom(p: string, room: string) {
   const mine = [ROOM_BG[room] ?? ROOM_BG.basic, ROOM_BACKDROP[room] ?? ROOM_BACKDROP.basic, `${room}-sky`];
   return !mine.some((n) => p === `/assets/home/${n}.webp`);
 }
-export function entryUrls(look: LookLite | null, today: string, room: string): string[] {
-  return ASSET_FILES.filter((p) => ["core", "home"].includes(sectionOf(p)) && wanted(p, look) && !otherRoom(p, room)
+/** the home rooms that are a boss's live fight room: their pictures live with his arena (art/home-scene.tsx) */
+const LIVE_ROOM_ARENA: Record<string, string> = { vault: "knyaz", acidyard: "utilizator", forge: "solntse", workshop: "nitka", lab: "himik", psycho: "psih", coder: "fokus", dojo: "botsman" };
+/**
+ * Everything the first screen needs, in ONE download with one progress to 100% (the user 2026-11-27: it used to run
+ * twice when the game opened on another screen — the entry, then that screen's own): the hero, the interface, the home
+ * and the player's room (a live boss room's own pictures too) — and the section of the screen the game opens on.
+ */
+export function entryUrls(look: LookLite | null, today: string, room: string, route = "/"): string[] {
+  const arena = LIVE_ROOM_ARENA[room];
+  const first = sectionOfRoute(route);
+  const base = ASSET_FILES.filter((p) => ["core", "home"].includes(sectionOf(p)) && wanted(p, look) && !otherRoom(p, room)
     && (!LATER.some((d) => p.startsWith(d)) || p.startsWith(`/assets/updates/${today}`) || (look?.tattoos ?? []).some((t) => p === `/assets/hero/tattoo/${t}.webp`))).map(usedUrl);
+  const live = arena ? ASSET_FILES.filter((p) => p.startsWith(`/assets/arena/${arena}/`)).map(usedUrl) : [];
+  const section = first && first !== "home" ? sectionUrls(first, look, room) : [];
+  return [...new Set([...base, ...live, ...section])];
 }
 /** what a section's screen waits for (the home: only the player's own room) */
 export function sectionUrls(section: Section, look: LookLite | null, room: string): string[] {

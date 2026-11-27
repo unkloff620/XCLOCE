@@ -322,7 +322,8 @@ function Loading({ prog, overlay }: { prog?: LoadProgress; overlay?: boolean }) 
     }, wait);
     return () => clearTimeout(t);
   }, [url, shownUrl]);
-  const frac = prog ? (prog.total ? prog.n / prog.total : 1) : null;
+  // before the list is known (total 0) the ring shows 0%, not a flash of 100%
+  const frac = prog ? (prog.total ? prog.n / prog.total : 0) : null;
   const R = 52;
   const C = 2 * Math.PI * R;
   return (
@@ -380,7 +381,7 @@ function usePauseWhenHidden() {
   }, []);
 }
 
-function useArtReady(look: LookLite | null, room: string, active: boolean) {
+function useArtReady(look: LookLite | null, room: string, active: boolean, route: string) {
   const [prog, setProg] = useState<LoadProgress>({ n: 0, total: 0, url: null });
   const [ready, setReady] = useState(false);
   const started = useRef(false);
@@ -388,7 +389,7 @@ function useArtReady(look: LookLite | null, room: string, active: boolean) {
     if (!active || started.current) return;
     started.current = true;
     void resetCacheOnce()
-      .then(() => preload(entryUrls(look, mskDay(Date.now()), room), (n, total, url) => setProg((p) => ({ n, total, url: url ?? p.url }))))
+      .then(() => preload(entryUrls(look, mskDay(Date.now()), room, route), (n, total, url) => setProg((p) => ({ n, total, url: url ?? p.url }))))
       .then(() => {
         setReady(true);
         // the light, likely-next screens only, two at a time, after the home has settled
@@ -466,7 +467,7 @@ export function Shell({ children }: { children: ReactNode }) {
   const body = state?.look.body;
   const look = useMemo<LookLite | null>(() => (body ? { hair: body.hair, hairColor: body.hairColor, skin: body.skin, tattoos: body.tattoos } : null), [body?.hair, body?.hairColor, body?.skin]); // eslint-disable-line react-hooks/exhaustive-deps
   usePauseWhenHidden();
-  const art = useArtReady(look, state?.look.room ?? "basic", auth === "ok" && !!state);
+  const art = useArtReady(look, state?.look.room ?? "basic", auth === "ok" && !!state, path);
 
   return (
     <>
