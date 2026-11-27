@@ -8,7 +8,7 @@
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { useGame, useNow } from "../store.tsx";
-import { Modal, RewardChips, Toggle } from "../ui.tsx";
+import { Modal, RewardChips } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { haptic } from "../telegram.ts";
@@ -91,8 +91,6 @@ export function HeistScreen() {
   const [help, setHelp] = useState(false);
   // «Открыть сразу за $100?» for the padlock being picked
   const [ask, setAsk] = useState<number | null>(null);
-  // «Автовзлом» confirmation
-  const [autoAsk, setAutoAsk] = useState<number | null>(null);
   const boxes = h?.boxes ?? [];
   // the chosen box: the one tapped, else the first there is
   const box = boxes.find((b) => b.slot === sel) ?? boxes[0] ?? null;
@@ -141,15 +139,6 @@ export function HeistScreen() {
             </>
           ) : box && d ? (
             <>
-              {/* «Автовзлом»: the padlocks left paid at once, then picked one by one by themselves (loot whole) */}
-              {done < d.locks && (
-                <div className="hs-auto">
-                  <Toggle on={!!box.auto} disabled={!!box.auto || busy === "heist_auto"} title="Замки ломаются сами, один за другим, по 6 часов — заходить не нужно"
-                    onChange={(v) => { if (v) setAutoAsk(box.slot); }}>
-                    {box.auto ? "Автовзлом" : <><Icon name="TOOTH" size={14} /><b className="num">{(h?.auto ?? 100) * (d.locks - done)}</b></>}
-                  </Toggle>
-                </div>
-              )}
               {/* tap a padlock: the next one starts being picked; tapped again while it is — open it at once for dollars */}
               <Chest box={box} now={now}
                 onLock={(i) => {
@@ -188,24 +177,6 @@ export function HeistScreen() {
           })}
         </div>
       </div>
-
-      {autoAsk !== null && (() => {
-        const bx = boxes.find((b) => b.slot === autoAsk);
-        if (!bx) return null;
-        const left = bx.locks - doneNow(bx, now);
-        return (
-          <Modal title="Автовзлом" onClose={() => setAutoAsk(null)}>
-            <p className="center" style={{ margin: "4px 0 8px", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, flexWrap: "wrap" }}>
-              Оплатить {left} {left === 1 ? "замок" : left < 5 ? "замка" : "замков"} за <span style={{ display: "inline-flex", alignItems: "center", gap: 3, whiteSpace: "nowrap" }}><Icon name="TOOTH" size={16} /><b>{(h?.auto ?? 100) * left}</b>?</span>
-            </p>
-            <p className="small center muted" style={{ margin: "0 0 12px" }}>Замки будут ломаться сами, один за другим, по 6 часов — заходить за каждым не нужно.</p>
-            <div className="row" style={{ gap: 8 }}>
-              <button className="btn dark" style={{ flex: 1 }} onClick={() => setAutoAsk(null)}>Нет</button>
-              <button className="btn gold" style={{ flex: 1 }} disabled={busy === "heist_auto"} onClick={async () => { const s0 = autoAsk; setAutoAsk(null); if (await act("heist_auto", { slot: s0 })) haptic.ok(); }}>Оплатить</button>
-            </div>
-          </Modal>
-        );
-      })()}
 
       {ask !== null && (() => {
         const price = rushPrice(state?.wallet?.TOOTH ?? 0);

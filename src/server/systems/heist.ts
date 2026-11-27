@@ -94,18 +94,9 @@ export async function heistRush(ctx: Ctx, slot: number) {
   return { slot, done: Number(r.locks_done) + 1, paid: price };
 }
 
-/** «Автовзлом»: the padlocks left are paid now (LOCK_AUTO teeth each) and picked one after another by themselves,
- * an hour each — no need to come back every hour; the loot stays whole (nothing is opened at once) */
-export async function heistAuto(ctx: Ctx, slot: number) {
-  const r = await boxRow(ctx, slot);
-  const d = heistBox(r.kind);
-  if (r.auto) throw new GameError("heist_auto", "Автовзлом уже включён");
-  const left = d.locks - Number(r.locks_done);
-  if (left <= 0) throw new GameError("heist_done", "Все замки сняты — открывай");
-  await oneAtATime(ctx, slot);
-  await takeMoney(ctx, "TOOTH", LOCK_AUTO * left, `heist_auto:${slot}`);
-  await ctx.q.query("UPDATE heist_boxes SET auto=true, pick_ends=COALESCE(pick_ends, $3) WHERE player_id=$1 AND slot=$2", [ctx.pid, slot, new Date(ctx.now + LOCK_MS)]);
-  return { slot, paid: LOCK_AUTO * left };
+/** «Автовзлом» is gone (the user 2026-11-27): a box already on it finishes by itself (settle), no new one */
+export async function heistAuto(_ctx: Ctx, _slot: number): Promise<never> {
+  throw new GameError("heist_auto_gone", "Автовзлома больше нет");
 }
 
 /** every padlock is off: the box opens — its loot, maybe a piece of the event's tattoos; the cell is free again */

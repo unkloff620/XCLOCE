@@ -31,18 +31,16 @@ describe("automation toggles", () => {
     expect(await runAutos(db, p, T + H)).toMatchObject({ hits: 0, fights: 0 });
   });
 
-  it("«Автовзлом»: the padlocks left are paid at once and come off one by one, 6 hours each", async () => {
+  it("«Автовзлом» is gone: a new one can't be switched on, an old one still finishes by itself", async () => {
     const db = await freshDb();
     await eventSave(db, 1, { title: "Взлом", startsAt: iso(T - H), endsAt: iso(T + 72 * H), effects: { heistBoxes: 1 } });
     resetConfigCache();
     const p = await newPlayer(db);
     await db.query("INSERT INTO heist_boxes (player_id, slot, kind) VALUES ($1, 0, 'gold')", [p]);
-    await setMoney(db, p, "TOOTH", LOCK_AUTO * 3 + 7);
-    await act(db, p, "heist_auto", { slot: 0 }, T);
-    expect(await wallet(db, p, "TOOTH")).toBe(7);
-    const mid = await inPlayerTx(db, p, async () => null, { now: T + 12 * H + M });
-    expect(mid.state.heist!.boxes[0]).toMatchObject({ done: 2, auto: true });
+    await setMoney(db, p, "TOOTH", LOCK_AUTO * 3);
+    await expect(act(db, p, "heist_auto", { slot: 0 }, T)).rejects.toMatchObject({ code: "heist_auto_gone" });
+    await db.query("UPDATE heist_boxes SET auto=true, pick_ends=$2 WHERE player_id=$1", [p, new Date(T + 6 * H)]);
     const o = await act(db, p, "heist_open", { slot: 0 }, T + 18 * H + M);
-    expect(o.result.rushed).toBe(false);
+    expect(o.result.kind).toBe("gold");
   });
 });
