@@ -19,14 +19,17 @@ export interface BossBonusStage {
 }
 
 export const BONUS_SHARES = [0.05, 0.1] as const;
-/** a boss's own further stages, in any mode (the user 2026-11-27: Солнце — 15 % for 1 000 roubles) */
+/** a boss's own further stages, in any mode (the user 2026-11-27: Солнце — 3 % for 1 000 roubles) */
 export const EXTRA_STAGES: Record<string, { share: number; reward: Reward }[]> = {
-  solntse: [{ share: 0.15, reward: { currencies: { RUB: 1000 } } }],
+  solntse: [{ share: 0.03, reward: { currencies: { RUB: 1000 } } }],
 };
 export const KEY_BONUS_BOSSES = ["datsik", "kedr", "mugo", "garkusha"] as const;
 
-/** the stages of this boss's box in a fight with this HP and mode */
-export function bossBonus(bossId: string, hpMax: number, mode: string): BossBonusStage[] {
+/**
+ * the stages of this boss's box in a fight with this HP and mode; `owned` (the player's pieces, on the client): only as
+ * many tattoo stages as there are pieces left after the win's own one — a complete set shows none
+ */
+export function bossBonus(bossId: string, hpMax: number, mode: string, owned?: (id: string) => boolean): BossBonusStage[] {
   if (!(hpMax > 0)) return [];
   const at = (k: number) => Math.max(1, Math.ceil(hpMax * k));
   if ((KEY_BONUS_BOSSES as readonly string[]).includes(bossId)) {
@@ -34,7 +37,8 @@ export function bossBonus(bossId: string, hpMax: number, mode: string): BossBonu
   }
   const set = tattooSetsOfBoss(bossId).find((s) => s.mode === mode);
   const extra = (EXTRA_STAGES[bossId] ?? []).map((x) => ({ damage: at(x.share), reward: x.reward }));
-  const sets = set ? BONUS_SHARES.map((k) => ({ damage: at(k), reward: { items: [{ id: set.pieces[0].id, qty: 1 }] }, set: set.id })) : [];
+  const left = set ? (owned ? set.pieces.filter((p) => !owned(p.id)).length - 1 : BONUS_SHARES.length) : 0;
+  const sets = set ? BONUS_SHARES.slice(0, Math.max(0, left)).map((k) => ({ damage: at(k), reward: { items: [{ id: set.pieces[0].id, qty: 1 }] }, set: set.id })) : [];
   return [...sets, ...extra].sort((a, b) => a.damage - b.damage);
 }
 

@@ -7558,7 +7558,7 @@ body.has-full .modal-back:not(.full):not(.page) { top: 0; }
 .bbox-foot .gain-line { color: #fff; justify-content: center; flex-wrap: wrap; gap: 4px 12px; }
 /* the reward on the pin's plank, under the bar */
 .bbox-plank-gain { position: absolute; display: flex; align-items: center; justify-content: center; animation: combo-pop 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
-.bbox-plank-gain .gain-line { flex-wrap: nowrap; align-items: center; gap: 2px; color: #fff; font-size: 2.6cqi; text-shadow: 0 1px 2px #000; }
+.bbox-plank-gain .gain-line { flex-wrap: nowrap; align-items: center; gap: 2px; color: #fff; font-size: 2cqi; text-shadow: 0 1px 2px #000; }
 .bbox-plank-gain svg { width: 6cqi !important; height: 6cqi !important; }
 .bbox-step { font-size: 3cqi; font-weight: 700; color: #ffe2b8; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); }
 .bbox-x { position: absolute; top: 4%; right: 3.5%; width: 7cqi; height: 7cqi; border: 0; border-radius: 1.4cqi; background: rgba(0, 0, 0, 0.4); color: #fff; font-size: 4.6cqi; line-height: 1; }
@@ -8669,4 +8669,4 @@ html.eco .rig-flask-bub { animation-iteration-count: 1; }
 .yard-sky-all { right: auto; width: 300%; aspect-ratio: 6000 / 3405; transform: translateX(calc((-1 - var(--pos, 0)) * 100% / 3)); will-change: transform; }
 .yard-sky-all .court-sky { height: 49.5%; }
 /* a tattoo stage of the damage box: the set's piece and the word (the server picks a missing piece on the win) */
-.bbox-tat { display: inline-flex; align-items: center; gap: 4px; color: #fff; font-size: 2.6cqi; font-weight: 800; text-shadow: 0 1px 2px #000; white-space: nowrap; }
+.bbox-tat { display: inline-flex; align-items: center; gap: 3px; color: #fff; font-size: 2cqi; font-weight: 800; text-shadow: 0 1px 2px #000; white-space: nowrap; }
