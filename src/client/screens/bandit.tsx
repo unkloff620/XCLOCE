@@ -362,7 +362,7 @@ function PayTable({ bet, onClose }: { bet: number; onClose: () => void }) {
         <div className="bd-pay-big">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={pic("revolver")} alt="" />
-          <div><b>Русская рулетка</b><span className="small">3 револьвера в любом месте — бонусная игра: {ROULETTE_PULLS} пули, каждая заряжается в барабан на шесть гнёзд и барабан крутится. Щелчок — {fmt(ROULETTE_PAY)} синих коробков в банк; забрал и ушёл или все пули мимо — банк твой, выстрел — банк сгорает.</span></div>
+          <div><b>Русская рулетка</b><span className="small">3 револьвера в любом месте — бонусная игра: {ROULETTE_PULLS} пули, каждая заряжается в барабан на шесть гнёзд и барабан крутится. Мимо — {fmt(ROULETTE_PAY)} синих коробков в банк; забрал и ушёл или все пули мимо — банк твой, выстрел — банк сгорает.</span></div>
         </div>
         <div className="bd-pay-big">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -514,7 +514,7 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
             <img className="bd-roul-gun-body" src={`${R}/gun.webp${V}`} alt="" draggable={false} />
           </span>
         </button>
-        {result === "click" && phase !== "idle" && <i className="bd-roul-click">ЩЁЛК!</i>}
+        {result === "click" && phase !== "idle" && <i className="bd-roul-click">МИМО!</i>}
         {result === "bang" && death === "fire" && <i className="bd-roul-bang">БАХ!</i>}
         {/* the room goes red at the edges with the blood, then the words */}
         {(death === "blood" || death === "lost") && <i className="bd-roul-veil" aria-hidden="true" />}
@@ -538,7 +538,7 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
           </>
         ) : (
           <>
-            <span className="small">Пуль осталось: <b className="num">{left}</b> · щелчок — +{fmt(ROULETTE_PAY)}</span>
+            <span className="small">Пуль осталось: <b className="num">{left}</b> · мимо — +{fmt(ROULETTE_PAY)}</span>
             <button type="button" className="btn block" disabled={!!busy || playing || !!over} onClick={() => void stop()}>{used > 0 ? "Забрать и уйти" : "Уйти"}</button>
           </>
         )}
