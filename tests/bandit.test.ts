@@ -40,24 +40,31 @@ describe("«Бандитский фарт»", () => {
     expect(rev.wins.some((w) => w.sym === "revolver")).toBe(false);
   });
 
-  it("the roulette: no spin while it is open; a click pays 25 (whatever the bet), the shot ends it; 4 pulls at most", async () => {
+  it("the roulette: no spin while it is open; a click puts 25 in the pot (whatever the bet), the shot burns the pot; stop or all 4 clicks — the pot is his", async () => {
     const db = await freshDb();
     const p = await newPlayer(db);
     await setMoney(db, p, "RUB", 100);
     await db.query("INSERT INTO bandit_state (player_id, roul_left, roul_round, roul_pulls, roul_bet) VALUES ($1, 4, 3, 0, 2)", [p]);
     await expect(act(db, p, "bandit_spin", { bet: 1 })).rejects.toMatchObject({ code: "roulette_open" });
     const a = await act(db, p, "bandit_pull", {});
-    expect(a.result).toMatchObject({ shot: false, got: ROULETTE_PAY, blue: 25, boxes: 0 });
+    expect(a.result).toMatchObject({ shot: false, got: ROULETTE_PAY, blue: 0, boxes: 0, roulette: { pot: 25 } });
     const b = await act(db, p, "bandit_pull", {});
-    expect(b.result).toMatchObject({ shot: false, blue: 50 });
+    expect(b.result).toMatchObject({ shot: false, blue: 0, roulette: { pot: 50 } });
+    // the third pull shoots: the 50 in the pot burn
     const c = await act(db, p, "bandit_pull", {});
-    expect(c.result).toMatchObject({ shot: true, got: 0, blue: 50, roulette: null });
+    expect(c.result).toMatchObject({ shot: true, got: 0, burned: 50, blue: 0, roulette: null });
     await expect(act(db, p, "bandit_pull", {})).rejects.toMatchObject({ code: "no_roulette" });
-    // no shot on any pull: all 4 click
-    await db.query("UPDATE bandit_state SET roul_left=4, roul_round=9, roul_pulls=0, roul_bet=1, blue=0 WHERE player_id=$1", [p]);
+    // two clicks and he stops: the pot is his
+    await db.query("UPDATE bandit_state SET roul_left=4, roul_round=9, roul_pulls=0, roul_bet=1, roul_pot=0, blue=0 WHERE player_id=$1", [p]);
+    await act(db, p, "bandit_pull", {});
+    await act(db, p, "bandit_pull", {});
+    const st = await act(db, p, "bandit_pull", { stop: true });
+    expect(st.result).toMatchObject({ stopped: true, took: 50, blue: 50, roulette: null });
+    // no shot on any pull: all 4 click — the pot is his
+    await db.query("UPDATE bandit_state SET roul_left=4, roul_round=9, roul_pulls=0, roul_bet=1, roul_pot=0, blue=0 WHERE player_id=$1", [p]);
     let last;
     for (let i = 0; i < 4; i++) last = await act(db, p, "bandit_pull", {});
-    expect(last!.result).toMatchObject({ shot: false, blue: 100, roulette: null });
+    expect(last!.result).toMatchObject({ shot: false, took: 100, blue: 100, roulette: null });
   });
 
   it("levels: 10 experience to level 1, 100 000 more to level 100", () => {

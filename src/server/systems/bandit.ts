@@ -12,11 +12,11 @@ import { grantReward, takeMoney, type Ctx } from "../core.ts";
 import { TATTOO_SETS } from "../../content/tattoos.ts";
 import { BANDIT_BET_MAX, BANDIT_BET_MIN, BANDIT_CHEST_PRICE, BANDIT_GIFT_MAX, banditGifts, ROULETTE_PAY, ROULETTE_PULLS, ROULETTE_SHOT, banditLevel, banditSpin } from "../../content/bandit.ts";
 
-interface Row { free: number; free_bet: number; carry: number; spins: number; won: string | number; xp: string | number; boxes: string | number; blue: string | number; bet: number; gifts: number; gifts_at: Date | string | null; roul_left: number; roul_round: number; roul_pulls: number; roul_bet: number }
+interface Row { free: number; free_bet: number; carry: number; spins: number; won: string | number; xp: string | number; boxes: string | number; blue: string | number; bet: number; gifts: number; gifts_at: Date | string | null; roul_left: number; roul_round: number; roul_pulls: number; roul_bet: number; roul_pot?: number }
 
 async function row(q: Queryable, pid: number): Promise<Row> {
-  const [r] = await q.query<Row>("SELECT free, free_bet, carry, spins, won, xp, boxes, blue, bet, gifts, gifts_at, roul_left, roul_round, roul_pulls, roul_bet FROM bandit_state WHERE player_id=$1", [pid]);
-  return r ?? { free: 0, free_bet: 0, carry: 0, spins: 0, won: 0, xp: 0, boxes: 0, blue: 0, bet: 1, gifts: BANDIT_GIFT_MAX, gifts_at: null, roul_left: 0, roul_round: 0, roul_pulls: 0, roul_bet: 0 };
+  const [r] = await q.query<Row>("SELECT free, free_bet, carry, spins, won, xp, boxes, blue, bet, gifts, gifts_at, roul_left, roul_round, roul_pulls, roul_bet, roul_pot FROM bandit_state WHERE player_id=$1", [pid]);
+  return r ?? { free: 0, free_bet: 0, carry: 0, spins: 0, won: 0, xp: 0, boxes: 0, blue: 0, bet: 1, gifts: BANDIT_GIFT_MAX, gifts_at: null, roul_left: 0, roul_round: 0, roul_pulls: 0, roul_bet: 0, roul_pot: 0 };
 }
 
 const giftsOf = (r: Row, now: number) => banditGifts(Number(r.gifts), r.gifts_at ? new Date(r.gifts_at).getTime() : now, now);
@@ -29,8 +29,8 @@ export async function banditView(q: Queryable, pid: number, now = Date.now()) {
     free: Number(r.free), freeBet: Number(r.free_bet), spins: Number(r.spins), won: Number(r.won), rub: Number(w?.amount ?? 0), xp: Number(r.xp), lvl: banditLevel(Number(r.xp)), boxes: Number(r.boxes), blue: Number(r.blue), bet: Number(r.bet) || 1,
     // the free attempts: how many, when the next one comes (null: full)
     gifts: g.have, giftNext: g.next,
-    // the open roulette: the pulls left and made, its bet (where the round is stays here)
-    roulette: Number(r.roul_left) > 0 ? { left: Number(r.roul_left), pulls: Number(r.roul_pulls), bet: Number(r.roul_bet) } : null,
+    // the open roulette: the pulls left and made, its bet, the pot its clicks won (where the round is stays here)
+    roulette: Number(r.roul_left) > 0 ? { left: Number(r.roul_left), pulls: Number(r.roul_pulls), bet: Number(r.roul_bet), pot: Number(r.roul_pot ?? 0) } : null,
   };
 }
 
@@ -62,28 +62,33 @@ export async function banditSpinAction(ctx: Ctx, body: { bet?: unknown }) {
   );
   // 3+ revolvers: the roulette opens, the round in a chamber 1…6
   if (s.roulette) {
-    await ctx.q.query("UPDATE bandit_state SET roul_left=$2, roul_round=0, roul_pulls=0, roul_bet=$3 WHERE player_id=$1", [ctx.pid, ROULETTE_PULLS, bet]);
+    await ctx.q.query("UPDATE bandit_state SET roul_left=$2, roul_round=0, roul_pulls=0, roul_bet=$3, roul_pot=0 WHERE player_id=$1", [ctx.pid, ROULETTE_PULLS, bet]);
   }
   const levelBefore = banditLevel(Number(r.xp)).level;
   return { ...s, ...(await banditView(ctx.q, ctx.pid, ctx.now)), levelBefore, bet, paid: free || gift ? 0 : bet, win: pay, wasFree: free, wasGift: gift, freeLeft };
 }
 
-/** «Русская рулетка»: a pull of the trigger — a click gives ROULETTE_PAY blue boxes, the shot ends the game;
- *  `stop`: he puts the revolver down (keeps what he got) */
+/** «Русская рулетка»: a pull of the trigger — a click puts ROULETTE_PAY blue boxes in the pot, the shot burns the pot and
+ *  ends the game (the user 2026-11-27); `stop`: he puts the revolver down and takes the pot; all the pulls clicked — the
+ *  pot is his too */
 export async function banditPull(ctx: Ctx, body: { stop?: unknown }) {
   const r = await row(ctx.q, ctx.pid);
   if (Number(r.roul_left) <= 0) throw new GameError("no_roulette", "Рулетки нет");
+  const pot = Number(r.roul_pot ?? 0);
   if (body.stop) {
-    await ctx.q.query("UPDATE bandit_state SET roul_left=0 WHERE player_id=$1", [ctx.pid]);
-    return { shot: false, stopped: true, got: 0, ...(await banditView(ctx.q, ctx.pid)) };
+    await ctx.q.query("UPDATE bandit_state SET roul_left=0, roul_pot=0, blue=blue+$2 WHERE player_id=$1", [ctx.pid, pot]);
+    return { shot: false, stopped: true, got: 0, took: pot, ...(await banditView(ctx.q, ctx.pid)) };
   }
   const pull = Number(r.roul_pulls) + 1;
   // a round in, the drum spun: the shot 1 in 6 (roul_round: a test may fix the pull that shoots)
   const shot = Number(r.roul_round) > 0 ? pull === Number(r.roul_round) : ctx.rng() < ROULETTE_SHOT;
   const got = shot ? 0 : ROULETTE_PAY;
   const left = shot ? 0 : Number(r.roul_left) - 1;
-  await ctx.q.query("UPDATE bandit_state SET roul_left=$2, roul_pulls=$3, blue=blue+$4 WHERE player_id=$1", [ctx.pid, left, pull, got]);
-  return { shot, stopped: false, got, pull, ...(await banditView(ctx.q, ctx.pid)) };
+  // the shot: the pot burns; the last pull clicked: the pot goes to the blue boxes
+  const newPot = shot ? 0 : pot + got;
+  const take = !shot && left === 0 ? newPot : 0;
+  await ctx.q.query("UPDATE bandit_state SET roul_left=$2, roul_pulls=$3, roul_pot=$4, blue=blue+$5 WHERE player_id=$1", [ctx.pid, left, pull, take ? 0 : newPot, take]);
+  return { shot, stopped: false, got, burned: shot ? pot : 0, took: take, pull, ...(await banditView(ctx.q, ctx.pid)) };
 }
 
 /** the chest: BANDIT_CHEST_PRICE matchboxes → a tattoo piece of any set the player has not got yet */

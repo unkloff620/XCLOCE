@@ -8697,3 +8697,10 @@ html.eco .rig-flask-bub { animation-iteration-count: 1; }
 .bd-roul-lost { position: absolute; left: 0; right: 0; top: 40%; z-index: 4; text-align: center; font: 900 clamp(34px, 11vw, 56px)/1 var(--font-display), system-ui; color: #ff2a1f;
   text-transform: uppercase; text-shadow: 0 4px 0 #2a0503, 0 0 24px rgba(255, 40, 20, 0.8); animation: bd-lost 0.6s cubic-bezier(0.2, 1.5, 0.4, 1) both; }
 @keyframes bd-lost { from { opacity: 0; transform: scale(2.2); } }
+/* the shot burns the roulette's pot (screens/bandit.tsx): the boxes go up in flames */
+.bd-roul-got { position: relative; }
+.bd-roul-got.burnt img { animation: bd-burn-box 1.2s ease-out forwards; }
+@keyframes bd-burn-box { 0% { filter: none; } 40% { filter: brightness(1.6) sepia(1) saturate(6) hue-rotate(-20deg); transform: scale(1.15); } 100% { filter: brightness(0.25) grayscale(1); transform: scale(0.9); } }
+.bd-roul-burn { position: absolute; left: 100%; top: -4px; margin-left: 8px; font-style: normal; color: #ff5a1f; text-shadow: 0 0 10px #ff8a1e, 0 2px 0 #2a0503;
+  animation: bd-burn-up 1.6s ease-out forwards; }
+@keyframes bd-burn-up { 0% { opacity: 0; transform: translateY(6px) scale(0.8); } 20% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-26px) scale(1.1); } }

@@ -1959,4 +1959,10 @@ ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS gifts_at TIMESTAMPTZ NOT NULL 
 SELECT DISTINCT p.player_id, 'raven', 1, 'promise:raven' FROM promises p WHERE p.what = 'raven'
 ON CONFLICT (player_id, item_id) DO UPDATE SET qty = GREATEST(inventory.qty, 1);`,
   },
+  {
+    // «Русская рулетка»: the clicks' blue boxes wait in the pot until he stops or all the pulls click — the shot burns
+    // them (the user 2026-11-27)
+    id: "v2-151-roulette-pot",
+    sql: `ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS roul_pot INT NOT NULL DEFAULT 0;`,
+  },
 ];

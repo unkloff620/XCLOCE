@@ -41,7 +41,7 @@ const fmt = (n: number) => n.toLocaleString("ru-RU");
 /** the blue matchbox: the roulette's win (the spins give the red ones) */
 const BLUE = "/assets/bandit/matchbox-blue.webp?v=1";
 
-interface Roulette { left: number; pulls: number; bet: number }
+interface Roulette { left: number; pulls: number; bet: number; pot?: number }
 interface View { free: number; freeBet: number; spins: number; won: number; rub: number; xp: number; lvl: { level: number; into: number; need: number }; boxes: number; blue: number; bet: number; gifts: number; giftNext: number | null; roulette: Roulette | null }
 /** the machine's state out of an answer */
 const viewOf = (r: View): View => ({ free: r.free, freeBet: r.freeBet, spins: r.spins, won: r.won, rub: r.rub, xp: r.xp, lvl: r.lvl, boxes: r.boxes, blue: r.blue, bet: r.bet, gifts: r.gifts, giftNext: r.giftNext, roulette: r.roulette });
@@ -361,7 +361,7 @@ function PayTable({ bet, onClose }: { bet: number; onClose: () => void }) {
         <div className="bd-pay-big">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={pic("revolver")} alt="" />
-          <div><b>Русская рулетка</b><span className="small">3 револьвера в любом месте — бонусная игра: {ROULETTE_PULLS} пули, каждая заряжается в барабан на шесть гнёзд и барабан крутится. Щелчок — {fmt(ROULETTE_PAY)} синих коробков, выстрел — игра окончена.</span></div>
+          <div><b>Русская рулетка</b><span className="small">3 револьвера в любом месте — бонусная игра: {ROULETTE_PULLS} пули, каждая заряжается в барабан на шесть гнёзд и барабан крутится. Щелчок — {fmt(ROULETTE_PAY)} синих коробков в банк; забрал и ушёл или все пули мимо — банк твой, выстрел — банк сгорает.</span></div>
         </div>
         <div className="bd-pay-big">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -404,7 +404,9 @@ type Phase = "idle" | "rise" | "open" | "load" | "close" | "spin" | "fire" | "lo
 function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Parameters<typeof HeroRig>[0]["look"]; onView: (v: View) => void; onClose: () => void }) {
   const { act, busy } = useGame();
   const [used, setUsed] = useState(r.pulls);
-  const [got, setGot] = useState(r.pulls * ROULETTE_PAY);
+  // the pot: the clicks' blue boxes, his only when he stops or every pull clicks — the shot burns it
+  const [got, setGot] = useState(r.pot ?? 0);
+  const [burnt, setBurnt] = useState(0);
   const [phase, setPhase] = useState<Phase>("idle");
   const [result, setResult] = useState<"click" | "bang" | null>(null);
   const [over, setOver] = useState<"bang" | "max" | null>(null);
@@ -430,7 +432,7 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
       setPhase("fire");
       setResult(res.shot ? "bang" : "click");
       onView(viewOf(res));
-      if (res.shot) { sfx("gunshot"); haptic.big(); setOver("bang"); setDeath("fire"); }
+      if (res.shot) { sfx("gunshot"); haptic.big(); setOver("bang"); setDeath("fire"); setBurnt(got); setGot(0); }
       else { sfx("tap"); setGot((g) => g + res.got); if (!res.roulette) setOver("max"); }
     });
     if (res.shot) {
@@ -506,9 +508,11 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
         {phase === "idle" && !over && <i className="bd-roul-hint">Жми на персонажа</i>}
       </div>
       <div className="bd-roul-panel">
-        <span className="bd-roul-got num">
+        <span className={`bd-roul-got num ${burnt ? "burnt" : ""}`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={BLUE} alt="синих коробков" /> {fmt(got)}
+          {/* the shot burns the pot: it goes up in flames */}
+          {burnt > 0 && <i className="bd-roul-burn">−{fmt(burnt)}</i>}
         </span>
         {over === "bang" ? (
           // the shot: the window closes by itself once it has played out (the clicks before it are kept)
