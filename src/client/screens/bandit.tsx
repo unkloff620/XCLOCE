@@ -45,7 +45,7 @@ interface Roulette { left: number; pulls: number; bet: number; pot?: number }
 interface View { free: number; freeBet: number; spins: number; won: number; rub: number; xp: number; lvl: { level: number; into: number; need: number }; boxes: number; blue: number; bet: number; gifts: number; giftNext: number | null; roulette: Roulette | null }
 /** the machine's state out of an answer */
 const viewOf = (r: View): View => ({ free: r.free, freeBet: r.freeBet, spins: r.spins, won: r.won, rub: r.rub, xp: r.xp, lvl: r.lvl, boxes: r.boxes, blue: r.blue, bet: r.bet, gifts: r.gifts, giftNext: r.giftNext, roulette: r.roulette });
-type SpinRes = BanditSpin & View & { bet: number; paid: number; wasFree: boolean; freeLeft: number; levelBefore: number };
+type SpinRes = BanditSpin & View & { bet: number; paid: number; wasFree: boolean; wasGift?: boolean; freeLeft: number; levelBefore: number };
 
 export function BanditScreen() {
   const { act, state } = useGame();
@@ -120,6 +120,8 @@ export function BanditScreen() {
         requestAnimationFrame(step);
       }
       setSpinning(false);
+      // the free spins (the bells' or the free attempts) are over: the auto play stops here — the next spin would cost
+      if ((r.wasFree && r.freeLeft === 0) || (r.wasGift && r.gifts === 0)) { autoRef.current = false; setAuto(false); }
       if (autoRef.current && !r.roulette) later(() => { if (autoRef.current) void spinRef.current(); }, r.win > 0 ? 1600 : 700);
     }, end);
   }, [spinning, cols, bet, act, v?.roulette]);
@@ -200,7 +202,6 @@ export function BanditScreen() {
             {res.mult > 1 && <span className="num">×{res.mult}</span>}
           </div>
         )}
-        {shown && res && res.free > 0 && <div className="bd-free-got">+{res.free} бесплатных!</div>}
 
         {/* the panel */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
