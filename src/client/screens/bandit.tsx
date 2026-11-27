@@ -75,6 +75,8 @@ export function BanditScreen() {
   const [roul, setRoul] = useState(false);
   const timers = useRef<number[]>([]);
 
+  const roulKept = useRef<Roulette | null>(null);
+  if (v?.roulette) roulKept.current = v.roulette;
   // an unfinished roulette (the app was closed during it) opens again
   const load = useCallback(() => api.get<View>("/api/bandit").then((x) => { setV(x); if (x.bet) { let local = 0; try { local = Number(localStorage.getItem("bandit-bet")); } catch { /* */ } if (!local) setBet(x.bet); } if (x.roulette) setRoul(true); }).catch(() => {}), []);
   useEffect(() => { void load(); }, [load]);
@@ -249,7 +251,8 @@ export function BanditScreen() {
       <Link href="/yard" className="bd-back" aria-label="Назад во двор">‹</Link>
       <button type="button" className="bd-table-btn" onClick={() => { haptic.tap(); setTable(true); }} aria-label="Таблица выплат">?</button>
       {chest && v && <ChestWindow v={v} onClose={() => setChest(false)} onView={setV} />}
-      {roul && v?.roulette && <RouletteWindow r={v.roulette} look={state?.look.body} onView={setV} onClose={() => setRoul(false)} />}
+      {/* the window keeps the roulette it opened with: the shot closes the roulette on the server at once, the window plays it out */}
+      {roul && (v?.roulette ?? roulKept.current) && <RouletteWindow r={(v?.roulette ?? roulKept.current)!} look={state?.look.body} onView={setV} onClose={() => { roulKept.current = null; setRoul(false); }} />}
       {table && <PayTable bet={shownBet} onClose={() => setTable(false)} />}
     </div>
   );
@@ -391,6 +394,12 @@ function PayTable({ bet, onClose }: { bet: number; onClose: () => void }) {
 const R = "/assets/bandit/roulette";
 /** the timeline of a pull (ms from the tap) */
 const RT = { rise: 0, open: 800, load: 1250, close: 1800, spin: 2150, fire: 4150, lower: 5000 };
+/** the shot, ms from the trigger: the blood, the words, the window closing */
+const DEATH = { blood: 450, lost: 1500, close: 4300 };
+/** the blood's drops (angle°, how far in % of the gun box, size): out of the wound, up and to the sides; the drips run down */
+const DROPS: [number, number, number][] = [[-160, 30, 3.2], [-140, 38, 2.4], [-120, 26, 3.6], [-100, 44, 2.2], [-85, 34, 3.8], [-70, 40, 2.6], [-55, 30, 3.4],
+  [-35, 42, 2.4], [-20, 28, 3.0], [-175, 22, 2.6], [-5, 24, 2.8], [-130, 50, 1.8], [-60, 52, 1.6], [-95, 56, 1.4], [-150, 46, 1.8], [-25, 48, 1.6]];
+const DRIPS: [number, number, number][] = [[-9, 30, 0.2], [-3, 46, 0.5], [4, 38, 0.1], [9, 26, 0.7], [14, 34, 0.35], [-14, 22, 0.9]];
 type Phase = "idle" | "rise" | "open" | "load" | "close" | "spin" | "fire" | "lower";
 function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Parameters<typeof HeroRig>[0]["look"]; onView: (v: View) => void; onClose: () => void }) {
   const { act, busy } = useGame();
@@ -399,6 +408,7 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
   const [phase, setPhase] = useState<Phase>("idle");
   const [result, setResult] = useState<"click" | "bang" | null>(null);
   const [over, setOver] = useState<"bang" | "max" | null>(null);
+  const [death, setDeath] = useState<"fire" | "blood" | "lost" | null>(null);
   const [turn, setTurn] = useState(0);
   const timers = useRef<number[]>([]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
@@ -420,11 +430,19 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
       setPhase("fire");
       setResult(res.shot ? "bang" : "click");
       onView(viewOf(res));
-      if (res.shot) { sfx("gunshot"); haptic.tap(); setOver("bang"); }
+      if (res.shot) { sfx("gunshot"); haptic.big(); setOver("bang"); setDeath("fire"); }
       else { sfx("tap"); setGot((g) => g + res.got); if (!res.roulette) setOver("max"); }
     });
-    if (!res.shot) at(RT.lower, () => setPhase("lower"));
-    at(res.shot ? RT.fire + 1200 : RT.lower + 650, () => setPhase("idle"));
+    if (res.shot) {
+      // the shot plays out (the user 2026-11-27): the fire from the muzzle behind the gun, then the blood, then «Ты
+      // проиграл» — and the window closes by itself; the gun stays at his head
+      at(RT.fire + DEATH.blood, () => { setDeath("blood"); haptic.heavy(); });
+      at(RT.fire + DEATH.lost, () => setDeath("lost"));
+      at(RT.fire + DEATH.close, () => onClose());
+      return;
+    }
+    at(RT.lower, () => setPhase("lower"));
+    at(RT.lower + 650, () => setPhase("idle"));
   };
   const stop = async () => {
     if (busy || playing) return;
@@ -457,13 +475,34 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img className="bd-roul-round" src={`${R}/round.webp${V}`} alt="" draggable={false} />
             </span></span>
+            {/* the fire out of the muzzle (behind the gun, at his head): the flame, its glow, the smoke after it */}
+            {death && <span className="bd-roul-fire" aria-hidden="true"><i className="core" /><i className="flame" /><i className="smoke" /></span>}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="bd-roul-gun-body" src={`${R}/gun.webp${V}`} alt="" draggable={false} />
             <i className="bd-roul-flash" />
+            {/* the blood: the splash out of the wound, the drops flying out, the drips running down */}
+            {(death === "blood" || death === "lost") && (
+              <svg className="bd-roul-blood" viewBox="-50 -50 100 100" aria-hidden="true">
+                <g className="splat">
+                  <path d="M0-9 C6-15 9-6 15-8 C11-2 18 3 11 6 C13 13 4 10 1 15 C-3 9-11 14-10 6 C-17 4-12-3-15-8 C-8-6-6-15 0-9Z" fill="#8e0b0b" />
+                  <circle r="6" fill="#b3121a" />
+                </g>
+                {DROPS.map(([a, d, r], i) => (
+                  <circle key={i} className="drop" r={r} fill={i % 3 ? "#a50f15" : "#7c0809"}
+                    style={{ ["--dx" as string]: `${(Math.cos((a * Math.PI) / 180) * d).toFixed(1)}px`, ["--dy" as string]: `${(Math.sin((a * Math.PI) / 180) * d).toFixed(1)}px`, animationDelay: `${(i % 4) * 0.03}s` }} />
+                ))}
+                {DRIPS.map(([x, l, dl], i) => (
+                  <rect key={i} className="drip" x={x - 0.9} y={4} width={1.8} height={l} rx={0.9} fill="#8e0b0b" style={{ animationDelay: `${0.35 + dl}s` }} />
+                ))}
+              </svg>
+            )}
           </span>
         </button>
         {result === "click" && phase !== "idle" && <i className="bd-roul-click">ЩЁЛК!</i>}
-        {result === "bang" && <i className="bd-roul-bang">БАХ!</i>}
+        {result === "bang" && death === "fire" && <i className="bd-roul-bang">БАХ!</i>}
+        {/* the room goes red at the edges with the blood, then the words */}
+        {(death === "blood" || death === "lost") && <i className="bd-roul-veil" aria-hidden="true" />}
+        {death === "lost" && <b className="bd-roul-lost">Ты проиграл</b>}
         {phase === "idle" && !over && <i className="bd-roul-hint">Жми на персонажа</i>}
       </div>
       <div className="bd-roul-panel">
@@ -471,9 +510,12 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={BLUE} alt="синих коробков" /> {fmt(got)}
         </span>
-        {over && !playing ? (
+        {over === "bang" ? (
+          // the shot: the window closes by itself once it has played out (the clicks before it are kept)
+          <span className="small"> </span>
+        ) : over && !playing ? (
           <>
-            <b className="bd-roul-end">{over === "bang" ? "Выстрел! Игра окончена" : `Все ${ROULETTE_PULLS} пули — мимо, повезло!`}</b>
+            <b className="bd-roul-end">{`Все ${ROULETTE_PULLS} пули — мимо, повезло!`}</b>
             <button type="button" className="btn gold block" onClick={onClose}>Дальше</button>
           </>
         ) : (

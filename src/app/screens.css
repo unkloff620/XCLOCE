@@ -8670,3 +8670,30 @@ html.eco .rig-flask-bub { animation-iteration-count: 1; }
 .yard-sky-all .court-sky { height: 49.5%; }
 /* a tattoo stage of the damage box: the set's piece and the word (the server picks a missing piece on the win) */
 .bbox-tat { display: inline-flex; align-items: center; gap: 3px; color: #fff; font-size: 2cqi; font-weight: 800; text-shadow: 0 1px 2px #000; white-space: nowrap; }
+/* «Русская рулетка», the shot (screens/bandit.tsx): the fire out of the muzzle behind the gun, the blood, «Ты проиграл» */
+.bd-roul-fire { position: absolute; left: 50%; top: 3%; width: 0; height: 0; pointer-events: none; }
+.bd-roul-fire i { position: absolute; left: 0; top: 0; border-radius: 50%; transform: translate(-50%, -50%); }
+.bd-roul-fire .core { width: 90px; height: 90px; background: radial-gradient(#fffbe6, #ffd34d 30%, #ff7a1a 55%, rgba(255, 80, 0, 0) 72%); animation: bd-fire-core 0.55s ease-out forwards; }
+.bd-roul-fire .flame { width: 150px; height: 150px; border-radius: 0;
+  background: conic-gradient(from 0deg, transparent 0 6%, #ffb02e 7% 9%, transparent 10% 19%, #ffd75e 20% 21%, transparent 22% 31%, #ff8a1e 32% 35%, transparent 36% 44%, #ffcc3e 45% 47%,
+    transparent 48% 57%, #ff9a2a 58% 60%, transparent 61% 69%, #ffd75e 70% 72%, transparent 73% 82%, #ff8a1e 83% 85%, transparent 86% 94%, #ffb02e 95% 97%, transparent 98%);
+  -webkit-mask-image: radial-gradient(circle, #000 15%, transparent 68%); mask-image: radial-gradient(circle, #000 15%, transparent 68%);
+  animation: bd-fire-flame 0.5s ease-out forwards; }
+.bd-roul-fire .smoke { width: 120px; height: 120px; background: radial-gradient(rgba(120, 110, 100, 0.7), rgba(90, 85, 80, 0.4) 45%, rgba(60, 60, 60, 0) 70%); filter: blur(4px);
+  animation: bd-fire-smoke 2.6s ease-out 0.25s both; }
+@keyframes bd-fire-core { 0% { opacity: 1; transform: translate(-50%, -50%) scale(0.3); } 30% { opacity: 1; transform: translate(-50%, -50%) scale(1.25); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.6); } }
+@keyframes bd-fire-flame { 0% { opacity: 1; transform: translate(-50%, -50%) scale(0.4) rotate(0deg); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.7) rotate(20deg); } }
+@keyframes bd-fire-smoke { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(-30%, -140%) scale(2.2); } }
+.bd-roul-blood { position: absolute; left: 50%; top: 3%; width: 80%; height: 80%; transform: translate(-50%, -50%); overflow: visible; pointer-events: none; z-index: 2; }
+.bd-roul-blood .splat { transform-box: fill-box; transform-origin: center; animation: bd-blood-splat 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
+.bd-roul-blood .drop { animation: bd-blood-drop 0.7s cubic-bezier(0.15, 0.7, 0.3, 1) both; }
+.bd-roul-blood .drip { transform-box: fill-box; transform-origin: top; animation: bd-blood-drip 2.4s ease-in both; }
+@keyframes bd-blood-splat { from { transform: scale(0.1); } }
+@keyframes bd-blood-drop { 0% { transform: translate(0, 0) scale(0.4); } 70% { transform: translate(var(--dx), var(--dy)) scale(1); } 100% { transform: translate(var(--dx), calc(var(--dy) + 6px)) scale(1); } }
+@keyframes bd-blood-drip { 0% { transform: scaleY(0); } 100% { transform: scaleY(1); } }
+.bd-roul-veil { position: absolute; inset: 0; pointer-events: none; z-index: 3; background: radial-gradient(ellipse at 50% 45%, rgba(120, 0, 0, 0) 35%, rgba(110, 0, 0, 0.55) 75%, rgba(70, 0, 0, 0.85));
+  animation: bd-veil 1s ease-out both; }
+@keyframes bd-veil { from { opacity: 0; } }
+.bd-roul-lost { position: absolute; left: 0; right: 0; top: 40%; z-index: 4; text-align: center; font: 900 clamp(34px, 11vw, 56px)/1 var(--font-display), system-ui; color: #ff2a1f;
+  text-transform: uppercase; text-shadow: 0 4px 0 #2a0503, 0 0 24px rgba(255, 40, 20, 0.8); animation: bd-lost 0.6s cubic-bezier(0.2, 1.5, 0.4, 1) both; }
+@keyframes bd-lost { from { opacity: 0; transform: scale(2.2); } }
