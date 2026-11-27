@@ -462,10 +462,16 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
     onClose();
   };
   const left = ROULETTE_PULLS - used;
-  // over the whole app (the machine's screen is a size container: a fixed child would be caught in it)
+  // into the body (the machine's screen is a size container: a fixed child would be caught in it), between the menus
   return createPortal(
     <div className="bd-roul" role="dialog" aria-label="Русская рулетка">
       <div className={`bd-roul-scene ${result === "bang" && phase === "fire" ? "bang" : ""}`} data-phase={phase}>
+        {/* the lamp hanging from the ceiling (the artist's), its light flickering */}
+        <span className="bd-roul-lamp" aria-hidden="true">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={`${R}/lamp.webp${V}`} alt="" draggable={false} />
+          <i />
+        </span>
         <b className="bd-roul-title">Русская рулетка</b>
         {/* the bullets left: a fired one leaves its shadow */}
         <div className="bd-roul-ammo">
@@ -514,14 +520,14 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
         {(death === "blood" || death === "lost") && <i className="bd-roul-veil" aria-hidden="true" />}
         {death === "lost" && <b className="bd-roul-lost">Ты проиграл</b>}
         {phase === "idle" && !over && <i className="bd-roul-hint">Жми на персонажа</i>}
-      </div>
-      <div className="bd-roul-panel">
+        {/* the pot, top right (the bullets are top left) */}
         <span className={`bd-roul-got num ${burnt ? "burnt" : ""}`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={BLUE} alt="синих коробков" /> {fmt(got)}
           {/* the shot burns the pot: it goes up in flames */}
           {burnt > 0 && <i className="bd-roul-burn">−{fmt(burnt)}</i>}
         </span>
+        <div className="bd-roul-panel">
         {over === "bang" ? (
           // the shot: the window closes by itself once it has played out (the clicks before it are kept)
           <span className="small"> </span>
@@ -536,6 +542,7 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
             <button type="button" className="btn block" disabled={!!busy || playing || !!over} onClick={() => void stop()}>{used > 0 ? "Забрать и уйти" : "Уйти"}</button>
           </>
         )}
+        </div>
       </div>
     </div>,
     document.body,

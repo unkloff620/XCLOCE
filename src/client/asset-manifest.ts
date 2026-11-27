@@ -95,6 +95,8 @@ export const ASSET_FILES: string[] = [
  "/assets/bandit/roulette/bullet.webp",
  "/assets/bandit/roulette/drum.webp",
  "/assets/bandit/roulette/gun.webp",
+ "/assets/bandit/roulette/lamp.webp",
+ "/assets/bandit/roulette/room.webp",
  "/assets/bandit/roulette/round.webp",
  "/assets/bandit/ten.webp",
  "/assets/bandit/ui/auto.webp",
