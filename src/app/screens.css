@@ -8668,3 +8668,5 @@ html.eco .rig-flask-bub { animation-iteration-count: 1; }
 .yard-free .yard-pan { transition: none; transform: translateX(calc((var(--k) - var(--pos, 0)) * 100%)); }
 .yard-sky-all { right: auto; width: 300%; aspect-ratio: 6000 / 3405; transform: translateX(calc((-1 - var(--pos, 0)) * 100% / 3)); will-change: transform; }
 .yard-sky-all .court-sky { height: 49.5%; }
+/* a tattoo stage of the damage box: the set's piece and the word (the server picks a missing piece on the win) */
+.bbox-tat { display: inline-flex; align-items: center; gap: 4px; color: #fff; font-size: 2.6cqi; font-weight: 800; text-shadow: 0 1px 2px #000; white-space: nowrap; }

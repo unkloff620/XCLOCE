@@ -1419,12 +1419,13 @@ describe("batch hits, extra pass", () => {
     const f1 = await startDatsik(p);
     await hit(p, "keyboard", T0, {}, 0.99);
     await act(db, p, "fight_claim", { fightId: f1.result.fightId }, T0, always(0.99));
-    expect(await qty(db, p, "key-datsik")).toBe(1);
+    // the pass for the win + 2 from the damage box (the kill dealt over 10 % of his HP)
+    expect(await qty(db, p, "key-datsik")).toBe(3);
     const f2 = await startDatsik(p, T0 + M);
     await hit(p, "keyboard", T0 + M, {}, 0.05);
     const c = await act(db, p, "fight_claim", { fightId: f2.result.fightId }, T0 + M, always(0.05));
     expect(c.result.bonusKey).toBe(true);
-    expect(await qty(db, p, "key-datsik")).toBe(3);
+    expect(await qty(db, p, "key-datsik")).toBe(3 + 2 + 2);
   });
 });
 
@@ -2683,12 +2684,17 @@ describe("«Комбо»", () => {
     expect(g.modes.find((m) => m.mode === "blat")!.seq).toEqual(await comboSequence(db, moscowDay(T0), "garkusha", "blat"));
   });
 
-  it("«Дополнительная награда»: Дацкоу's box — 300 damage in the fight: +1 pass, 700: +2 more, with the win", async () => {
+  it("«Дополнительная награда»: 5 % and 10 % of the fight's HP — the first bosses' passes, the others' tattoos of the mode's set", async () => {
     const { bonusReached, bossBonus } = await import("../src/content/boss-bonus.ts");
-    expect(bossBonus("datsik").map((s) => s.damage)).toEqual([300, 700]);
-    expect(bonusReached("datsik", 299)).toHaveLength(0);
-    expect(bonusReached("datsik", 750)).toHaveLength(2);
-    expect(bossBonus("kedr")).toEqual([]);
+    expect(bossBonus("datsik", 1000, "pacan").map((s) => s.damage)).toEqual([50, 100]);
+    expect(bossBonus("datsik", 1000, "pacan").map((s) => s.reward.items)).toEqual([[{ id: "key-datsik", qty: 1 }], [{ id: "key-datsik", qty: 1 }]]);
+    expect(bonusReached("datsik", 1000, "pacan", 49)).toHaveLength(0);
+    expect(bonusReached("datsik", 1000, "pacan", 100)).toHaveLength(2);
+    // a later boss: a tattoo of his «Пацанский» set for each stage; «Блатной» has no tattoo set — no box
+    const v = bossBonus("vadim", 2000, "pacan");
+    expect(v.map((s) => s.damage)).toEqual([100, 200]);
+    expect(v.every((s) => !!s.set)).toBe(true);
+    expect(bossBonus("vadim", 2000, "blat")).toEqual([]);
   });
 
   it("the payout by the mode (the user's table)", async () => {

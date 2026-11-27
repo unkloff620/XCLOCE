@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { bossBonus } from "../../content/boss-bonus.ts";
 import { BAR_INSIDE, BOX_LAYERS, BOX_WINDOW, PIN_X } from "../art/boss-box-layout.ts";
 import { GainLine } from "../ui.tsx";
+import { ItemArt } from "../art/items.tsx";
 import { full, short } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { bboxSfx } from "../sound.ts";
@@ -19,8 +20,8 @@ const readSeen = (fightId: number) => { try { return Number(localStorage.getItem
 const writeSeen = (fightId: number, n: number) => { try { localStorage.setItem(seenKey(fightId), String(n)); } catch { /* storage blocked */ } };
 
 /** the box by the boss: its knife fills towards the next stage; it glows when a stage is waiting to be opened */
-export function BossBoxButton({ bossId, fightId, damage, onOpen }: { bossId: string; fightId: number; damage: number; onOpen: () => void }) {
-  const stages = bossBonus(bossId);
+export function BossBoxButton({ bossId, fightId, damage, hpMax, mode, onOpen }: { bossId: string; fightId: number; damage: number; hpMax: number; mode: string; onOpen: () => void }) {
+  const stages = bossBonus(bossId, hpMax, mode);
   const [seen, setSeen] = useState(0);
   useEffect(() => { setSeen(readSeen(fightId)); }, [fightId, damage]);
   if (!stages.length) return null;
@@ -50,8 +51,8 @@ const PIN_AT = BAR_INSIDE[2] - 4.5;
  * The board in the middle: one bar for the whole fight, a pin (шпингалет) at every stage's damage. A stage passed and
  * not opened yet opens now, one after another: the nut, the plate, the pin fall — its reward lies on its plank.
  */
-export function BossBoxWindow({ bossId, fightId, damage, onClose }: { bossId: string; fightId: number; damage: number; onClose: () => void }) {
-  const stages = bossBonus(bossId);
+export function BossBoxWindow({ bossId, fightId, damage, hpMax, mode, onClose }: { bossId: string; fightId: number; damage: number; hpMax: number; mode: string; onClose: () => void }) {
+  const stages = bossBonus(bossId, hpMax, mode);
   const reached = stages.filter((s) => damage >= s.damage).length;
   const [seen, setSeen] = useState(() => readSeen(fightId));
   const [opening, setOpening] = useState<number | null>(null);
@@ -92,7 +93,7 @@ export function BossBoxWindow({ bossId, fightId, damage, onClose }: { bossId: st
             {/* the stage open: its reward on the plank, where the plate hung */}
             {open && (
               <span className="bbox-plank-gain" style={{ left: `${BOX_LAYERS.plank[0]}%`, top: `${BOX_LAYERS.plate[1] - 1}%`, width: `${BOX_LAYERS.plank[2]}%`, height: `${BOX_LAYERS.plate[3] + 2}%` }}>
-                <GainLine r={st.reward} size={22} />
+                {st.set ? <span className="bbox-tat"><ItemArt id={st.reward.items![0].id} size={22} /> Наколка</span> : <GainLine r={st.reward} size={22} />}
               </span>
             )}
             <span className="bbox-plate-n num plate" style={{ left: `${BOX_LAYERS.plate[0]}%`, top: `${BOX_LAYERS.plate[1]}%`, width: `${BOX_LAYERS.plate[2]}%`, height: `${BOX_LAYERS.plate[3]}%` }}>{short(st.damage)}</span>

@@ -502,14 +502,18 @@ export async function claimFight(ctx: Ctx, fightId: number, see = true) {
     await commitUnlock(ctx, def, r, r.held);
     if (r.got && !r.held) unlocked.push(r.got);
   }
-  // a tattoo of this boss's set: one per win in the set's mode, a piece the player does not have yet (content/tattoos.ts)
+  // «Дополнительная награда»: every stage of the boss's box reached with my damage in this fight (content/boss-bonus.ts)
+  const reached = bonusReached(def.id, Number(f.hp_max), mode.id, Number(f.my_damage));
+  // a tattoo of this boss's set: one per win in the set's mode, and one more for every tattoo stage of the box reached —
+  // pieces the player does not have yet, all different (content/tattoos.ts)
   const tattoos: { id: string; qty: number }[] = [];
   if (earnedKey) {
     for (const s of tattooSetsOfBoss(def.id)) {
       if (s.mode !== mode.id) continue;
       const have = new Set((await ctx.q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [ctx.pid, s.pieces.map((p) => p.id)])).map((r) => r.item_id));
       const left = s.pieces.filter((p) => !have.has(p.id));
-      if (left.length) tattoos.push({ id: left[Math.floor(ctx.rng() * left.length)].id, qty: 1 });
+      const n = 1 + reached.filter((st) => st.set === s.id).length;
+      for (let i = 0; i < n && left.length; i++) tattoos.push({ id: left.splice(Math.floor(ctx.rng() * left.length), 1)[0].id, qty: 1 });
     }
   }
   // one-of-a-kind rewards are not handed out again
@@ -519,8 +523,8 @@ export async function claimFight(ctx: Ctx, fightId: number, see = true) {
   if (base.items?.length) base.items = await notOwnedUnique(ctx, base.items);
   // no craft parts for a win any more (the yard and the events give them)
   const parts: { id: string; qty: number }[] = [];
-  // «Дополнительная награда»: every stage of the boss's box reached with my damage in this fight (content/boss-bonus.ts)
-  const bonus = bonusReached(def.id, Number(f.my_damage)).reduce((r, st) => mergeRewards(r, st.reward), {} as Reward);
+  // the box's pass stages (the tattoo stages are in `tattoos` above)
+  const bonus = reached.filter((st) => !st.set).reduce((r, st) => mergeRewards(r, st.reward), {} as Reward);
   const granted = await grantReward(ctx, mergeRewards(mergeRewards(base, { items: [...key, ...drops, ...tattoos, ...parts] }), bonus), `win:${def.id}`);
   if (unlocked.length) granted.unlocks = unlocked;
   // «Взлом»: while the event is on, a box for the win (any mode, the same fair share as the pass)

@@ -460,6 +460,8 @@ export function BossScreen({ id }: { id: string }) {
   const limitLeft = row ? row.fightsPerDay - row.fightsToday : 1;
 
   const hpMax = view?.hpMax ?? row?.hpMax ?? boss.hp;
+  // the fight's mode: which tattoo set the damage box pays (content/boss-bonus.ts)
+  const boxMode = view?.mode ?? state?.fight?.mode ?? "pacan";
   // the fight takes the whole screen: the boss's own room (the garage for the others) + drifting sky behind, the boss in the middle, weapons at the bottom
   if (fightId) {
     return (
@@ -478,8 +480,8 @@ export function BossScreen({ id }: { id: string }) {
         </div>
         {boss.id === "utilizator" && <UtilizatorFront />}
         <Arena full boss={boss} hp={hpShown} hpMax={hpMax} endsAt={state!.fight!.endsAt} fx={layer} hit={hitAnim} ouch={ouch} rug={rug} feed={[]} strike={strikeFx.side}
-          corner={view && bossBonus(boss.id).length ? <BossBoxButton bossId={boss.id} fightId={view.fightId} damage={view.myDamage} onOpen={() => setBoxOpen(true)} /> : null} />
-        {boxOpen && view && <BossBoxWindow bossId={boss.id} fightId={view.fightId} damage={view.myDamage} onClose={() => setBoxOpen(false)} />}
+          corner={view && bossBonus(boss.id, hpMax, boxMode).length ? <BossBoxButton bossId={boss.id} fightId={view.fightId} damage={view.myDamage} hpMax={hpMax} mode={boxMode} onOpen={() => setBoxOpen(true)} /> : null} />
+        {boxOpen && view && <BossBoxWindow bossId={boss.id} fightId={view.fightId} damage={view.myDamage} hpMax={hpMax} mode={boxMode} onClose={() => setBoxOpen(false)} />}
         {/* the side tabs: «Топ» on the left edge, «Инфо» (the hits) on the right — each slides its panel in */}
         <BoostIcons />
         <button type="button" className="fside l" onClick={() => { haptic.tap(); setTab("top"); }}><span>Топ</span></button>
