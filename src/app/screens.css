@@ -8477,8 +8477,9 @@ body:has(.bd-screen) .hud { background: none; border-bottom: 0; box-shadow: none
 .bd-win.big { animation-duration: 2.8s; }
 .bd-win.big b { font-size: 12cqw; }
 .bd-free-got { position: absolute; left: 50%; top: 66%; translate: -50% 0; padding: 1.2cqw 3cqw; border-radius: 2cqw; background: #1f5a24; border: 0.5cqw solid #8fe08a; color: #eaffd9; font: 900 4cqw/1.2 system-ui; animation: bd-x 0.4s ease; white-space: nowrap; z-index: 3; }
-.bd-val { position: absolute; display: flex; align-items: center; justify-content: center; gap: 1cqw; color: var(--bd-gold); font: 600 4.8cqw/1 system-ui; letter-spacing: 0.1cqw; text-shadow: 0 0.3cqw 0 #000; pointer-events: none; }
+.bd-val { position: absolute; display: flex; align-items: center; justify-content: center; gap: 1cqw; color: var(--bd-gold); font: 600 3.8cqw/1 system-ui; letter-spacing: 0.1cqw; text-shadow: 0 0.3cqw 0 #000; pointer-events: none; }
 .bd-val.free { color: #8fe08a; }
+.bd-val img, .bd-val svg { width: 3.6cqw; height: 3.6cqw; flex: none; }
 .bd-btn { position: absolute; padding: 0; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 0.08s, filter 0.15s; }
 .bd-btn img { width: 100%; height: 100%; display: block; pointer-events: none; }
 .bd-btn:active:not(:disabled) { transform: scale(0.93); }
