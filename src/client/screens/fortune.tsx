@@ -112,7 +112,7 @@ const SPARK_PAD = 1.5;
 function SectorIcon({ s, size }: { s: Sector; size: number }) {
   if (s.icon === "RUB" || s.icon === "PAP" || s.icon === "TOKEN") return <Icon name={s.icon} size={size} />;
   // eslint-disable-next-line @next/next/no-img-element
-  if (s.icon === "tattoo") return <img src={`${A}/tattoo-icon.webp`} alt="" width={size} height={size} draggable={false} />;
+  if (s.icon === "tattoo") return <img src={`${A}/tattoo-icon.webp?v=2`} alt="" width={size} height={size} draggable={false} />;
   // eslint-disable-next-line @next/next/no-img-element
   if (s.icon === "fortune-xp") return <img src={`${A}/xp.webp`} alt="" width={size} height={size} draggable={false} />;
   return <ItemArt id={s.icon} size={size} />;
@@ -404,7 +404,7 @@ function Bags({ keycaps, onClose }: { keycaps: number; onClose: () => void }) {
               {set && (
                 <span className="tat" title={`Наколка сета «${set.name}» — ${Math.round(BAG_TATTOO_CHANCE * 100)}%`}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={`${A}/tattoo-icon.webp`} alt="" />
+                  <img src={`${A}/tattoo-icon.webp?v=2`} alt="" />
                   {/* how many of its set are mine already */}
                   <b className="tat-of num">{ownOf(set)}/{set.pieces.length}</b>
                 </span>

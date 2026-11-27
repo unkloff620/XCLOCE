@@ -338,7 +338,7 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
       )}
       <div className="sty-side-tabs" role="tablist">
         <button type="button" className={mode === "body" && !inkTab ? "on" : ""} onClick={() => setMode("body")} aria-label="Изменить внешность" title="Изменить внешность"><img src="/assets/ui/tab-look.webp" alt="" draggable={false} /></button>
-        <button type="button" className={inkTab ? "on" : ""} onClick={openInk} aria-label="Набить наколки" title="Набить наколки"><img src="/assets/ui/drop-tattoo.webp" alt="" draggable={false} /></button>
+        <button type="button" className={inkTab ? "on" : ""} onClick={openInk} aria-label="Набить наколки" title="Набить наколки"><img src="/assets/ui/drop-tattoo.webp?v=2" alt="" draggable={false} /></button>
         <button type="button" className={mode === "items" && !inkTab ? "on" : ""} onClick={() => setMode("items")} aria-label="Сменить одежду" title="Сменить одежду"><img src="/assets/ui/slot-shirt.webp" alt="" draggable={false} /></button>
         {/* «Побриться»: the beard (a level a day unshaven) goes; greyed while there is nothing to shave */}
         <button type="button" className={`sty-shave ${(state?.look.body.beard ?? 0) > 0 ? "" : "idle"}`} disabled={!!busy || (state?.look.body.beard ?? 0) < 1}

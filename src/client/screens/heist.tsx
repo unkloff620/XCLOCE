@@ -74,9 +74,10 @@ function Possible({ kind, owned }: { kind: HeistKind; owned: Set<string> }) {
         <b className="hs-panel-t">Возможная награда</b>
         <div className={`hs-panel-grid ${ids.length > 7 ? "many" : ""}`}>
           {ids.map((id) => <span key={id}>{id === HEIST_CASE ? <Icon name="case" size={26} /> : <ItemArt id={id} size={28} />}</span>)}
-          {SET_PIECES[0] && <span title="Наколки сетов ивента"><ItemArt id={SET_PIECES[0]} size={28} /></span>}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {SET_PIECES[0] && <span title="Наколки сетов ивента"><img src="/assets/ui/drop-tattoo.webp?v=2" width={28} height={28} alt="наколка" draggable={false} /></span>}
         </div>
-        <span className="hs-panel-note">Наколка {Math.round(T.tattoo * 100)}% · за <Icon name="GOLD" size={11} /> {Math.round(B.tattoo * 100)}%<br />{got}/{SET_PIECES.length}</span>
+        <span className="hs-panel-note">Наколка {Math.round(T.tattoo * 100)}%<br /><span style={{ whiteSpace: "nowrap" }}>за <Icon name="GOLD" size={11} /> {Math.round(B.tattoo * 100)}% · {got}/{SET_PIECES.length}</span></span>
       </div>
     </div>
   );

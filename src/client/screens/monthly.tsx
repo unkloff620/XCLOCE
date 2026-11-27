@@ -44,7 +44,7 @@ function ChestInfo({ onClose }: { onClose: () => void }) {
         <div className="mt-chest-row"><Icon name="RUB" size={32} /><b>Рубли</b><span className="num">{c.RUB[0]}–{c.RUB[1]}</span></div>
         <div className="mt-chest-row"><Icon name="case" size={32} /><b>Кейсы</b><span className="num">{c.cases[0]}–{c.cases[1]}</span></div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <div className="mt-chest-row"><img src="/assets/ui/drop-tattoo.webp" width={32} height={32} alt="" /><b>Наколка или вещь</b><span className="num">1</span></div>
+        <div className="mt-chest-row"><img src="/assets/ui/drop-tattoo.webp?v=2" width={32} height={32} alt="" /><b>Наколка или вещь</b><span className="num">1</span></div>
       </div>
     </Modal>
   );

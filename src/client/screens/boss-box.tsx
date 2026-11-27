@@ -10,7 +10,6 @@ import { useEffect, useState } from "react";
 import { bossBonus } from "../../content/boss-bonus.ts";
 import { BAR_INSIDE, BOX_LAYERS, BOX_WINDOW, PIN_X } from "../art/boss-box-layout.ts";
 import { GainLine } from "../ui.tsx";
-import { ItemArt } from "../art/items.tsx";
 import { full, short } from "../format.ts";
 import { haptic } from "../telegram.ts";
 import { bboxSfx } from "../sound.ts";
@@ -93,7 +92,7 @@ export function BossBoxWindow({ bossId, fightId, damage, hpMax, mode, owned, onC
             {/* the stage open: its reward on the plank, where the plate hung */}
             {open && (
               <span className="bbox-plank-gain" style={{ left: `${BOX_LAYERS.plank[0]}%`, top: `${BOX_LAYERS.plate[1] - 1}%`, width: `${BOX_LAYERS.plank[2]}%`, height: `${BOX_LAYERS.plate[3] + 2}%` }}>
-                {st.set ? <span className="bbox-tat"><ItemArt id={st.reward.items![0].id} size={16} /> Наколка</span> : <GainLine r={st.reward} size={16} />}
+                {st.set ? <span className="bbox-tat"><img src="/assets/ui/drop-tattoo.webp?v=2" width={16} height={16} alt="" draggable={false} /> Наколка</span> : <GainLine r={st.reward} size={16} />}
               </span>
             )}
             <span className="bbox-plate-n num plate" style={{ left: `${BOX_LAYERS.plate[0]}%`, top: `${BOX_LAYERS.plate[1]}%`, width: `${BOX_LAYERS.plate[2]}%`, height: `${BOX_LAYERS.plate[3]}%` }}>{short(st.damage)}</span>

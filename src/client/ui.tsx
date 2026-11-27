@@ -179,7 +179,7 @@ export function DropKind({ kind, size = 18, count }: { kind: "tattoo" | "wear" |
   return (
     <span className={`gain drop-kind ${kind === "room" ? "hata" : kind}`} title={`${what} с этого босса${count ? `: ${count}` : ""}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={`/assets/ui/drop-${kind}.webp`} alt={what.toLowerCase()} width={size * 1.25} height={size * 1.25} draggable={false} />
+      <img src={`/assets/ui/drop-${kind}.webp${kind === "tattoo" ? "?v=2" : ""}`} alt={what.toLowerCase()} width={size * 1.25} height={size * 1.25} draggable={false} />
       {count && <span className="mystery-count">{count}</span>}
     </span>
   );

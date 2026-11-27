@@ -309,7 +309,7 @@ export function TatCount({ set }: { set: string }) {
   return (
     <span className={`tat-count ${have >= s.pieces.length ? "full" : ""}`} title={`Наколок сета «${s.name}»: ${have} из ${s.pieces.length}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/assets/fortune/tattoo-icon.webp" alt="" />
+      <img src="/assets/fortune/tattoo-icon.webp?v=2" alt="" />
       <b className="num">{have}/{s.pieces.length}</b>
     </span>
   );
