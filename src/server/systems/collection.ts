@@ -23,7 +23,8 @@ async function owned(q: Queryable, pid: number): Promise<Set<string>> {
 export async function setBonuses(q: Queryable, pid: number): Promise<Record<string, number>> {
   const have = await owned(q, pid);
   const out: Record<string, number> = {};
-  for (const b of BOSSES) {
+  // the chain's bosses and the event ones (the mentors' things: Химик's flask and coat, Псих's knife)
+  for (const b of [...BOSSES, ...EVENT_FIGHTS]) {
     const items = bossSetItems(b);
     if (!b.set || !items.length || !items.every((id) => have.has(id))) continue;
     out[b.set.weapon] = (out[b.set.weapon] ?? 0) + b.set.damage;
