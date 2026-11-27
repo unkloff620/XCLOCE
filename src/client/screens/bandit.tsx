@@ -428,7 +428,14 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
     at(RT.load, () => { setPhase("load"); setUsed((u) => u + 1); sfx("tap", 0.3); });
     at(RT.close, () => setPhase("close"));
     // the drum spins 2 s and stops on a chamber (a whole number of turns and a sixth)
-    at(RT.spin, () => { setPhase("spin"); setTurn((t) => t + 360 * 5 + 60 * (1 + Math.floor(Math.random() * 6))); sfx("revspin"); });
+    // the round (drawn top left in the drum, at 210°) comes to the top chamber — under the hammer, at the barrel — only for
+    // the shot (the drum turned by 60° mod 360); a click stops it in any other chamber
+    at(RT.spin, () => {
+      setPhase("spin");
+      const stopAt = res.shot ? 60 : 60 * (2 + Math.floor(Math.random() * 5));
+      setTurn((t) => { const base = t + 360 * 5; return base + ((stopAt - base) % 360 + 360) % 360; });
+      sfx("revspin");
+    });
     at(RT.fire, () => {
       setPhase("fire");
       setResult(res.shot ? "bang" : "click");
@@ -471,19 +478,10 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
           <HeroRig size={360} back look={look} />
           {/* the revolver: from below to the back of the head; the drum (with the bullet in it) swings out of it, spins */}
           <span className="bd-roul-gun">
-            {/* the drum behind the gun (it rises with it), swung out to the left to be loaded */}
-            <span className="bd-roul-drum-w"><span className="bd-roul-drum" style={{ ["--turn" as string]: `${turn}deg` }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`${R}/drum.webp${V}`} alt="" draggable={false} />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="bd-roul-round" src={`${R}/round.webp${V}`} alt="" draggable={false} />
-            </span></span>
             {/* the fire out of the muzzle (behind the gun, at his head): the flame, its glow, the smoke after it */}
             {death && <span className="bd-roul-fire" aria-hidden="true"><i className="core" /><i className="flame" /><i className="smoke" /></span>}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="bd-roul-gun-body" src={`${R}/gun.webp${V}`} alt="" draggable={false} />
             <i className="bd-roul-flash" />
-            {/* the blood: the splash out of the wound, the drops flying out, the drips running down */}
+            {/* the blood (behind the gun): the splash out of the wound, the drops flying out, the drips running down */}
             {(death === "blood" || death === "lost") && (
               <svg className="bd-roul-blood" viewBox="-50 -50 100 100" aria-hidden="true">
                 <g className="splat">
@@ -499,6 +497,15 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
                 ))}
               </svg>
             )}
+            {/* the drum behind the gun (it rises with it), swung out to the left to be loaded */}
+            <span className="bd-roul-drum-w"><span className="bd-roul-drum" style={{ ["--turn" as string]: `${turn}deg` }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`${R}/drum.webp${V}`} alt="" draggable={false} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="bd-roul-round" src={`${R}/round.webp${V}`} alt="" draggable={false} />
+            </span></span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="bd-roul-gun-body" src={`${R}/gun.webp${V}`} alt="" draggable={false} />
           </span>
         </button>
         {result === "click" && phase !== "idle" && <i className="bd-roul-click">ЩЁЛК!</i>}

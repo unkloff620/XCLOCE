@@ -8684,7 +8684,7 @@ html.eco .rig-flask-bub { animation-iteration-count: 1; }
 @keyframes bd-fire-core { 0% { opacity: 1; transform: translate(-50%, -50%) scale(0.3); } 30% { opacity: 1; transform: translate(-50%, -50%) scale(1.25); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.6); } }
 @keyframes bd-fire-flame { 0% { opacity: 1; transform: translate(-50%, -50%) scale(0.4) rotate(0deg); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.7) rotate(20deg); } }
 @keyframes bd-fire-smoke { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.4); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(-30%, -140%) scale(2.2); } }
-.bd-roul-blood { position: absolute; left: 50%; top: 3%; width: 80%; height: 80%; transform: translate(-50%, -50%); overflow: visible; pointer-events: none; z-index: 2; }
+.bd-roul-blood { position: absolute; left: 50%; top: 3%; width: 80%; height: 80%; transform: translate(-50%, -50%); overflow: visible; pointer-events: none; }
 .bd-roul-blood .splat { transform-box: fill-box; transform-origin: center; animation: bd-blood-splat 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) both; }
 .bd-roul-blood .drop { animation: bd-blood-drop 0.7s cubic-bezier(0.15, 0.7, 0.3, 1) both; }
 .bd-roul-blood .drip { transform-box: fill-box; transform-origin: top; animation: bd-blood-drip 2.4s ease-in both; }
