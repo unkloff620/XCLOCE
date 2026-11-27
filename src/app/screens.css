@@ -8662,3 +8662,9 @@ html.eco .rig-flask-bub { animation-iteration-count: 1; }
 }
 .psr-dark { animation-timing-function: steps(1, end); }
 @media (prefers-reduced-motion: reduce) { .psr-bag, .psr-door, .psr-noise, .psr-boom, .psr-blue, .psr-dark { animation: none; } }
+/* the yard as one long picture the finger moves freely (screens/yard.tsx): --pos is where the screen stands (-1 … 1),
+   every picture --k stands at its own place; one sky behind all three */
+.yard-free { touch-action: none; user-select: none; -webkit-user-select: none; }
+.yard-free .yard-pan { transition: none; transform: translateX(calc((var(--k) - var(--pos, 0)) * 100%)); }
+.yard-sky-all { right: auto; width: 300%; aspect-ratio: 6000 / 3405; transform: translateX(calc((-1 - var(--pos, 0)) * 100% / 3)); will-change: transform; }
+.yard-sky-all .court-sky { height: 49.5%; }

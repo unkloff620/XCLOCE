@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useRef, useState, type TouchEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent, type TouchEvent } from "react";
 import { usePageReady } from "../route-loader.tsx";
 import { tasksReady, useGame, useNow } from "../store.tsx";
 import { api } from "../api.ts";
@@ -26,6 +26,9 @@ const LINKS = [
   { href: "/exchange", icon: "exchange", label: "Обменник", c: "#ffb347", hint: "Меняй одну валюту на другую. Ивент: работает один день из трёх." },
 ] as const;
 
+/** where the yard was left (its `pos`): the next visit opens there */
+const POS_KEY = "yard-pos";
+
 interface YardData { items: { id: number; slot: number; drop: string; at: number }[]; max: number; nextAt: number | null; periodMs: number }
 
 export function YardScreen() {
@@ -43,27 +46,94 @@ export function YardScreen() {
   const taskHint = tasksReady(state, now);
   const [slots, setSlots] = useState(false);
   const [van, setVan] = useState(false);
-  // the yard is three pictures side by side: -1 the back yard on the left (the mural wall, the arch), 0 the court, 1 the kiosk and
-  // the pigeon loft on the right; a swipe or the arrows move between them
-  const [page, setPage] = useState(0);
-  const [drag, setDrag] = useState(0);
-  const touch = useRef<{ x: number; y: number; on: boolean | null } | null>(null);
-  const onStart = (e: TouchEvent) => { const t = e.touches[0]; touch.current = { x: t.clientX, y: t.clientY, on: null }; };
-  const onMove = (e: TouchEvent) => {
-    const c = touch.current, t = e.touches[0];
-    if (!c) return;
-    const dx = t.clientX - c.x, dy = t.clientY - c.y;
-    if (c.on === null && Math.hypot(dx, dy) > 12) c.on = Math.abs(dx) > Math.abs(dy) * 1.5;
-    if (c.on) setDrag(Math.max(page === 1 ? 0 : -Infinity, Math.min(page === -1 ? 0 : Infinity, dx)));
+  // the yard is three pictures side by side — -1 the back yard on the left (the mural wall, the arch), 0 the court, 1 the
+  // kiosk and the pigeon loft on the right — one long yard the finger moves freely (the user 2026-11-27): `pos` is where
+  // the screen stands (-1 … 1, in screens), it stays where it was let go (with a little glide), and the next visit opens
+  // there again (POS_KEY). The arrows glide to the next picture's middle.
+  const yardRef = useRef<HTMLDivElement>(null);
+  const pos = useRef(0);
+  const [page, setPage] = useState(0); // the picture mostly on screen (for the arrows, the counts and the keyboard)
+  const anim = useRef(0);
+  const apply = () => {
+    yardRef.current?.style.setProperty("--pos", pos.current.toFixed(4));
   };
-  const onEnd = () => {
-    const c = touch.current;
-    touch.current = null;
-    if (c?.on && Math.abs(drag) > 50) { haptic.tap(); setPage(Math.max(-1, Math.min(1, page + (drag < 0 ? 1 : -1)))); }
-    setDrag(0);
+  const settle = () => {
+    setPage(Math.max(-1, Math.min(1, Math.round(pos.current))));
+    try { localStorage.setItem(POS_KEY, pos.current.toFixed(3)); } catch { /* storage blocked */ }
   };
-  const turn = (to: number) => { haptic.tap(); setPage(to); };
-  const pan = (k: number) => ({ transform: `translateX(calc(${(k - page) * 100}% + ${drag}px))`, transition: drag ? "none" : undefined });
+  useEffect(() => {
+    let p = 0;
+    try { p = Number(localStorage.getItem(POS_KEY) ?? 0) || 0; } catch { /* storage blocked */ }
+    pos.current = Math.max(-1, Math.min(1, p));
+    apply();
+    setPage(Math.max(-1, Math.min(1, Math.round(pos.current))));
+    return () => cancelAnimationFrame(anim.current);
+  }, []);
+  // over the ends the yard gives way only a little (rubber) and springs back on release
+  const rubber = (p: number) => (p < -1 ? -1 - (-1 - p) * 0.3 : p > 1 ? 1 + (p - 1) * 0.3 : p);
+  const glide = (v: number) => {
+    // after the finger: the speed dies down (screens per second); over an end — back to it
+    cancelAnimationFrame(anim.current);
+    let last = performance.now();
+    const step = (now: number) => {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      v *= Math.pow(0.04, dt);
+      pos.current += v * dt;
+      const out = pos.current < -1 ? -1 : pos.current > 1 ? 1 : null;
+      if (out !== null) { v = 0; pos.current += (out - pos.current) * Math.min(1, dt * 14); if (Math.abs(out - pos.current) < 0.002) pos.current = out; }
+      apply();
+      if (Math.abs(v) > 0.02 || (out !== null && pos.current !== out)) anim.current = requestAnimationFrame(step);
+      else settle();
+    };
+    anim.current = requestAnimationFrame(step);
+  };
+  const glideTo = (to: number) => {
+    cancelAnimationFrame(anim.current);
+    const from = pos.current, t0 = performance.now(), dur = 380;
+    const step = (now: number) => {
+      const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      pos.current = from + (to - from) * e;
+      apply();
+      if (k < 1) anim.current = requestAnimationFrame(step);
+      else settle();
+    };
+    anim.current = requestAnimationFrame(step);
+  };
+  // the finger (or the mouse): sideways moves the yard; a tap that moved is no tap
+  const drag = useRef<{ x: number; y: number; p: number; on: boolean | null; lx: number; lt: number; v: number } | null>(null);
+  const moved = useRef(false);
+  const begin = (x: number, y: number) => {
+    cancelAnimationFrame(anim.current);
+    drag.current = { x, y, p: pos.current, on: null, lx: x, lt: performance.now(), v: 0 };
+    moved.current = false;
+  };
+  const move = (x: number, y: number) => {
+    const d = drag.current;
+    if (!d) return;
+    const dx = x - d.x, dy = y - d.y;
+    if (d.on === null && Math.hypot(dx, dy) > 10) d.on = Math.abs(dx) > Math.abs(dy);
+    if (!d.on) return;
+    moved.current = true;
+    const w = yardRef.current?.clientWidth || 1;
+    const now = performance.now();
+    if (now > d.lt) d.v = d.v * 0.5 + (-(x - d.lx) / w / ((now - d.lt) / 1000)) * 0.5;
+    d.lx = x; d.lt = now;
+    pos.current = rubber(d.p - dx / w);
+    apply();
+  };
+  const end = () => {
+    const d = drag.current;
+    drag.current = null;
+    if (!d?.on) return;
+    glide(Math.max(-6, Math.min(6, performance.now() - d.lt > 90 ? 0 : d.v)));
+  };
+  const onStart = (e: TouchEvent) => begin(e.touches[0].clientX, e.touches[0].clientY);
+  const onMove = (e: TouchEvent) => move(e.touches[0].clientX, e.touches[0].clientY);
+  const onDown = (e: MouseEvent) => { if (e.button === 0) begin(e.clientX, e.clientY); };
+  const onMouseMove = (e: MouseEvent) => { if (drag.current && e.buttons & 1) move(e.clientX, e.clientY); };
+  const turn = (to: number) => { haptic.tap(); glideTo(Math.max(-1, Math.min(1, to))); };
+  const pan = (k: number) => ({ ["--k" as string]: k });
   const load = useCallback(async () => {
     try {
       setData(await api.get<YardData>("/api/yard"));
@@ -133,12 +203,12 @@ export function YardScreen() {
         <div className="title-row">
           <h1 className="display">Двор</h1>
           <Help topic="yard-menu" title="Как устроен двор">
-            <p>Двор длинный: свайпни влево (или нажми стрелку справа) — там продолжение: ларёк-обменник и голубятня. Свайп вправо (стрелка слева) — задний двор.</p>
+            <p>Двор длинный: веди пальцем влево-вправо (или жми стрелки) — справа ларёк-обменник и голубятня, слева задний двор. Где остановился — там двор и откроется в следующий раз.</p>
             <p>Каждые 5 минут во дворе появляется случайная находка, максимум 5 сразу. Время идёт, даже когда игра закрыта — заходи и собирай.</p>
             <p>Изредка попадается Клавиатура. Всё найденное можно продать в инвентаре.</p>
-            <p>Обменник — ларёк во второй половине двора (свайпни влево). {LINKS[0].hint}</p>
+            <p>Обменник — ларёк в правой части двора. {LINKS[0].hint}</p>
             <p>Игровой автомат 777 — 3 бесплатные прокрутки в час. Справа от него — автомат «Апгрейдер»: улучшай находки и оружие.</p>
-            {state?.fortune?.on && <p>Задний двор (свайп вправо) — люк «Колесо удачи»: крути за билеты, джекпот растёт с каждой прокруткой.</p>}
+            {state?.fortune?.on && <p>Задний двор (левая часть) — люк «Колесо удачи»: крути за билеты, джекпот растёт с каждой прокруткой.</p>}
             <p>Подъезд — вход в локации: задания за энергию, шаги и награды. Значок «!» — энергии хватает на задание.</p>
             <p>Стол с табло — блэкджек (3 бесплатные партии в день) и зонк (1 бесплатная игра в день), дальше партия стоит рубли. Нажми на стол и выбери игру.</p>
           </Help>
@@ -148,13 +218,17 @@ export function YardScreen() {
           <span className="chip">{data?.items.length ?? state?.yard.count ?? 0}/{data?.max ?? 5}</span>
         </span>
       </div>
-      <div className={`yard tod-${tod} page-${page < 0 ? "left" : page}`} onTouchStart={onStart} onTouchMove={onMove} onTouchEnd={onEnd} onTouchCancel={onEnd}>
+      <div ref={yardRef} className={`yard yard-free tod-${tod} page-${page < 0 ? "left" : page}`} onTouchStart={onStart} onTouchMove={onMove} onTouchEnd={end} onTouchCancel={end}
+        onMouseDown={onDown} onMouseMove={onMouseMove} onMouseUp={end} onMouseLeave={end}
+        onClickCapture={(e) => { if (moved.current) { e.preventDefault(); e.stopPropagation(); moved.current = false; } }}>
         {/* blurred copy of the yard fills the space above the scene on tall screens */}
         <div className="scene-backdrop" style={{ backgroundImage: `url(/assets/yard/${tod === "night" ? "court-backdrop-dark" : "court-backdrop"}.webp)` }} />
+        {/* one sky over the whole long yard (behind its three pictures, moving with them): no seams between them */}
+        <div className="yard-stage yard-sky-all" aria-hidden="true">
+          <DriftingSky className="court-sky" copies={6} src={tod === "night" ? "/assets/yard/sky-dark.webp" : undefined} />
+        </div>
         {/* the sharp scene stands on the nav at full width; the objects sit where they are drawn on the 2000×3405 sheet */}
         <div className="yard-stage yard-pan" style={pan(0)}>
-          {/* the sunset sky (the same as in the fights) drifts behind the see-through sky of the yard */}
-          <DriftingSky className="court-sky" src={tod === "night" ? "/assets/yard/sky-dark.webp" : undefined} />
           {/* the same sky upside down under the ground: it shows in the see-through puddles */}
           <DriftingSky className="yard-reflect" src={tod === "night" ? "/assets/yard/sky-dark.webp" : undefined} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -187,7 +261,6 @@ export function YardScreen() {
         </div>
         {/* the back yard on the left (tools/scene/build-yard0.py): the manhole of «Колесо удачи» */}
         <div className="yard-stage yard-pan yard-stage0" style={pan(-1)} aria-hidden={page !== -1}>
-          <DriftingSky className="court-sky" src={tod === "night" ? "/assets/yard/sky-dark.webp" : undefined} />
           <DriftingSky className="yard-reflect" src={tod === "night" ? "/assets/yard/sky-dark.webp" : undefined} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="yard-bg" src={tod === "night" ? "/assets/yard/yard0-bg-dark.webp" : "/assets/yard/yard0-bg.webp"} alt="" draggable={false} />
@@ -207,7 +280,6 @@ export function YardScreen() {
         </div>
         {/* the second half of the yard (tools/scene/build-yard2.py): the exchange kiosk, the garages, the pigeon loft */}
         <div className="yard-stage yard-pan yard-stage2" style={pan(1)} aria-hidden={page !== 1}>
-          <DriftingSky className="court-sky" src={tod === "night" ? "/assets/yard/sky-dark.webp" : undefined} />
           <DriftingSky className="yard-reflect" src={tod === "night" ? "/assets/yard/sky-dark.webp" : undefined} />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="yard-bg" src={tod === "night" ? "/assets/yard/yard2-bg-dark.webp" : "/assets/yard/yard2-bg.webp"} alt="" draggable={false} />
