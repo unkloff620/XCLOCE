@@ -312,7 +312,7 @@ function wornIn(worn: Worn, slot: string): WearId | null {
 /** a worn piece of clothing, if the item in that slot has art (the FACE slot is drawn on the head, over the eyes) */
 /** `hat`: a head thing — "under" the hair (headphones) or "over" it (hats that cut the hair, HAIR_CUT_HATS) */
 /** clothes with a part behind the legs (a long coat's back, over the seat, under the body): its own picture */
-const WEAR_BACK: Record<string, string> = { "coat-botsman": "coat-botsman-back" };
+const WEAR_BACK: Record<string, string> = { "coat-botsman": "coat-botsman-back", "coat-himik": "coat-himik-back" };
 function WearBack() {
   const id = wornIn(useContext(WornCtx), "SHIRT");
   const back = id ? WEAR_BACK[id] : undefined;
@@ -325,7 +325,7 @@ function WearBack() {
 
 /** long coats whose tails (and the apron below the lap) sway a little: below this line (rig y) the picture leans side to side (a skew about the line,
  *  so the seam stays put); above it — the shoulders and sleeves on the arms — it stays still */
-const WEAR_SWAY: Record<string, number> = { "coat-botsman": 820, "apron-utilizator": 840 };
+const WEAR_SWAY: Record<string, number> = { "coat-botsman": 820, "apron-utilizator": 840, "coat-himik": 790 };
 function SwayingWear({ id }: { id: string }) {
   const f = WEARS[id];
   const cut = WEAR_SWAY[id];
@@ -334,7 +334,7 @@ function SwayingWear({ id }: { id: string }) {
   return (
     <>
       <defs>
-        <clipPath id={`${uid}-u`}><rect x={-200} y={-200} width={1400} height={cut + 200} /></clipPath>
+        <clipPath id={`${uid}-u`}><rect x={-200} y={-200} width={1400} height={cut + 201} /></clipPath>
         <clipPath id={`${uid}-d`}><rect x={-200} y={cut} width={1400} height={1600} /></clipPath>
       </defs>
       <g clipPath={`url(#${uid}-u)`}>{pic}</g>
@@ -436,7 +436,7 @@ function Beard() {
 }
 
 /** open jackets: the chain goes under them */
-const OPEN_JACKETS = ["jacket-komandate", "jacket-puffer", "jacket-vadim", "coat-botsman"];
+const OPEN_JACKETS = ["jacket-komandate", "jacket-puffer", "jacket-vadim", "coat-botsman", "coat-himik"];
 
 /** where the diamond teeth glint (rig coordinates over the mouth) and when (s) */
 const GLINTS: [number, number, number][] = [[485, 253, 0], [503, 256, 1.3], [520, 252, 2.6], [495, 266, 3.7], [515, 267, 5.1]];

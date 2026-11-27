@@ -89,7 +89,9 @@ WEAR_SLOT = {"tee-white": "SHIRT", "tee-pump": "SHIRT", "jeans": "PANTS", "short
              # Боцман's things (drawn by the artist on the rig canvas)
              "pants-botsman": "PANTS", "boots-botsman": "SHOES", "coat-botsman": "SHIRT",
              # not an item: the coat's back, drawn behind the legs (rig.tsx WEAR_BACK)
-             "coat-botsman-back": "SHIRT"}
+             "coat-botsman-back": "SHIRT",
+             # Химик's lab coat (drawn by the artist on the rig canvas, open; its back behind the legs — not an item)
+             "coat-himik": "SHIRT", "coat-himik-back": "SHIRT"}
 # head things worn over the hair (no hair variants cut under them)
 OVER_HAIR = {"headphones-vostok", "crown-cash", "bandana-hodl", "cap-captain"}
 # of those: drawn on top of the hair (the crown sits on it, the bandana is tied over it) — the hair is not cut

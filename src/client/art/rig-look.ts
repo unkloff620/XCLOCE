@@ -411,6 +411,20 @@ export const WEAR_FIT = {
     "y": 726.0,
     "w": 845,
     "h": 538
+  },
+  "coat-himik": {
+    "slot": "SHIRT",
+    "x": 60.5,
+    "y": 268.0,
+    "w": 888,
+    "h": 763
+  },
+  "coat-himik-back": {
+    "slot": "SHIRT",
+    "x": 65.0,
+    "y": 766.5,
+    "w": 874,
+    "h": 268
   }
 } as const;
 /** head things that cut the hair under them (the rest are worn over the hair) */
