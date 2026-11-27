@@ -466,6 +466,8 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
   return createPortal(
     <div className="bd-roul" role="dialog" aria-label="Русская рулетка">
       <div className={`bd-roul-scene ${result === "bang" && phase === "fire" ? "bang" : ""}`} data-phase={phase}>
+        {/* the room in the dark outside the lamp's cone of light */}
+        <span className="bd-roul-dark" aria-hidden="true"><i /></span>
         {/* the lamp hanging from the ceiling (the artist's), its light flickering */}
         <span className="bd-roul-lamp" aria-hidden="true">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -514,6 +516,8 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
             <img className="bd-roul-gun-body" src={`${R}/gun.webp${V}`} alt="" draggable={false} />
           </span>
         </button>
+        {/* the lamp's light falling on him */}
+        <i className="bd-roul-light" aria-hidden="true" />
         {result === "click" && phase !== "idle" && <i className="bd-roul-click">МИМО!</i>}
         {result === "bang" && death === "fire" && <i className="bd-roul-bang">БАХ!</i>}
         {/* the room goes red at the edges with the blood, then the words */}

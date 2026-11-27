@@ -8584,8 +8584,19 @@ body:has(.bd-screen) .hud { background: none; border-bottom: 0; box-shadow: none
 .bd-roul { position: fixed; z-index: 38; left: 50%; transform: translateX(-50%); width: 100%; max-width: var(--col); top: calc(var(--hud-h) + var(--safe-t)); bottom: calc(var(--nav-h) + var(--safe-b));
   display: flex; flex-direction: column; background: rgba(5, 3, 2, 0.85); padding: 8px 10px; }
 .bd-roul-scene { position: relative; flex: 1; min-height: 0; border-radius: 18px; overflow: hidden; border: 3px solid #6b4a1e; background: #1a1410 url(/assets/bandit/roulette/room.webp) 50% 100% / cover no-repeat; }
+/* the lamp's cone of light: from the shade's rim down, wide at the floor; the room outside it darker (soft edges: the
+   blurred wrapper), the light warm on him (over the hero) */
+.bd-roul-scene { container-type: size; --lw: min(24cqw, 110px); --cy: calc(-2cqh + var(--lw) * 1.3); --cs: calc(var(--lw) * 0.45); }
+.bd-roul-dark { position: absolute; inset: 0; filter: blur(10px); pointer-events: none; }
+.bd-roul-dark i { position: absolute; inset: -30px; background: rgba(4, 3, 2, 0.58);
+  clip-path: polygon(evenodd, 0 0, 100% 0, 100% 100%, 0 100%, 0 0,
+    calc(30px + 50cqw - var(--cs)) calc(30px + var(--cy)), calc(30px + 50cqw + var(--cs)) calc(30px + var(--cy)),
+    calc(40px + 100cqw) calc(30px + 70cqh), calc(40px + 100cqw) calc(40px + 100cqh), 20px calc(40px + 100cqh), 20px calc(30px + 70cqh)); }
+.bd-roul-light { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: soft-light; filter: blur(8px);
+  background: linear-gradient(rgba(255, 214, 150, 0.85), rgba(255, 196, 120, 0.35) 60%, rgba(255, 190, 110, 0.1));
+  clip-path: polygon(calc(50cqw - var(--cs)) var(--cy), calc(50cqw + var(--cs)) var(--cy), calc(100cqw + 10px) 70cqh, calc(100cqw + 10px) 100cqh, -10px 100cqh, -10px 70cqh); }
 /* the lamp on the ceiling (its cord from the top edge), the light under it flickers */
-.bd-roul-lamp { position: absolute; left: 50%; top: -2%; width: min(24%, 110px); transform: translateX(-50%); transform-origin: 50% 0; animation: bd-roul-lamp 4.2s ease-in-out infinite alternate; z-index: 1; pointer-events: none; }
+.bd-roul-lamp { position: absolute; left: 50%; top: -2cqh; width: var(--lw); transform: translateX(-50%); transform-origin: 50% 0; animation: bd-roul-lamp 4.2s ease-in-out infinite alternate; z-index: 1; pointer-events: none; }
 .bd-roul-lamp img { display: block; width: 100%; height: auto; filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6)); }
 .bd-roul-lamp i { position: absolute; left: 50%; top: 92%; width: 420%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; mix-blend-mode: screen;
   background: radial-gradient(rgba(255, 230, 160, 0.55), rgba(255, 190, 100, 0.22) 25%, rgba(255, 170, 80, 0) 62%); animation: bd-roul-bulb 3.1s steps(1) infinite; }
