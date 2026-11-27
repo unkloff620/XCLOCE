@@ -23,7 +23,7 @@ describe("«Бандитский фарт»", () => {
     const col = (...c: BanditCell[]) => c;
     const reels = [col("money", "a", "q"), col("money", "k", "k"), col("money", "dice", "j"), col("a", "k", "q"), col("a", "k", "q")];
     const plain = banditPay(reels, {}, 10);
-    expect(plain.wins).toEqual([{ sym: "money", n: 3, row: 0, pay: 750 }]);
+    expect(plain.wins).toEqual([{ sym: "money", n: 3, row: 0, pay: 470 }]);
     // a pair pays too
     const pair = banditPay([col("a", "j", "q"), col("a", "k", "k"), col("ten", "dice", "j"), col("q", "k", "q"), col("j", "k", "q")], {}, 1);
     expect(pair.wins).toEqual([{ sym: "a", n: 2, row: 0, pay: 1 }]);

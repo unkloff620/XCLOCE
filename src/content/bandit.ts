@@ -20,20 +20,22 @@ export interface BanditSymDef { id: BanditSym; name: string; weight: number; pay
  *  horseshoe gives the machine's experience instead (`xp`, not × the bet). The bell and the revolver are scatters
  *  (anywhere on the screen): the bell's 3 / 4 / 5 price, the revolver pays nothing itself (the bonus game) */
 export const BANDIT_SYMS: BanditSymDef[] = [
-  { id: "money", name: "Пачка денег", weight: 3, pay: [5, 75, 250, 1000] },
-  { id: "ring", name: "Печатка", weight: 4, pay: [4, 60, 200, 500] },
-  { id: "chain", name: "Цепь", weight: 5, pay: [3, 50, 150, 300] },
-  { id: "raven", name: "Ворон", weight: 6, pay: [2, 40, 100, 250] },
-  { id: "cap", name: "Кепка", weight: 7, pay: [2, 30, 80, 200] },
-  { id: "dice", name: "Кости", weight: 12, pay: [1, 12, 30, 80] },
+  { id: "money", name: "Пачка денег", weight: 6, pay: [3, 47, 155, 620] },
+  { id: "ring", name: "Печатка", weight: 7, pay: [2, 37, 124, 310] },
+  { id: "chain", name: "Цепь", weight: 8, pay: [2, 31, 93, 186] },
+  { id: "raven", name: "Ворон", weight: 9, pay: [1, 25, 62, 155] },
+  { id: "cap", name: "Кепка", weight: 10, pay: [1, 19, 50, 124] },
+  { id: "dice", name: "Кости", weight: 12, pay: [1, 7, 19, 50] },
   { id: "horseshoe", name: "Подкова", weight: 12, pay: [0, 0, 0, 0], xp: [0, 200, 300, 500] },
-  { id: "a", name: "Туз", weight: 20, pay: [1, 7, 20, 60] },
-  { id: "k", name: "Король", weight: 20, pay: [1, 7, 20, 60] },
-  { id: "q", name: "Дама", weight: 24, pay: [1, 4, 15, 40] },
-  { id: "j", name: "Валет", weight: 24, pay: [1, 4, 15, 40] },
-  { id: "ten", name: "Десятка", weight: 24, pay: [1, 4, 15, 40] },
-  { id: "bell", name: "Колокол", weight: 3.3, pay: [0, 5, 20, 100] },
-  { id: "revolver", name: "Револьвер", weight: 3.5, pay: [0, 0, 0, 0] },
+  { id: "a", name: "Туз", weight: 20, pay: [1, 4, 12, 37] },
+  { id: "k", name: "Король", weight: 20, pay: [1, 4, 12, 37] },
+  { id: "q", name: "Дама", weight: 22, pay: [1, 2, 9, 25] },
+  { id: "j", name: "Валет", weight: 22, pay: [1, 2, 9, 25] },
+  { id: "ten", name: "Десятка", weight: 22, pay: [1, 2, 9, 25] },
+  // the user 2026-11-27: the roulette ~4 % of the spins (3 revolvers), 3 bells ~1 in 75; the top symbols twice as often,
+  // the line prices lowered to keep BANDIT_RTP
+  { id: "bell", name: "Колокол", weight: 8, pay: [0, 5, 20, 100] },
+  { id: "revolver", name: "Револьвер", weight: 12, pay: [0, 0, 0, 0] },
 ];
 /** the scatters: they pay or give something anywhere on the screen, never on a line, a wild does not stand in for them */
 export const BANDIT_SCATTER: BanditSym[] = ["bell", "revolver"];
