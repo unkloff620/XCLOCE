@@ -2695,6 +2695,10 @@ describe("«Комбо»", () => {
     expect(v.map((s) => s.damage)).toEqual([100, 200]);
     expect(v.every((s) => !!s.set)).toBe(true);
     expect(bossBonus("vadim", 2000, "blat")).toEqual([]);
+    // Солнце: a third stage, 15 % for 1 000 roubles (he has a tattoo set in every mode)
+    expect(bossBonus("solntse", 2000, "pacan").map((s) => s.damage)).toEqual([100, 200, 300]);
+    expect(bossBonus("solntse", 2000, "pacan")[2].reward).toEqual({ currencies: { RUB: 1000 } });
+    expect(bossBonus("solntse", 2000, "blat").map((s) => s.damage)).toEqual([100, 200, 300]);
   });
 
   it("the payout by the mode (the user's table)", async () => {

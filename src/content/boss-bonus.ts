@@ -7,8 +7,8 @@ import { tattooSetsOfBoss } from "./tattoos.ts";
  * pays on top of the usual reward:
  *  - the first bosses (KEY_BONUS_BOSSES — their passes open the next one): 1 more pass of this boss for each stage;
  *  - every other boss: 1 more tattoo of his set of this mode for each stage (a piece the player does not have yet) — with
- *    the win's own tattoo, up to 3 a fight. A mode with no tattoo set of his («Блатной»), or a set already complete:
- *    no box.
+ *    the win's own tattoo, up to 3 a fight (a mode with no tattoo set of his — «Блатной» — has no tattoo stages);
+ *  - a boss's own further stages (EXTRA_STAGES), in any mode.
  */
 export interface BossBonusStage {
   /** the damage to deal in this fight */
@@ -19,6 +19,10 @@ export interface BossBonusStage {
 }
 
 export const BONUS_SHARES = [0.05, 0.1] as const;
+/** a boss's own further stages, in any mode (the user 2026-11-27: Солнце — 15 % for 1 000 roubles) */
+export const EXTRA_STAGES: Record<string, { share: number; reward: Reward }[]> = {
+  solntse: [{ share: 0.15, reward: { currencies: { RUB: 1000 } } }],
+};
 export const KEY_BONUS_BOSSES = ["datsik", "kedr", "mugo", "garkusha"] as const;
 
 /** the stages of this boss's box in a fight with this HP and mode */
@@ -29,8 +33,9 @@ export function bossBonus(bossId: string, hpMax: number, mode: string): BossBonu
     return BONUS_SHARES.map((k) => ({ damage: at(k), reward: { items: [{ id: `key-${bossId}`, qty: 1 }] } }));
   }
   const set = tattooSetsOfBoss(bossId).find((s) => s.mode === mode);
-  if (!set) return [];
-  return BONUS_SHARES.map((k) => ({ damage: at(k), reward: { items: [{ id: set.pieces[0].id, qty: 1 }] }, set: set.id }));
+  const extra = (EXTRA_STAGES[bossId] ?? []).map((x) => ({ damage: at(x.share), reward: x.reward }));
+  const sets = set ? BONUS_SHARES.map((k) => ({ damage: at(k), reward: { items: [{ id: set.pieces[0].id, qty: 1 }] }, set: set.id })) : [];
+  return [...sets, ...extra].sort((a, b) => a.damage - b.damage);
 }
 
 /** the stages reached with this damage */
