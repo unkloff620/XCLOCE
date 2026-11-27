@@ -1,12 +1,13 @@
 "use client";
 /* The player's room: artist's background, the seated character on his chair, the trophies. */
-import { CHARACTER, HERO_HOT, LAB_ON_SCENE, ROOM_BG, ROOM_LIGHTS, ROOM_RGB, ROOM_SKY, ROOM_TALL, SCENE, SCENE_OBJECTS } from "../../content/home-scene.ts";
+import { CHARACTER, HERO_HOT, LAB_ON_SCENE, PSYCHO_ON_SCENE, ROOM_BG, ROOM_LIGHTS, ROOM_RGB, ROOM_SKY, ROOM_TALL, SCENE, SCENE_OBJECTS } from "../../content/home-scene.ts";
 import { RigViewport, type RigEdit, type Worn } from "./rig.tsx";
 import { ART_ASPECT } from "./desk-data.ts";
 import { usedUrl } from "../preload.ts";
 import { KnyazRoom, SunRoom, UtilizatorRoom } from "./arena-bg.tsx";
 import { NitkaRoom } from "./arena-nitka.tsx";
 import { HimikRoom } from "./arena-himik.tsx";
+import { PsihRoom } from "./arena-psih.tsx";
 import { BOTSMAN_ROOM } from "./arena-botsman-data.ts";
 import { FokusRoom } from "./arena-fokus.tsx";
 import { placedOf, type Look } from "../../content/home.ts";
@@ -95,6 +96,9 @@ export function HomeScene({ room = "basic", onHero, still, look, worn, pieces = 
         // 1024×1843 picture bigger than the scene's width (the room big round the hero), going on above the canvas on the
         // home screen (ROOM_TALL)
         <g transform={`translate(${LAB_ON_SCENE.x} ${LAB_ON_SCENE.y}) scale(${LAB_ON_SCENE.k})`}><HimikRoom uid="home" stool={false} drop={LAB_ON_SCENE.drop} /></g>
+      ) : room === "psycho" && !still ? (
+        // «Хата Психа» is Псих's live fight room, sitting on the scene as Химик's lab does (above the canvas on the home screen)
+        <g transform={`translate(${PSYCHO_ON_SCENE.x} ${PSYCHO_ON_SCENE.y}) scale(${PSYCHO_ON_SCENE.k})`}><PsihRoom uid="home" /></g>
       ) : room === "coder" && !still ? (
         // «Берлога кодера» is Фокус's live fight room, drawn on the scene canvas itself (1060×1484)
         <FokusRoom uid="home" layer="back" />

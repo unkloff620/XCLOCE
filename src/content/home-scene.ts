@@ -38,13 +38,15 @@ export const SEAT = { x: 320, y: 843, w: 360, aspect: 1.2 }; // a low stool: its
  * canvas's top (the home screen's room view grows upward by them, the hero stays where he is).
  * «Лаборатория Химика»: his 2000×3600 lab ×0.62 — the room bigger round the hero, its lamp still in (tools/boss/build-himik-room.py).
  */
-export const ROOM_TALL: Record<string, number> = { lab: 430 };
+export const ROOM_TALL: Record<string, number> = { lab: 430, psycho: 430 };
 /** how the tall rooms' live pictures (1024 wide) sit on the scene: x, y, scale */
 // (the lab's lamp hangs lower there, drop in its picture's units: its top goes under the HUD, the lamp stays in sight)
 export const LAB_ON_SCENE = { x: -90, y: -430, k: (0.62 * 2000) / 1024, drop: 230 };
-export const ROOM_BG: Record<string, string> = { basic: "room-basic", freezer: "room-freezer", neon: "room-neon", shark: "room-shark", backroom: "room-backroom", boxing: "room-boxing", izba: "room-izba", ludoman: "room-ludoman", pepe: "room-pepe", vault: "room-vault", office: "room-office", penthouse: "room-penthouse", kitchen: "room-kitchen", cabinet: "room-cabinet", dojo: "room-dojo", acidyard: "room-acidyard", coder: "room-coder", forge: "room-forge", workshop: "room-workshop", lab: "room-lab" };
+/** «Хата Психа»: his 2000×3600 flat on the scene the same way (tools/boss/build-psih-room.py) */
+export const PSYCHO_ON_SCENE = { x: -90, y: -430, k: (0.62 * 2000) / 1024 };
+export const ROOM_BG: Record<string, string> = { basic: "room-basic", freezer: "room-freezer", neon: "room-neon", shark: "room-shark", backroom: "room-backroom", boxing: "room-boxing", izba: "room-izba", ludoman: "room-ludoman", pepe: "room-pepe", vault: "room-vault", office: "room-office", penthouse: "room-penthouse", kitchen: "room-kitchen", cabinet: "room-cabinet", dojo: "room-dojo", acidyard: "room-acidyard", coder: "room-coder", forge: "room-forge", workshop: "room-workshop", lab: "room-lab", psycho: "room-psycho" };
 /** opaque picture for the blurred backdrop around the scene (a room with a see-through window has a flat copy) */
-export const ROOM_BACKDROP: Record<string, string> = { basic: "room-basic", freezer: "room-freezer", neon: "room-neon", shark: "room-shark", backroom: "room-backroom", boxing: "room-boxing", izba: "room-izba", ludoman: "room-ludoman", pepe: "room-pepe", vault: "room-vault", office: "room-office", penthouse: "room-penthouse-flat", kitchen: "room-kitchen", cabinet: "room-cabinet", dojo: "room-dojo", acidyard: "room-acidyard", coder: "room-coder", forge: "room-forge", workshop: "room-workshop", lab: "room-lab" };
+export const ROOM_BACKDROP: Record<string, string> = { basic: "room-basic", freezer: "room-freezer", neon: "room-neon", shark: "room-shark", backroom: "room-backroom", boxing: "room-boxing", izba: "room-izba", ludoman: "room-ludoman", pepe: "room-pepe", vault: "room-vault", office: "room-office", penthouse: "room-penthouse-flat", kitchen: "room-kitchen", cabinet: "room-cabinet", dojo: "room-dojo", acidyard: "room-acidyard", coder: "room-coder", forge: "room-forge", workshop: "room-workshop", lab: "room-lab", psycho: "room-psycho" };
 /** RGB LED strip (violet → blue) along the ceiling and the sides: polylines in scene units */
 export const ROOM_RGB: Record<string, number[][][]> = {
   neon: [
@@ -82,6 +84,8 @@ export const ROOM_LIGHTS: Record<string, { x: number; y: number; r: number; colo
   workshop: [{ x: 546, y: 93, r: 150, color: "#ffc46b", kind: "lamp" }],
   // «Лаборатория Химика»: the lamp's and the poison's light swing and blink in the live room itself
   lab: [],
+  // «Хата Психа»: the police lights and the TV live in the room itself
+  psycho: [],
   vault: [{ x: 530, y: 137, r: 140, color: "#ffc46b", kind: "lamp" }, { x: 530, y: 140, r: 420, color: "#a46bff", kind: "strip" }],
   cabinet: [{ x: 530, y: 133, r: 140, color: "#ffc46b", kind: "lamp" }, { x: 238, y: 564, r: 100, color: "#ffc46b", kind: "lamp" }, { x: 530, y: 30, r: 460, color: "#ffb35c", kind: "strip" }],
   // the two wall lamps by the shelves and the glowing pill on the shelf

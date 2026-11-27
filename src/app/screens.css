@@ -8636,3 +8636,29 @@ body:has(.bd-screen) .hud { background: none; border-bottom: 0; box-shadow: none
 /* «Колба Химика» in the hero's hand (rig.tsx FlaskHand): bubbles rise through the liquid */
 .rig-flask-bub { animation: hmr-bub 2.2s ease-in infinite; transform-box: fill-box; transform-origin: center; }
 html.eco .rig-flask-bub { animation-iteration-count: 1; }
+/* Псих's flat (arena-psih.tsx): the bag swings, the safe's door swings slowly, the TV's static, the boombox shakes, the police lights */
+.psr-bag { animation: psr-bag 2.6s ease-in-out infinite alternate; }
+@keyframes psr-bag { from { transform: rotate(-2.6deg); } to { transform: rotate(2.6deg); } }
+.psr-door { animation: psr-door 7s ease-in-out infinite alternate; }
+@keyframes psr-door { from { transform: scaleX(1) skewY(0deg); } to { transform: scaleX(0.72) skewY(-4deg); } }
+.psr-noise { animation: psr-noise 0.5s steps(8) infinite; }
+@keyframes psr-noise { to { transform: translateX(var(--strip)); } }
+.psr-boom { animation: psr-boom 0.42s infinite; }
+@keyframes psr-boom {
+  0%, 100% { transform: scale(1, 1) translate(0, 0); }
+  12% { transform: scale(1.035, 0.965) translate(0.4px, 0); }
+  30% { transform: scale(0.99, 1.01) translate(-0.4px, -0.6px); }
+  50% { transform: scale(1.025, 0.975) translate(0, 0); }
+  62% { transform: scale(1, 1) translate(0.3px, -0.3px); }
+  80% { transform: scale(1.015, 0.985) translate(-0.3px, 0); }
+}
+.psr-blue { opacity: 0; animation: psr-blue 1.6s infinite; }
+@keyframes psr-blue { 0%, 49.9% { opacity: 0; } 50%, 99.9% { opacity: 1; } }
+.psr-dark { opacity: 0; animation: psr-dark 1.6s infinite; }
+/* each colour flashes twice: on — off — on — off, then the other colour */
+@keyframes psr-dark {
+  0% { opacity: 0; } 15% { opacity: 1; } 21% { opacity: 0; } 36% { opacity: 1; } 50% { opacity: 0; }
+  65% { opacity: 1; } 71% { opacity: 0; } 86% { opacity: 1; } 100% { opacity: 1; }
+}
+.psr-dark { animation-timing-function: steps(1, end); }
+@media (prefers-reduced-motion: reduce) { .psr-bag, .psr-door, .psr-noise, .psr-boom, .psr-blue, .psr-dark { animation: none; } }
