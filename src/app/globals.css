@@ -361,3 +361,5 @@ html.eco *, html.eco *::before, html.eco *::after { animation-iteration-count: 1
 .find-id { display: flex; gap: 8px; align-items: center; }
 .find-id .input { min-width: 0; font-size: 18px; font-weight: 800; }
 .find-id-row { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 12px; padding: 8px 10px; border-radius: 14px; border: 2px solid var(--line); background: rgba(255, 255, 255, 0.06); color: inherit; cursor: pointer; font: inherit; }
+/* a screen being opened stays hidden until its pictures are ready (src/client/route-loader.tsx) */
+html.routing .main { opacity: 0; pointer-events: none; }
