@@ -1,4 +1,5 @@
 "use client";
+import { bossPieces, pieceUnlockId } from "../../content/home.ts";
 import { NitkaCardSew } from "../art/nitka-card.tsx";
 import { HimikCardFx } from "../art/himik-card.tsx";
 import { PsihCardSlash } from "../art/psih-card.tsx";
@@ -235,13 +236,18 @@ export function BossRulesHelp({ topic, bossId }: { topic: "bosses" | "boss"; bos
       <p><b>Режимы боя:</b> {FIGHT_MODES.map((m) => `«${m.name}» — здоровье ×${m.hp}, деньги и авторитет ×${m.reward}${m.things ? ", падают вещи босса" : ""}`).join("; ")}. Вещи босса (одежда, комнаты) выпадают только в «Блатном»; деньги, пропуска и расходники — в любом режиме.</p>
       {boss ? (
         <>
-          {boss.wear?.items.length ? (
-            <HelpList title={`Вещи с босса: открыто ${bossItemsCount(boss, state)}`} rows={boss.wear.items.map((id, i) => {
+          {bossItemsCount(boss, state) ? (
+            <HelpList title={`Вещи с босса: открыто ${bossItemsCount(boss, state)}`} rows={[...(boss.wear?.items ?? []).map((id, i) => {
               const open = !!state?.unlocks?.includes(id) || (state?.inventory.find((x) => x.id === id)?.qty ?? 0) > 0;
               return open
                 ? { key: id, icon: <ItemArt id={id} size={40} />, name: itemById(id)?.name ?? id, hint: "Уже выпала — открыта в магазине одежды, там её можно выкупить." }
                 : { key: `s${i}`, icon: <MysteryDrop size={36} />, name: "Секретная вещь", hint: "Какая — пока секрет. Выпадет — откроется в магазине, и её нужно будет выкупить." };
-            })} />
+            }), ...bossPieces(boss.id).map((c) => {
+              const open = !!state?.unlocks?.includes(pieceUnlockId(c.pc.art)) || (((state?.home?.pieces?.[c.equipment] ?? 0) >> c.bit) & 1) === 1;
+              return open
+                ? { key: c.pc.art, icon: <MysteryDrop size={36} />, name: c.pc.name, hint: "Уже выпало — открыто в редакторе комнаты, там его можно выкупить." }
+                : { key: c.pc.art, icon: <MysteryDrop size={36} />, name: "Секретная вещь", hint: "Какая — пока секрет. Выпадет — откроется в редакторе комнаты, и её нужно будет выкупить." };
+            })]} />
           ) : (
             <p className="small muted">С босса {boss.name} вещи не выпадают.</p>
           )}

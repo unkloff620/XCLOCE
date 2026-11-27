@@ -13,7 +13,7 @@ import { BOSS_ROAD, BLAT_THING_CHANCE, BOTH_DROP_CHANCE, BOSSES, EVENT_FIGHTS, E
 import { BAT, WEAPONS, itemById, rushPrice, weaponById } from "../../content/items.ts";
 import { HIT_PHRASES } from "../../content/phrases.ts";
 import { boostReward, mergeRewards, scaleReward, type Reward } from "../../content/rewards.ts";
-import { BASE_CRIT_MULT, EQUIPMENT, PIECE_DROP_CHANCE, PIECE_PITY, ROOM_DEFS, ROOM_PITY, pieceUnlockId, roomUnlockId } from "../../content/home.ts";
+import { BASE_CRIT_MULT, EQUIPMENT, ROOM_DEFS, ROOM_PITY, pieceUnlockId, roomUnlockId } from "../../content/home.ts";
 import { bonusReached } from "../../content/boss-bonus.ts";
 import { comboHit, comboRestart, comboView, type ComboView } from "./combo.ts";
 import { hasCombo, type ComboMode } from "../../content/combo.ts";
@@ -502,31 +502,6 @@ export async function claimFight(ctx: Ctx, fightId: number, see = true) {
     await commitUnlock(ctx, def, r, r.held);
     if (r.got && !r.held) unlocked.push(r.got);
   }
-  // a chair of this boss (EQUIPMENT pieces with drop.boss): in any mode with PIECE_DROP_CHANCE, after PIECE_PITY
-  // wins without luck for sure; it opens in the room editor to be bought there
-  if (earnedKey) {
-    for (const e of EQUIPMENT) {
-      for (const [i, pc] of (e.pieces ?? []).entries()) {
-        if (pc.drop?.boss !== def.id) continue;
-        const key = pieceUnlockId(pc.art);
-        const [own] = await ctx.q.query<{ pieces: number }>("SELECT pieces FROM player_equipment WHERE player_id=$1 AND equipment_id=$2", [ctx.pid, e.id]);
-        if (((Number(own?.pieces ?? 0) >> i) & 1) === 1) continue;
-        const [have] = await ctx.q.query("SELECT 1 FROM player_unlocks WHERE player_id=$1 AND item_id=$2", [ctx.pid, key]);
-        if (have) continue;
-        const [pity] = await ctx.q.query<{ misses: number }>("SELECT misses FROM boss_pity WHERE player_id=$1 AND boss_id=$2 FOR UPDATE", [ctx.pid, key]);
-        const misses = pity?.misses ?? 0;
-        const got = ctx.rng() < PIECE_DROP_CHANCE || misses + 1 >= PIECE_PITY;
-        await ctx.q.query(
-          "INSERT INTO boss_pity (player_id, boss_id, misses) VALUES ($1,$2,$3) ON CONFLICT (player_id, boss_id) DO UPDATE SET misses = EXCLUDED.misses",
-          [ctx.pid, key, got ? 0 : misses + 1],
-        );
-        if (got) {
-          await ctx.q.query("INSERT INTO player_unlocks (player_id, item_id, boss_id, at) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING", [ctx.pid, key, def.id, new Date(ctx.now)]);
-          unlocked.push(key);
-        }
-      }
-    }
-  }
   // a tattoo of this boss's set: one per win in the set's mode, a piece the player does not have yet (content/tattoos.ts)
   const tattoos: { id: string; qty: number }[] = [];
   if (earnedKey) {
@@ -593,15 +568,25 @@ export async function unlockedItems(q: Queryable, pid: number): Promise<string[]
  */
 type Plan = { key: string; got: string | null; misses: number; forced: boolean; held?: boolean };
 async function planUnlock(ctx: Ctx, def: BossDef): Promise<Plan | null> {
-  if (!def.wear) return null;
   const missing: string[] = [];
-  for (const id of def.wear.items) if ((await itemQty(ctx.q, ctx.pid, id)) === 0) missing.push(id);
+  for (const id of def.wear?.items ?? []) if ((await itemQty(ctx.q, ctx.pid, id)) === 0) missing.push(id);
+  // his chair (content/home.ts EQUIPMENT pieces with drop.boss) is one of his things too (the user 2026-11-27): it drops
+  // with them, then it is bought in the room editor
+  for (const e of EQUIPMENT) {
+    for (const [i, pc] of (e.pieces ?? []).entries()) {
+      if (pc.drop?.boss !== def.id) continue;
+      const [own] = await ctx.q.query<{ pieces: number }>("SELECT pieces FROM player_equipment WHERE player_id=$1 AND equipment_id=$2", [ctx.pid, e.id]);
+      if (((Number(own?.pieces ?? 0) >> i) & 1) === 1) continue;
+      const [have] = await ctx.q.query("SELECT 1 FROM player_unlocks WHERE player_id=$1 AND item_id=$2", [ctx.pid, pieceUnlockId(pc.art)]);
+      if (!have) missing.push(pieceUnlockId(pc.art));
+    }
+  }
   if (!missing.length) return null;
   const [row] = await ctx.q.query<{ misses: number }>("SELECT misses FROM boss_pity WHERE player_id=$1 AND boss_id=$2 FOR UPDATE", [ctx.pid, def.id]);
   const misses = row?.misses ?? 0;
   // in «Блатной» (the only mode the things drop in): one win — at most one thing, with BLAT_THING_CHANCE, for every boss
   // (one of the missing ones at random); the pity gives one for sure after a run of misses
-  const forced = misses + 1 >= def.wear.pity;
+  const forced = misses + 1 >= (def.wear?.pity ?? 10);
   const got = ctx.rng() < BLAT_THING_CHANCE || forced ? missing[Math.floor(ctx.rng() * missing.length) % missing.length] : null;
   return { key: def.id, got, misses, forced };
 }
@@ -612,8 +597,8 @@ async function commitUnlock(ctx: Ctx, def: BossDef, p: Plan, held = false, give 
     [ctx.pid, p.key, held ? p.misses : p.got ? 0 : p.misses + 1],
   );
   if (!p.got || held) return;
-  // a thing: into the inventory; a room: opened to be bought at home
-  if (give) await addItem(ctx, p.got, 1, `win:${def.id}`);
+  // a thing: into the inventory; a room or a chair: opened to be bought at home / in the room editor
+  if (give && !p.got.startsWith("piece:")) await addItem(ctx, p.got, 1, `win:${def.id}`);
   else await ctx.q.query("INSERT INTO player_unlocks (player_id, item_id, boss_id, at) VALUES ($1,$2,$3,$4) ON CONFLICT DO NOTHING", [ctx.pid, p.got, def.id, new Date(ctx.now)]);
 }
 

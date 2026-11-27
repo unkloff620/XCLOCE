@@ -1,4 +1,5 @@
 "use client";
+import { bossPieces, pieceUnlockId } from "../content/home.ts";
 import { STASH_IDS } from "../content/stashes.ts";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -194,10 +195,14 @@ export function bossTattooCount(bossId: string, state: { inventory: { id: string
 }
 
 /** "x/N": how many of a boss's things the player has opened (or owns); null when the boss has none */
-export function bossItemsCount(boss: { wear?: { items: string[] } }, state: { unlocks?: string[]; inventory: { id: string; qty: number }[] } | null): string | null {
-  if (!boss.wear?.items.length) return null;
-  const have = boss.wear.items.filter((id) => state?.unlocks?.includes(id) || (state?.inventory.find((i) => i.id === id)?.qty ?? 0) > 0).length;
-  return `${have}/${boss.wear.items.length}`;
+export function bossItemsCount(boss: { id: string; wear?: { items: string[] } }, state: { unlocks?: string[]; inventory: { id: string; qty: number }[]; home?: { pieces?: Record<string, number> } } | null): string | null {
+  // his clothes and his chair (one of his things, content/home.ts bossPieces)
+  const chairs = bossPieces(boss.id);
+  const total = (boss.wear?.items.length ?? 0) + chairs.length;
+  if (!total) return null;
+  const have = (boss.wear?.items ?? []).filter((id) => state?.unlocks?.includes(id) || (state?.inventory.find((i) => i.id === id)?.qty ?? 0) > 0).length
+    + chairs.filter((c) => state?.unlocks?.includes(pieceUnlockId(c.pc.art)) || (((state?.home?.pieces?.[c.equipment] ?? 0) >> c.bit) & 1) === 1).length;
+  return `${have}/${total}`;
 }
 
 /** What was gained or will be: pictures with «×N» at their corner (`times`, the default) or «+N» after them. */

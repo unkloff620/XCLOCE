@@ -250,20 +250,27 @@ describe("boss fights: personal fights, shared damage", () => {
       await hit(p, "gpu", t, {}, rng);
       return act(db, p, "fight_claim", { fightId: f.result.fightId }, t, always(rng));
     };
+    // his things: the sneakers, the T-shirt (test players own jeans already — owned things do not drop) and his chair
+    // (one of his things since 2026-11-27: opened in the room editor, not put into the inventory)
+    const chair = async () => (await db.query("SELECT 1 FROM player_unlocks WHERE player_id=$1 AND item_id='piece:chair-datsik'", [p])).length;
+    const got = async () => (await things()).length + (await chair());
     for (let i = 0; i < 9; i++) await win(i, 0.99);
-    expect(await things()).toEqual([]);
+    expect(await got()).toBe(0);
     const c = await win(9, 0.99);
-    expect(await things()).toHaveLength(1);
-    expect(c.result.reward.unlocks.filter((id: string) => !id.startsWith("room:") && !id.startsWith("piece:"))).toHaveLength(1);
-    // a lucky roll gives one more — never all at once (test players own jeans already — owned things do not drop)
+    expect(await got()).toBe(1);
+    expect(c.result.reward.unlocks.filter((id: string) => !id.startsWith("room:"))).toHaveLength(1);
+    // a lucky roll gives one more — never all at once
     await win(10, 0.01);
+    expect(await got()).toBe(2);
+    await win(11, 0.01);
     expect(await things()).toEqual(["sneakers", "tee-white"]);
-    // nothing opened to buy: the things are his already
+    expect(await chair()).toBe(1);
+    // nothing opened to buy: the clothes are his already
     const [u] = await db.query("SELECT 1 FROM player_unlocks WHERE player_id=$1 AND item_id IN ('sneakers','tee-white')", [p]);
     expect(u).toBeUndefined();
     // nothing left to drop: no more rolls
-    const after = await win(11, 0.01);
-    expect((after.result.reward.unlocks ?? []).filter((id: string) => !id.startsWith("room:") && !id.startsWith("piece:"))).toEqual([]);
+    const after = await win(12, 0.01);
+    expect((after.result.reward.unlocks ?? []).filter((id: string) => !id.startsWith("room:"))).toEqual([]);
   });
 
   it("«Соло»: others' damage does not touch my solo fight; my own win counts for the solo badge", async () => {
@@ -2082,6 +2089,8 @@ describe("Бутылка Командате", () => {
     const p = await newPlayer(db);
     // the other things of his are owned: only the bottle is left to drop
     for (const it of ["tee-pump", "jacket-komandate", "pants-komandate", "sneakers-komandate"]) await give(db, p, it, 1);
+    // and his chair (one of his things) is opened already
+    await db.query("INSERT INTO player_unlocks (player_id, item_id, boss_id, at) VALUES ($1,'piece:chair-bebyakyan','bebyakyan',now())", [p]);
     await give(db, p, "key-garkusha", 100);
     await give(db, p, "keyboard", 30);
     const D = 24 * H;

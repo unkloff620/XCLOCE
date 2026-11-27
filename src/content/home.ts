@@ -33,14 +33,17 @@ export interface PieceDef {
   /** bonus this piece gives while owned (pieces of one kind add up) */
   bonus: Bonus;
   /**
-   * a boss's own piece (the chairs in the style of his room): it drops from his wins in any mode with PIECE_DROP_CHANCE, after PIECE_PITY wins without luck for sure; then it is bought here like the rest
+   * a boss's own piece (the chairs in the style of his room): one of his things (the user 2026-11-27) — it drops with his
+   * clothes in the mode they drop in, by the same chance and pity (server/systems/combat.ts planUnlock); then it is
+   * bought here like the rest
    */
   drop?: { boss: string };
 }
-export const PIECE_DROP_CHANCE = 0.3;
-export const PIECE_PITY = 5;
 /** the unlock (player_unlocks) a dropped piece leaves: bought in the room editor afterwards */
 export const pieceUnlockId = (art: string) => `piece:${art}`;
+/** a boss's own pieces (his chair): which equipment, its bit in the owned mask, the piece */
+export const bossPieces = (bossId: string) =>
+  EQUIPMENT.flatMap((e) => (e.pieces ?? []).map((pc, i) => ({ equipment: e.id, bit: i, pc })).filter((x) => x.pc.drop?.boss === bossId));
 
 export interface EquipmentDef {
   id: string;
@@ -67,7 +70,7 @@ export const EQUIPMENT: EquipmentDef[] = [
       { name: "Офисное кресло", art: "chair-1", price: { currency: "RUB", amount: 2500 }, bonus: {} },
       { name: "Геймерское кресло", art: "chair-2", price: { currency: "RUB", amount: 4_000 }, bonus: {} },
       { name: "Трон трейдера", art: "chair-3", price: { currency: "RUB", amount: 6_000 }, bonus: {} },
-      // the bosses' chairs, each in the style of his room: they drop in any mode (PieceDef.drop)
+      // the bosses' chairs, each in the style of his room: one of the boss's things (PieceDef.drop)
       { name: "Ледяное кресло", art: "chair-datsik", price: { currency: "RUB", amount: 2000 }, bonus: {}, drop: { boss: "datsik" } },
       { name: "Неоновое кресло", art: "chair-kedr", price: { currency: "RUB", amount: 2500 }, bonus: {}, drop: { boss: "kedr" } },
       { name: "Капитанское кресло", art: "chair-mugo", price: { currency: "RUB", amount: 3000 }, bonus: {}, drop: { boss: "mugo" } },

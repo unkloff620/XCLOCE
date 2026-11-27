@@ -180,7 +180,7 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose, onBack }: { 
               <div className="room-ed-info">
                 <span className="small"><b>{fPiece.name}</b></span>
                 {!fOwned && fPiece.drop && !(state.unlocks ?? []).includes(pieceUnlockId(fPiece.art)) ? (
-                  <span className="tiny muted">Выпадает с {bossById(fPiece.drop.boss)?.name} (любой режим): шанс 30%, после 5 побед без удачи — точно. Потом покупается здесь.</span>
+                  <span className="tiny muted">Выпадает с {bossById(fPiece.drop.boss)?.name} вместе с его вещами. Потом покупается здесь.</span>
                 ) : !fOwned && (
                   <button className="btn sm gold" disabled={!canPay(fPiece.price) || busy === "piece_buy"} onClick={() => buy(tab, f)}>
                     Купить · <Icon name={fPiece.price.currency} size={14} /> {money(fPiece.price.currency, fPiece.price.amount)}
