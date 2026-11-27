@@ -1985,6 +1985,13 @@ describe("нычки", () => {
     expect(c.state.stashSets).toEqual({ 1: 1 });
     expect(await wallet(db, p, "PAP")).toBe(rub + 100); // a set pays папиросы
     expect([await qty(db, p, "stash-sneaker"), await qty(db, p, "stash-cigs")]).toEqual([1, 0]);
+    // every full set at once: 4 sneakers and 3 of the rest — 3 sets in one tap, their rewards together
+    await give(db, p, "stash-sneaker", 4);
+    for (const id of ["stash-cigs", "stash-noodles", "stash-can"]) await give(db, p, id, 3);
+    const c3 = await act(db, p, "stash_collect", { set: "stash-set-1" }, T0);
+    expect([c3.result.sets, c3.result.count]).toEqual([3, 4]);
+    expect(await wallet(db, p, "PAP")).toBe(rub + 400);
+    expect([await qty(db, p, "stash-sneaker"), await qty(db, p, "stash-cigs")]).toEqual([1, 0]);
     // the collection gathered once: 5 points; ten times: 20
     expect(await achGot(db, p, "stashset-1-1")).toBe(true);
     await expect(act(db, p, "achievement_claim", { id: "stashset-1-2" }, T0)).rejects.toMatchObject({ code: "achievement_not_done" });

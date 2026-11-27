@@ -78,7 +78,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
   const stashQty = new Map(self ? (state?.inventory ?? []).filter((i) => i.qty > 0 && i.id.startsWith("stash-")).map((i) => [i.id, i.qty] as const) : []);
   const ownedStash = new Set(stashQty.keys());
   const collect = async (setId: string, name: string) => {
-    const r = await act<{ count: number }>("stash_collect", { set: setId }, (x) => `Набор «${name}» собран (${x.count})`);
+    const r = await act<{ count: number; sets: number }>("stash_collect", { set: setId }, (x) => x.sets > 1 ? `Собрано наборов «${name}»: ${x.sets} (всего ${x.count})` : `Набор «${name}» собран (${x.count})`);
     if (r) {
       haptic.big();
       onClaimed?.();
@@ -129,7 +129,7 @@ export function BadgesPanel({ rows, self, onClaimed, points = 0, unfolded = fals
                     </span>
                   </div>
                   <div className="stash-row">
-                    <button className={`stash-cell full ${ready ? "ready" : count ? "" : "off"}`} disabled={!ready || busy === "stash_collect"} onClick={() => collect(st.id, st.name)} title={ready ? "Собрать набор и забрать награду" : "Полный набор"}>
+                    <button className={`stash-cell full ${ready ? "ready" : count ? "" : "off"}`} disabled={!ready || busy === "stash_collect"} onClick={() => collect(st.id, st.name)} title={ready ? "Собрать все полные наборы и забрать награду" : "Полный набор"}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={`/assets/stash/set-${st.n}.webp`} alt="Полный набор" />
                       {ready && <i className="stash-take">Забрать</i>}

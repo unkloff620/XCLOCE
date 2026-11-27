@@ -252,17 +252,23 @@ async function findStash(ctx: Ctx, locationId: string, into: Granted): Promise<s
 export async function collectStashSet(ctx: Ctx, setId: string) {
   const set = STASH_SETS.find((s) => s.id === setId);
   if (!set) throw new GameError("bad_set", "Такого набора нет");
+  // every full set at once (the user 2026-11-27): as many as the scarcest нычка of the set allows
+  const rows = await ctx.q.query<{ item_id: string; qty: number }>("SELECT item_id, qty FROM inventory WHERE player_id=$1 AND item_id = ANY($2) FOR UPDATE", [ctx.pid, set.items.map((it) => it.id)]);
+  const have = new Map(rows.map((r) => [r.item_id, Number(r.qty)]));
+  const n = Math.min(...set.items.map((it) => have.get(it.id) ?? 0));
+  if (n < 1) throw new GameError("set_incomplete", "Нужны все 4 нычки набора");
   for (const it of set.items) {
-    const r = await ctx.q.query("UPDATE inventory SET qty = qty - 1, updated_at=$3 WHERE player_id=$1 AND item_id=$2 AND qty >= 1 RETURNING qty", [ctx.pid, it.id, new Date(ctx.now)]);
-    if (!r.length) throw new GameError("set_incomplete", "Нужны все 4 нычки набора");
-    await ledger(ctx, "item", it.id, -1, `stash-set:${set.id}`);
+    await ctx.q.query("UPDATE inventory SET qty = qty - $3, updated_at=$4 WHERE player_id=$1 AND item_id=$2", [ctx.pid, it.id, n, new Date(ctx.now)]);
+    await ledger(ctx, "item", it.id, -n, `stash-set:${set.id}`);
   }
   const [row] = await ctx.q.query<{ count: number }>(
-    "INSERT INTO stash_sets (player_id, set_n, count) VALUES ($1,$2,1) ON CONFLICT (player_id, set_n) DO UPDATE SET count = stash_sets.count + 1 RETURNING count",
-    [ctx.pid, set.n],
+    "INSERT INTO stash_sets (player_id, set_n, count) VALUES ($1,$2,$3) ON CONFLICT (player_id, set_n) DO UPDATE SET count = stash_sets.count + $3 RETURNING count",
+    [ctx.pid, set.n, n],
   );
-  const reward = await grantReward(ctx, set.reward, `stash-set:${set.id}`);
-  return { setId: set.id, count: Number(row.count), reward };
+  let all = {} as Reward;
+  for (let i = 0; i < n; i++) all = mergeRewards(all, set.reward);
+  const reward = await grantReward(ctx, all, `stash-set:${set.id}`);
+  return { setId: set.id, count: Number(row.count), sets: n, reward };
 }
 
 export async function claimLocation(ctx: Ctx, locationId: string, mode: LocMode = "day") {
