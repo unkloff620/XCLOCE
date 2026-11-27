@@ -405,6 +405,13 @@ type Phase = "idle" | "rise" | "open" | "load" | "close" | "spin" | "fire" | "lo
 function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Parameters<typeof HeroRig>[0]["look"]; onView: (v: View) => void; onClose: () => void }) {
   const { act, busy } = useGame();
   const [used, setUsed] = useState(r.pulls);
+  // the four slots at the bottom: a bullet in each; a pull takes one out to the drum, a miss leaves the matches in its slot
+  const [misses, setMisses] = useState(r.pulls);
+  const sceneRef = useRef<HTMLDivElement>(null);
+  const chamberRef = useRef<HTMLElement>(null);
+  const slotRefs = useRef<(HTMLElement | null)[]>([]);
+  /** the bullet flying from its slot into the drum's chamber (scene px) */
+  const [fly, setFly] = useState<{ x0: number; y0: number; x1: number; y1: number; go: boolean } | null>(null);
   // the pot: the clicks' blue boxes, his only when he stops or every pull clicks — the shot burns it
   const [got, setGot] = useState(r.pot ?? 0);
   const [burnt, setBurnt] = useState(0);
@@ -425,7 +432,17 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
     const res = await act<View & { shot: boolean; got: number; stopped: boolean }>("bandit_pull", {});
     if (!res) { setPhase("idle"); return; }
     at(RT.open, () => setPhase("open"));
-    at(RT.load, () => { setPhase("load"); setUsed((u) => u + 1); sfx("tap", 0.3); });
+    const slot = used;
+    at(RT.load, () => {
+      // the bullet is taken out of its slot and put into the swung-out drum's chamber
+      const sc = sceneRef.current?.getBoundingClientRect(), a = slotRefs.current[slot]?.getBoundingClientRect(), b = chamberRef.current?.getBoundingClientRect();
+      if (sc && a && b) {
+        setFly({ x0: a.left + a.width / 2 - sc.left, y0: a.top + a.height / 2 - sc.top, x1: b.left - sc.left, y1: b.top - sc.top, go: false });
+        requestAnimationFrame(() => requestAnimationFrame(() => setFly((f) => f && { ...f, go: true })));
+      }
+      setPhase("load"); setUsed((u) => u + 1); sfx("tap", 0.3);
+    });
+    at(RT.load + 480, () => setFly(null));
     at(RT.close, () => setPhase("close"));
     // the drum spins 2 s and stops on a chamber (a whole number of turns and a sixth)
     // the round (drawn top left in the drum, at 210°) comes to the top chamber — under the hammer, at the barrel — only for
@@ -441,7 +458,7 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
       setResult(res.shot ? "bang" : "click");
       onView(viewOf(res));
       if (res.shot) { sfx("gunshot"); haptic.big(); setOver("bang"); setDeath("fire"); setBurnt(got); setGot(0); }
-      else { sfx("tap"); setGot((g) => g + res.got); if (!res.roulette) setOver("max"); }
+      else { sfx("tap"); setGot((g) => g + res.got); setMisses((m) => m + 1); if (!res.roulette) setOver("max"); }
     });
     if (res.shot) {
       // the shot plays out (the user 2026-11-27): the fire from the muzzle behind the gun, then the blood, then «Ты
@@ -465,7 +482,7 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
   // into the body (the machine's screen is a size container: a fixed child would be caught in it), between the menus
   return createPortal(
     <div className="bd-roul" role="dialog" aria-label="Русская рулетка">
-      <div className={`bd-roul-scene ${result === "bang" && phase === "fire" ? "bang" : ""}`} data-phase={phase}>
+      <div ref={sceneRef} className={`bd-roul-scene ${result === "bang" && phase === "fire" ? "bang" : ""}`} data-phase={phase}>
         {/* the room in the dark outside the lamp's cone of light */}
         <span className="bd-roul-dark" aria-hidden="true"><i /></span>
         {/* the lamp hanging from the ceiling (the artist's), its light flickering */}
@@ -475,13 +492,6 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
           <i />
         </span>
         <b className="bd-roul-title">Русская рулетка</b>
-        {/* the bullets left: a fired one leaves its shadow */}
-        <div className="bd-roul-ammo">
-          {Array.from({ length: ROULETTE_PULLS }, (_, i) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img key={i} className={i < used ? "gone" : ""} src={`${R}/bullet.webp${V}`} alt="" draggable={false} />
-          ))}
-        </div>
         <button type="button" className="bd-roul-hero" disabled={!!busy || !!over || playing} onClick={() => void pull()} aria-label="Приставить револьвер и нажать на спуск">
           <HeroRig size={360} back look={look} />
           {/* the revolver: from below to the back of the head; the drum (with the bullet in it) swings out of it, spins */}
@@ -511,6 +521,8 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
               <img src={`${R}/drum.webp${V}`} alt="" draggable={false} />
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img className="bd-roul-round" src={`${R}/round.webp${V}`} alt="" draggable={false} />
+              {/* the chamber the bullet goes into (where round.webp sits) */}
+              <i ref={chamberRef} className="bd-roul-chamber" />
             </span></span>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="bd-roul-gun-body" src={`${R}/gun.webp${V}`} alt="" draggable={false} />
@@ -524,6 +536,20 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
         {(death === "blood" || death === "lost") && <i className="bd-roul-veil" aria-hidden="true" />}
         {death === "lost" && <b className="bd-roul-lost">Ты проиграл</b>}
         {phase === "idle" && !over && <i className="bd-roul-hint">Жми на персонажа</i>}
+        {/* the rewards at the bottom: a bullet in each slot; a miss leaves the matches in it */}
+        <div className="bd-roul-slots">
+          {Array.from({ length: ROULETTE_PULLS }, (_, i) => (
+            <span key={i} ref={(el) => { slotRefs.current[i] = el; }} className="bd-roul-slot">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              {i < misses ? <img className="got" src={BLUE} alt="мимо" draggable={false} /> : i >= used ? <img className="bullet" src={`${R}/bullet.webp${V}`} alt="" draggable={false} /> : null}
+            </span>
+          ))}
+        </div>
+        {fly && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img className={`bd-roul-fly ${fly.go ? "go" : ""}`} src={`${R}/bullet.webp${V}`} alt="" draggable={false}
+            style={{ left: fly.go ? fly.x1 : fly.x0, top: fly.go ? fly.y1 : fly.y0 }} />
+        )}
         {/* the pot, top right (the bullets are top left) */}
         <span className={`bd-roul-got num ${burnt ? "burnt" : ""}`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -542,7 +568,7 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
           </>
         ) : (
           <>
-            <span className="small">Пуль осталось: <b className="num">{left}</b> · мимо — +{fmt(ROULETTE_PAY)}</span>
+            <span className="small">Пуль осталось: <b className="num">{left}</b> · мимо +{fmt(ROULETTE_PAY)}<img className="bd-roul-ico" src={BLUE} alt="синих коробков" /></span>
             <button type="button" className="btn block" disabled={!!busy || playing || !!over} onClick={() => void stop()}>{used > 0 ? "Забрать и уйти" : "Уйти"}</button>
           </>
         )}
