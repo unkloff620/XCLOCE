@@ -90,9 +90,9 @@ export function actionText(type: string, body: Row, result: unknown): string | n
     case "fortune_bag": return join(`колесо: сумка ${String(body.bag ?? "")}`, grantedText(r.reward), r.tattoo ? `наколка ${String(r.tattoo)}` : null);
     case "fortune_cup_pick": return join(`колесо: чашка ${Number(body.index) + 1} — ${String(r.kind ?? "")}`, r.jackpot ? `ДЖЕКПОТ ${fmt(r.jackpot)} $` : grantedText(r.reward));
     case "heist_pick": return `ящик ${Number(body.slot) + 1}: взлом замка`;
-    case "heist_rush": return join(`ящик ${Number(body.slot) + 1}: замок сразу`, r.done !== undefined ? `снято ${fmt(r.done)}` : null);
+    case "heist_rush": return join(`ящик ${Number(body.slot) + 1}: замок сразу`, r.done !== undefined ? `снято ${fmt(r.done)}` : null, r.paid && typeof r.paid === "object" ? `за ${fmt((r.paid as { amount: number }).amount)} ${(r.paid as { currency: string }).currency === "GOLD" ? "слитков" : "зубов"}` : null);
     case "heist_auto": return join(`ящик ${Number(body.slot) + 1}: автовзлом`, r.paid !== undefined ? `за ${fmt(r.paid)} зубов` : null);
-    case "heist_open": return join(`${String(r.kind ?? "")} ящик открыт`, r.rushed ? "со срезом за платные замки" : null, grantedText(r.reward), r.tattoo ? "наколка" : null);
+    case "heist_open": return join(`${String(r.kind ?? "")} ящик открыт`, r.pay === "bars" ? "все замки за слитки" : null, grantedText(r.reward), r.tattoo ? "наколка" : null);
     case "fight_claim": return join(`бой #${body.fightId}`, r.status === "won" ? "победа" : r.status === "lost" ? "босс ушёл" : String(r.status ?? ""), grantedText(r.reward), r.key ? "пропуск получен" : null);
     case "fight_flee": return r.fightId ? `бой #${r.fightId}` : null;
     case "daily_claim": return join(`день ${r.day}`, `серия ${r.streak}`, grantedText(r.reward));

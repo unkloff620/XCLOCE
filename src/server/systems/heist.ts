@@ -1,11 +1,12 @@
 /* «Взлом» (content/heist.ts): boxes from boss wins into the player's cells, padlocks picked one by one, opened boxes. */
 import { GameError, type Queryable } from "../db.ts";
-import { grantReward, takeMoney, type Ctx, type Granted } from "../core.ts";
+import { balances, grantReward, takeMoney, type Ctx, type Granted } from "../core.ts";
 import type { Config } from "../config.ts";
-import { rushedShare, HEIST_SET_BOSS, HEIST_SLOTS, LOCK_MS, LOCK_RUSH, heistBox, scaleLoot, heistStrength, rollHeistKind, rollHeistLoot, type HeistKind } from "../../content/heist.ts";
+import { HEIST_SET_BOSS, HEIST_SLOTS, LOCK_AUTO, LOCK_MS, LOCK_RUSH, LOCK_RUSH_GOLD, heistBox, heistLoot, heistPay, heistStrength, rollHeistKind, rollHeistLoot, rushPrice, type HeistKind, type HeistPay } from "../../content/heist.ts";
 import { TATTOO_SETS } from "../../content/tattoos.ts";
 
-interface Row { slot: number; kind: string; locks_done: number; pick_ends: Date | null; boss_id: string | null; rushed?: number; auto?: boolean }
+interface Row { slot: number; kind: string; locks_done: number; pick_ends: Date | null; boss_id: string | null; rushed?: number; gold_paid?: number; auto?: boolean }
+const COLS = "slot, kind, locks_done, pick_ends, boss_id, rushed, gold_paid, auto";
 
 /** a lock whose time ran out is off — counted in the row (a player who comes back finds it opened).
  * «Автовзлом» boxes go on by themselves: every LOCK_MS the next padlock is off, until all are. */
@@ -23,20 +24,20 @@ async function settle(q: Queryable, pid: number, now: number) {
   await q.query("UPDATE heist_boxes SET locks_done = locks_done + 1, pick_ends = NULL WHERE player_id=$1 AND pick_ends IS NOT NULL AND pick_ends <= $2", [pid, new Date(now)]);
 }
 
-export interface HeistBoxView { slot: number; kind: HeistKind; locks: number; done: number; pickEnds: number | null; boss: string | null; rushed: number; auto: boolean }
-export interface HeistView { on: boolean; endsAt: number | null; slots: number; boxes: HeistBoxView[]; lockMs: number; rush: number }
+export interface HeistBoxView { slot: number; kind: HeistKind; locks: number; done: number; pickEnds: number | null; boss: string | null; rushed: number; goldPaid: number; auto: boolean }
+export interface HeistView { on: boolean; endsAt: number | null; slots: number; boxes: HeistBoxView[]; lockMs: number; rush: number; rushGold: number; auto: number }
 
 /** what the player sees: null while the event is off and his cells are empty (he sees nothing of it then) */
 export async function heistView(q: Queryable, pid: number, cfg: Config, now: number): Promise<HeistView | null> {
   await settle(q, pid, now);
-  const rows = await q.query<Row>("SELECT slot, kind, locks_done, pick_ends, boss_id, rushed, auto FROM heist_boxes WHERE player_id=$1 ORDER BY slot", [pid]);
+  const rows = await q.query<Row>(`SELECT ${COLS} FROM heist_boxes WHERE player_id=$1 ORDER BY slot`, [pid]);
   const on = !!cfg.heist && cfg.heist.endsAt > now;
   if (!on && !rows.length) return null;
   return {
-    on, endsAt: on ? cfg.heist!.endsAt : null, slots: HEIST_SLOTS, lockMs: LOCK_MS, rush: LOCK_RUSH,
+    on, endsAt: on ? cfg.heist!.endsAt : null, slots: HEIST_SLOTS, lockMs: LOCK_MS, rush: LOCK_RUSH, rushGold: LOCK_RUSH_GOLD, auto: LOCK_AUTO,
     boxes: rows.map((r) => {
       const d = heistBox(r.kind);
-      return { slot: Number(r.slot), kind: d.id, locks: d.locks, done: Math.min(d.locks, Number(r.locks_done)), pickEnds: r.pick_ends ? new Date(r.pick_ends).getTime() : null, boss: r.boss_id, rushed: Number(r.rushed ?? 0), auto: !!r.auto };
+      return { slot: Number(r.slot), kind: d.id, locks: d.locks, done: Math.min(d.locks, Number(r.locks_done)), pickEnds: r.pick_ends ? new Date(r.pick_ends).getTime() : null, boss: r.boss_id, rushed: Number(r.rushed ?? 0), goldPaid: Number(r.gold_paid ?? 0), auto: !!r.auto };
     }),
   };
 }
@@ -56,9 +57,15 @@ export async function heistDrop(ctx: Ctx, boss: { id: string; order: number; eve
 async function boxRow(ctx: Ctx, slot: number): Promise<Row> {
   if (!Number.isInteger(slot) || slot < 0 || slot >= HEIST_SLOTS) throw new GameError("bad_request", "Нет такой ячейки", 400);
   await settle(ctx.q, ctx.pid, ctx.now);
-  const [r] = await ctx.q.query<Row>("SELECT slot, kind, locks_done, pick_ends, boss_id, rushed, auto FROM heist_boxes WHERE player_id=$1 AND slot=$2 FOR UPDATE", [ctx.pid, slot]);
+  const [r] = await ctx.q.query<Row>(`SELECT ${COLS} FROM heist_boxes WHERE player_id=$1 AND slot=$2 FOR UPDATE`, [ctx.pid, slot]);
   if (!r) throw new GameError("heist_empty", "Ячейка пустая");
   return r;
+}
+
+/** only one box is being picked at a time (the user 2026-11-27): another one with a padlock under the picks stops it */
+async function oneAtATime(ctx: Ctx, slot: number) {
+  const [o] = await ctx.q.query<{ slot: number }>("SELECT slot FROM heist_boxes WHERE player_id=$1 AND slot<>$2 AND pick_ends IS NOT NULL LIMIT 1", [ctx.pid, slot]);
+  if (o) throw new GameError("heist_one", "Взламывать можно только один ящик за раз");
 }
 
 /** start picking the next padlock (one at a time; the player comes back for each) */
@@ -67,22 +74,27 @@ export async function heistPick(ctx: Ctx, slot: number) {
   const d = heistBox(r.kind);
   if (r.pick_ends) throw new GameError("heist_busy", "Этот замок уже взламывается");
   if (Number(r.locks_done) >= d.locks) throw new GameError("heist_done", "Все замки сняты — открывай");
+  await oneAtATime(ctx, slot);
   const ends = ctx.now + LOCK_MS;
   await ctx.q.query("UPDATE heist_boxes SET pick_ends=$3 WHERE player_id=$1 AND slot=$2", [ctx.pid, slot, new Date(ends)]);
   return { slot, pickEnds: ends };
 }
 
-/** the current padlock (being picked or not started) off at once for LOCK_RUSH dollars */
+/** the current padlock (being picked or not started) off at once: LOCK_RUSH teeth, or LOCK_RUSH_GOLD bars when the
+ * teeth run short (a box with every padlock paid in bars holds the richer loot) */
 export async function heistRush(ctx: Ctx, slot: number) {
   const r = await boxRow(ctx, slot);
   const d = heistBox(r.kind);
   if (Number(r.locks_done) >= d.locks) throw new GameError("heist_done", "Все замки сняты — открывай");
-  await takeMoney(ctx, "TOOTH", LOCK_RUSH, `heist_rush:${slot}`);
-  await ctx.q.query("UPDATE heist_boxes SET locks_done = locks_done + 1, pick_ends = NULL, rushed = rushed + 1 WHERE player_id=$1 AND slot=$2", [ctx.pid, slot]);
-  return { slot, done: Number(r.locks_done) + 1 };
+  if (r.auto) throw new GameError("heist_auto", "Этот ящик ломается автовзломом");
+  const price = rushPrice((await balances(ctx.q, ctx.pid)).TOOTH);
+  await takeMoney(ctx, price.currency, price.amount, `heist_rush:${slot}`);
+  const gold = price.currency === "GOLD" ? 1 : 0;
+  await ctx.q.query("UPDATE heist_boxes SET locks_done = locks_done + 1, pick_ends = NULL, rushed = rushed + 1, gold_paid = gold_paid + $3 WHERE player_id=$1 AND slot=$2", [ctx.pid, slot, gold]);
+  return { slot, done: Number(r.locks_done) + 1, paid: price };
 }
 
-/** «Автовзлом»: the padlocks left are paid now ($LOCK_RUSH each) and picked one after another by themselves,
+/** «Автовзлом»: the padlocks left are paid now (LOCK_AUTO teeth each) and picked one after another by themselves,
  * an hour each — no need to come back every hour; the loot stays whole (nothing is opened at once) */
 export async function heistAuto(ctx: Ctx, slot: number) {
   const r = await boxRow(ctx, slot);
@@ -90,9 +102,10 @@ export async function heistAuto(ctx: Ctx, slot: number) {
   if (r.auto) throw new GameError("heist_auto", "Автовзлом уже включён");
   const left = d.locks - Number(r.locks_done);
   if (left <= 0) throw new GameError("heist_done", "Все замки сняты — открывай");
-  await takeMoney(ctx, "TOOTH", LOCK_RUSH * left, `heist_auto:${slot}`);
+  await oneAtATime(ctx, slot);
+  await takeMoney(ctx, "TOOTH", LOCK_AUTO * left, `heist_auto:${slot}`);
   await ctx.q.query("UPDATE heist_boxes SET auto=true, pick_ends=COALESCE(pick_ends, $3) WHERE player_id=$1 AND slot=$2", [ctx.pid, slot, new Date(ctx.now + LOCK_MS)]);
-  return { slot, paid: LOCK_RUSH * left };
+  return { slot, paid: LOCK_AUTO * left };
 }
 
 /** every padlock is off: the box opens — its loot, maybe a piece of the event's tattoos; the cell is free again */
@@ -100,12 +113,12 @@ export async function heistOpen(ctx: Ctx, slot: number) {
   const r = await boxRow(ctx, slot);
   const d = heistBox(r.kind);
   if (Number(r.locks_done) < d.locks) throw new GameError("heist_locked", "Сначала сними все замки");
-  // every padlock opened for dollars takes its share off the loot (the tattoo chance stays)
-  const paid = Number(r.rushed ?? 0);
-  const rushed = paid > 0;
-  const loot = scaleLoot(rollHeistLoot(d.id, ctx.rng), rushedShare(d.locks, paid));
+  // every padlock paid in gold bars: the «bars» loot; any other way — the «teeth» one
+  const rushed = Number(r.rushed ?? 0) > 0;
+  const pay: HeistPay = heistPay(d.locks, Number(r.gold_paid ?? 0));
+  const loot = rollHeistLoot(d.id, ctx.rng, pay);
   let tattoo: string | null = null;
-  if (ctx.rng() < d.tattoo) {
+  if (ctx.rng() < heistLoot(d.id, pay).tattoo) {
     const all = TATTOO_SETS.filter((s) => s.boss === HEIST_SET_BOSS).flatMap((s) => s.pieces.map((p) => p.id));
     const have = new Set((await ctx.q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [ctx.pid, all])).map((x) => x.item_id));
     const left = all.filter((id) => !have.has(id));
@@ -113,5 +126,5 @@ export async function heistOpen(ctx: Ctx, slot: number) {
   }
   await ctx.q.query("DELETE FROM heist_boxes WHERE player_id=$1 AND slot=$2", [ctx.pid, slot]);
   const reward = await grantReward(ctx, loot, `heist_open:${d.id}`);
-  return { slot, kind: d.id, reward, tattoo, rushed };
+  return { slot, kind: d.id, reward, tattoo, rushed, pay };
 }

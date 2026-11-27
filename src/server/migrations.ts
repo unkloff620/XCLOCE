@@ -1965,4 +1965,9 @@ ON CONFLICT (player_id, item_id) DO UPDATE SET qty = GREATEST(inventory.qty, 1);
     id: "v2-151-roulette-pot",
     sql: `ALTER TABLE bandit_state ADD COLUMN IF NOT EXISTS roul_pot INT NOT NULL DEFAULT 0;`,
   },
+  {
+    // «Взлом»: the padlocks paid in gold bars (all of them — the richer loot)
+    id: "v2-152-heist-gold",
+    sql: `ALTER TABLE heist_boxes ADD COLUMN IF NOT EXISTS gold_paid INT NOT NULL DEFAULT 0;`,
+  },
 ];

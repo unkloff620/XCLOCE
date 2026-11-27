@@ -2,8 +2,8 @@
 /*
  * «Взлом» (content/heist.ts): the basement. Below — 5 paper cards with the boxes; the chosen box stands big above them
  * with its padlocks in a row on its front: the one being picked shakes while the lockpicks poke it, a timer under it.
- * On the right — what the box may hold. «Взломать» starts the next padlock (an hour; the player comes back for each),
- * «Вскрыть сейчас» opens it for dollars; with every padlock off the box opens — the loot lies on its bottom.
+ * On the right — what the box may hold. «Взломать» starts the next padlock (6 hours; the player comes back for each; one box at a time),
+ * «Вскрыть сейчас» opens it for teeth (bars when the teeth run short); with every padlock off the box opens — the loot lies on its bottom.
  */
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
@@ -12,12 +12,11 @@ import { Modal, RewardChips, Toggle } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
 import { ItemArt } from "../art/items.tsx";
 import { haptic } from "../telegram.ts";
-import { clock } from "../format.ts";
+import { clock, full as num } from "../format.ts";
 import { leftText } from "../event-banner.tsx";
 import type { GameState, Granted } from "../api.ts";
-import { rushCut, rushedShare, HEIST_BOXES, HEIST_SET_BOSS, LOCK_ROW, heistBox, heistLoot, heistOdds, type HeistKind } from "../../content/heist.ts";
+import { HEIST_BOXES, HEIST_CASE, HEIST_SET_BOSS, LOCK_ROW, heistBox, heistLoot, heistOdds, rushPrice, type HeistKind } from "../../content/heist.ts";
 import { TATTOO_SETS } from "../../content/tattoos.ts";
-import { STASH_IDS } from "../../content/stashes.ts";
 
 type Heist = NonNullable<GameState["heist"]>;
 type Box = Heist["boxes"][number];
@@ -63,8 +62,9 @@ function Chest({ box, now, onLock, face }: { box: Box; now: number; onLock?: (i:
 
 /** «Возможная награда» on the paper on the right: what this kind of box may hold */
 function Possible({ kind, owned }: { kind: HeistKind; owned: Set<string> }) {
-  const L = heistLoot(kind);
-  const d = heistBox(kind);
+  const T = heistLoot(kind, "teeth"), B = heistLoot(kind, "bars");
+  // what may be inside (opened for teeth or for bars)
+  const ids = [...new Set([...T.items, ...B.items].map(([id]) => id))];
   const got = SET_PIECES.filter((id) => owned.has(id)).length;
   return (
     <div className="hs-panel">
@@ -72,15 +72,11 @@ function Possible({ kind, owned }: { kind: HeistKind; owned: Set<string> }) {
       <img className="hs-panel-bg" src={`${A}/panel.webp`} alt="" draggable={false} />
       <div className="hs-panel-in">
         <b className="hs-panel-t">Возможная награда</b>
-        <div className="hs-panel-grid">
-          <span title="Рубли"><Icon name="RUB" size={24} /></span>
-          <span title="Зубы"><Icon name="TOOTH" size={24} /></span>
-          {L.weapons.map(([id]) => <span key={id}><ItemArt id={id} size={28} /></span>)}
-          <span title="Детали"><Icon name="parts" size={24} /></span>
-          {L.stashes[1] > 0 && <span title="Нычки"><ItemArt id={STASH_IDS[0]} size={28} /></span>}
+        <div className={`hs-panel-grid ${ids.length > 7 ? "many" : ""}`}>
+          {ids.map((id) => <span key={id}>{id === HEIST_CASE ? <Icon name="case" size={26} /> : <ItemArt id={id} size={28} />}</span>)}
           {SET_PIECES[0] && <span title="Наколки сетов ивента"><ItemArt id={SET_PIECES[0]} size={28} /></span>}
         </div>
-        <span className="hs-panel-note">Наколка {Math.round(d.tattoo * 100)}% · {got}/{SET_PIECES.length}</span>
+        <span className="hs-panel-note">Наколка {Math.round(T.tattoo * 100)}% · за <Icon name="GOLD" size={11} /> {Math.round(B.tattoo * 100)}%<br />{got}/{SET_PIECES.length}</span>
       </div>
     </div>
   );
@@ -148,9 +144,9 @@ export function HeistScreen() {
               {/* «Автовзлом»: the padlocks left paid at once, then picked one by one by themselves (loot whole) */}
               {done < d.locks && (
                 <div className="hs-auto">
-                  <Toggle on={!!box.auto} disabled={!!box.auto || busy === "heist_auto"} title="Замки ломаются сами, один за другим, по часу — заходить не нужно. Награда полная"
+                  <Toggle on={!!box.auto} disabled={!!box.auto || busy === "heist_auto"} title="Замки ломаются сами, один за другим, по 6 часов — заходить не нужно"
                     onChange={(v) => { if (v) setAutoAsk(box.slot); }}>
-                    {box.auto ? "Автовзлом" : <><Icon name="TOOTH" size={14} /><b className="num">{(h?.rush ?? 100) * (d.locks - done)}</b></>}
+                    {box.auto ? "Автовзлом" : <><Icon name="TOOTH" size={14} /><b className="num">{(h?.auto ?? 100) * (d.locks - done)}</b></>}
                   </Toggle>
                 </div>
               )}
@@ -200,9 +196,9 @@ export function HeistScreen() {
         return (
           <Modal title="Автовзлом" onClose={() => setAutoAsk(null)}>
             <p className="center" style={{ margin: "4px 0 8px", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, flexWrap: "wrap" }}>
-              Оплатить {left} {left === 1 ? "замок" : left < 5 ? "замка" : "замков"} за <span style={{ display: "inline-flex", alignItems: "center", gap: 3, whiteSpace: "nowrap" }}><Icon name="TOOTH" size={16} /><b>{(h?.rush ?? 100) * left}</b>?</span>
+              Оплатить {left} {left === 1 ? "замок" : left < 5 ? "замка" : "замков"} за <span style={{ display: "inline-flex", alignItems: "center", gap: 3, whiteSpace: "nowrap" }}><Icon name="TOOTH" size={16} /><b>{(h?.auto ?? 100) * left}</b>?</span>
             </p>
-            <p className="small center muted" style={{ margin: "0 0 12px" }}>Замки будут ломаться сами, один за другим, по часу — заходить каждый час не нужно. Награда полная.</p>
+            <p className="small center muted" style={{ margin: "0 0 12px" }}>Замки будут ломаться сами, один за другим, по 6 часов — заходить за каждым не нужно.</p>
             <div className="row" style={{ gap: 8 }}>
               <button className="btn dark" style={{ flex: 1 }} onClick={() => setAutoAsk(null)}>Нет</button>
               <button className="btn gold" style={{ flex: 1 }} disabled={busy === "heist_auto"} onClick={async () => { const s0 = autoAsk; setAutoAsk(null); if (await act("heist_auto", { slot: s0 })) haptic.ok(); }}>Оплатить</button>
@@ -211,32 +207,30 @@ export function HeistScreen() {
         );
       })()}
 
-      {ask !== null && (
-        <Modal title="Открыть сразу?" onClose={() => setAsk(null)}>
-          <p style={{ margin: "4px 0 12px", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, flexWrap: "wrap" }}>
-            Открыть замок сразу за <span style={{ display: "inline-flex", alignItems: "center", gap: 3, whiteSpace: "nowrap" }}><Icon name="TOOTH" size={16} /><b>{h?.rush ?? 100}</b>?</span>
-          </p>
-          {(() => {
-            const bx = boxes.find((b) => b.slot === ask);
-            if (!bx) return null;
-            const cut = Math.round(rushCut(bx.locks) * 100), after = Math.round((1 - rushedShare(bx.locks, (bx.rushed ?? 0) + 1)) * 100);
-            return <p className="small center muted" style={{ margin: "-6px 0 12px" }}>Награда в ящике станет меньше на {cut}%{after > cut ? ` (всего −${after}%)` : ""}. Если дождаться таймера — без потерь.</p>;
-          })()}
-          <div className="row" style={{ gap: 8 }}>
-            <button className="btn dark" style={{ flex: 1 }} onClick={() => setAsk(null)}>Нет</button>
-            <button className="btn gold" style={{ flex: 1 }} disabled={busy === "heist_rush"} onClick={async () => { const s0 = ask; setAsk(null); await rush(s0); }}>Открыть</button>
-          </div>
-        </Modal>
-      )}
+      {ask !== null && (() => {
+        const price = rushPrice(state?.wallet?.TOOTH ?? 0);
+        return (
+          <Modal title="Открыть сразу?" onClose={() => setAsk(null)}>
+            <p style={{ margin: "4px 0 12px", display: "flex", alignItems: "center", justifyContent: "center", gap: 5, flexWrap: "wrap" }}>
+              Открыть замок сразу за <span style={{ display: "inline-flex", alignItems: "center", gap: 3, whiteSpace: "nowrap" }}><Icon name={price.currency} size={16} /><b className="num">{num(price.amount)}</b>?</span>
+            </p>
+            <div className="row" style={{ gap: 8 }}>
+              <button className="btn dark" style={{ flex: 1 }} onClick={() => setAsk(null)}>Нет</button>
+              <button className="btn gold" style={{ flex: 1 }} disabled={busy === "heist_rush"} onClick={async () => { const s0 = ask; setAsk(null); await rush(s0); }}>Открыть</button>
+            </div>
+          </Modal>
+        );
+      })()}
 
       {help && (
         <Modal title="Как работает взлом" onClose={() => setHelp(false)}>
           <ul className="small" style={{ paddingLeft: 18, display: "grid", gap: 6 }}>
             <li>Пока идёт ивент, с каждой победы над любым боссом в любом режиме падает ящик. Он ложится в свободную ячейку; когда все 5 заняты, ящики не падают.</li>
             <li>Чем сильнее босс, тем чаще дорогие ящики: {HEIST_BOXES.map((b) => b.name.split(" ")[0].toLowerCase()).join(", ")}. С Солнца бриллиантовый — примерно 1 из {Math.round(1 / heistOdds(1).diamond)}.</li>
-            <li>На ящике от 1 до 4 замков. Нажми на замок — его начнут взламывать, это час; следующий начинаешь сам, так что заходи каждый час. Нажми на взламываемый замок ещё раз — откроешь его сразу за ${h?.rush ?? 100}, но каждый такой замок срезает награду ящика: бриллиантовый −10%, золотой −13%, серебряный −20%, бронзовый −40% за замок.</li>
-            <li>Внутри рубли, зубы, оружие, детали и нычки — чем дороже ящик, тем больше. И шанс на наколку из сетов ивента: бронза 25%, серебро 50%, золото 75%, бриллиант 100%.</li>
-            <li>Сеты: «Динамит» +300 к пушке, «Маски» +200 к стволу, «Ночная смена» +100 к ножу.</li>
+            <li>На ящике от 1 до 4 замков. Нажми на замок — его начнут взламывать, это 6 часов; следующий начинаешь сам. Взламывать можно только один ящик за раз.</li>
+            <li>Нажми на взламываемый замок ещё раз — откроешь его сразу за {num(h?.rush ?? 25000)} зубов, а если зубов не хватает — за {h?.rushGold ?? 8} слитков.</li>
+            <li>Внутри ножи, стволы, пушки, самородки, а в ящиках подороже — кольца, фишки, билеты колеса, кейсы и энергетики. Если все замки ящика открыть за слитки — награда больше и шанс на наколку из сетов ивента выше: {HEIST_BOXES.map((b) => `${Math.round(heistLoot(b.id, "teeth").tattoo * 100)}/${Math.round(heistLoot(b.id, "bars").tattoo * 100)}%`).join(", ")} (бронза, серебро, золото, бриллиант).</li>
+            <li>Сеты: «Динамит» +600 к стволу, +400 к пушке, +150 к ножу; «Маски» +200 к стволу, «Ночная смена» +100 к ножу.</li>
           </ul>
         </Modal>
       )}

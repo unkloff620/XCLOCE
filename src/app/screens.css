@@ -5932,7 +5932,10 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .hs-panel-in { position: absolute; inset: 11% 9% 8%; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #4a3220; text-align: center; }
 .hs-panel-t { font: 800 min(3.8cqw, 15px)/1.1 var(--font-display, inherit); text-transform: uppercase; letter-spacing: 0.02em; }
 .hs-panel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; place-items: center; width: 100%; }
-.hs-panel-note { margin-top: auto; font-size: 10px; white-space: nowrap; font-weight: 700; line-height: 1.3; opacity: 0.85; }
+.hs-panel-note { margin-top: auto; font-size: 10px; font-weight: 700; line-height: 1.3; opacity: 0.85; }
+/* the richer boxes hold more kinds of things: four in a row, smaller */
+.hs-panel-grid.many { grid-template-columns: repeat(4, 1fr); gap: 2px; }
+.hs-panel-grid.many img, .hs-panel-grid.many svg { width: 22px !important; height: 22px !important; }
 /* below: a hint and 5 paper cards with the boxes */
 .hs-bottom { position: absolute; z-index: 2; left: 6px; right: 6px; bottom: calc(var(--bottom) + 8px); container-type: inline-size; }
 .hs-hint { margin: 0 auto 6px; width: fit-content; max-width: 100%; padding: 3px 10px; border-radius: 10px; background: rgba(20, 12, 6, 0.8); color: #e9d9c0; font-size: 11px; font-weight: 700; text-align: center; }

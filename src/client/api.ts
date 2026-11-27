@@ -106,7 +106,7 @@ export interface GameState {
   raids?: { on: boolean };
   /** my fight for a building in «Ходки» going on now */
   raidFight?: { yard: string; building: string } | null;
-  heist?: { on: boolean; endsAt: number | null; slots: number; lockMs: number; rush: number; boxes: { slot: number; kind: "bronze" | "silver" | "gold" | "diamond"; locks: number; done: number; pickEnds: number | null; boss: string | null; rushed?: number; auto?: boolean }[] } | null;
+  heist?: { on: boolean; endsAt: number | null; slots: number; lockMs: number; rush: number; rushGold: number; auto: number; boxes: { slot: number; kind: "bronze" | "silver" | "gold" | "diamond"; locks: number; done: number; pickEnds: number | null; boss: string | null; rushed?: number; goldPaid?: number; auto?: boolean }[] } | null;
   /** today's automation toggles (systems/autos.ts): the zone spending the energy, the mode per boss */
   autos?: { zone: string | null; bosses: Record<string, string> };
   /** the dealer in the garage: today's parts on sale */

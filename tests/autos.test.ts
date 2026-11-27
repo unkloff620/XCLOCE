@@ -5,7 +5,7 @@ import { resetConfigCache } from "../src/server/config.ts";
 import { eventSave } from "../src/server/admin.ts";
 import { runAutos } from "../src/server/systems/autos.ts";
 import { moscowDay } from "../src/server/core.ts";
-import { LOCK_RUSH } from "../src/content/heist.ts";
+import { LOCK_AUTO } from "../src/content/heist.ts";
 import { LOCATIONS } from "../src/content/locations.ts";
 
 const T = Date.UTC(2026, 10, 10, 9); // 12:00 Moscow
@@ -31,18 +31,18 @@ describe("automation toggles", () => {
     expect(await runAutos(db, p, T + H)).toMatchObject({ hits: 0, fights: 0 });
   });
 
-  it("«Автовзлом»: the padlocks left are paid at once and come off one by one, an hour each, loot whole", async () => {
+  it("«Автовзлом»: the padlocks left are paid at once and come off one by one, 6 hours each", async () => {
     const db = await freshDb();
     await eventSave(db, 1, { title: "Взлом", startsAt: iso(T - H), endsAt: iso(T + 72 * H), effects: { heistBoxes: 1 } });
     resetConfigCache();
     const p = await newPlayer(db);
     await db.query("INSERT INTO heist_boxes (player_id, slot, kind) VALUES ($1, 0, 'gold')", [p]);
-    await setMoney(db, p, "TOOTH", LOCK_RUSH * 3 + 7);
+    await setMoney(db, p, "TOOTH", LOCK_AUTO * 3 + 7);
     await act(db, p, "heist_auto", { slot: 0 }, T);
     expect(await wallet(db, p, "TOOTH")).toBe(7);
-    const mid = await inPlayerTx(db, p, async () => null, { now: T + 2 * H + M });
+    const mid = await inPlayerTx(db, p, async () => null, { now: T + 12 * H + M });
     expect(mid.state.heist!.boxes[0]).toMatchObject({ done: 2, auto: true });
-    const o = await act(db, p, "heist_open", { slot: 0 }, T + 3 * H + M);
+    const o = await act(db, p, "heist_open", { slot: 0 }, T + 18 * H + M);
     expect(o.result.rushed).toBe(false);
   });
 });

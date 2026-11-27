@@ -3,7 +3,7 @@ import { act, always, freshDb, give, H, M, newPlayer, qty, setMoney, wallet } fr
 import { resetConfigCache } from "../src/server/config.ts";
 import { eventSave } from "../src/server/admin.ts";
 import type { Db } from "../src/server/db.ts";
-import { HEIST_BOXES, HEIST_SLOTS, LOCK_RUSH, heistOdds, rollHeistLoot, rushCut, rushedShare } from "../src/content/heist.ts";
+import { HEIST_BOXES, HEIST_SLOTS, LOCK_RUSH, LOCK_RUSH_GOLD, heistLoot, heistOdds, rollHeistLoot } from "../src/content/heist.ts";
 import { TATTOO_SETS } from "../src/content/tattoos.ts";
 
 const T = Date.UTC(2026, 10, 10, 12);
@@ -32,7 +32,7 @@ describe("«Взлом»: boxes with padlocks", () => {
     expect(r.state.heist).toBeNull();
   });
 
-  it("a win drops a box; padlocks are picked one by one, an hour each, or opened for dollars; the box opens", async () => {
+  it("a win drops a box; padlocks are picked one by one, 6 hours each, or opened for teeth; the box opens", async () => {
     const db = await freshDb();
     await heistOn(db);
     const p = await newPlayer(db);
@@ -43,31 +43,37 @@ describe("«Взлом»: boxes with padlocks", () => {
     // can't open with a padlock on
     await expect(act(db, p, "heist_open", { slot: 0 }, T)).rejects.toMatchObject({ code: "heist_locked" });
     const s = await act(db, p, "heist_pick", { slot: 0 }, T);
-    expect(s.result.pickEnds).toBe(T + H);
+    expect(s.result.pickEnds).toBe(T + 6 * H);
     await expect(act(db, p, "heist_pick", { slot: 0 }, T + 10 * M)).rejects.toMatchObject({ code: "heist_busy" });
-    // an hour later the padlock is off; the box opens: money, weapons, parts, maybe stashes
-    const o = await act(db, p, "heist_open", { slot: 0 }, T + H + M, always(0.5));
+    // 6 hours later the padlock is off; the box opens: knives, pistols, nuggets (the «teeth» loot)
+    const o = await act(db, p, "heist_open", { slot: 0 }, T + 6 * H + M, always(0.5));
     expect(o.result.kind).toBe("bronze");
-    expect(o.result.reward.currencies.RUB).toBeGreaterThan(0);
-    expect(await qty(db, p, "keyboard")).toBeGreaterThan(0);
+    expect(o.result.pay).toBe("teeth");
+    expect(await qty(db, p, "keyboard")).toBe(4);
+    expect(await qty(db, p, "gold-nugget")).toBe(5);
     expect(o.state.heist!.boxes).toEqual([]);
 
-    // a gold box: three padlocks; one paid, the rest picked
-    await db.query("INSERT INTO heist_boxes (player_id, slot, kind) VALUES ($1, 2, 'gold')", [p]);
+    // a gold box: three padlocks; one paid in teeth, then (teeth short) one in bars, the last picked
+    const t0 = T + 7 * H;
+    await db.query("INSERT INTO heist_boxes (player_id, slot, kind) VALUES ($1, 2, 'gold'), ($1, 3, 'bronze')", [p]);
     await setMoney(db, p, "TOOTH", LOCK_RUSH + 5);
-    const rush = await act(db, p, "heist_rush", { slot: 2 }, T + 2 * H);
-    expect(rush.result.done).toBe(1);
+    await setMoney(db, p, "GOLD", LOCK_RUSH_GOLD);
+    const rush = await act(db, p, "heist_rush", { slot: 2 }, t0);
+    expect(rush.result).toMatchObject({ done: 1, paid: { currency: "TOOTH", amount: LOCK_RUSH } });
     expect(await wallet(db, p, "TOOTH")).toBe(5);
-    await expect(act(db, p, "heist_rush", { slot: 2 }, T + 2 * H)).rejects.toMatchObject({ code: "no_money" });
-    await act(db, p, "heist_pick", { slot: 2 }, T + 2 * H);
-    // the player must come back to start the next one: the second lock is off, the third waits
-    const later = await act(db, p, "heist_pick", { slot: 2 }, T + 4 * H);
-    expect(later.state.heist!.boxes[0]).toMatchObject({ done: 2 });
-    const st = await act(db, p, "heist_open", { slot: 2 }, T + 5 * H + 2 * M);
-    expect(st.result.kind).toBe("gold");
+    const rush2 = await act(db, p, "heist_rush", { slot: 2 }, t0);
+    expect(rush2.result).toMatchObject({ done: 2, paid: { currency: "GOLD", amount: LOCK_RUSH_GOLD } });
+    await expect(act(db, p, "heist_rush", { slot: 2 }, t0)).rejects.toMatchObject({ code: "no_money" });
+    await act(db, p, "heist_pick", { slot: 2 }, t0);
+    // one box at a time
+    await expect(act(db, p, "heist_pick", { slot: 3 }, t0 + M)).rejects.toMatchObject({ code: "heist_one" });
+    const st = await act(db, p, "heist_open", { slot: 2 }, t0 + 6 * H + M);
+    expect(st.result).toMatchObject({ kind: "gold", pay: "teeth" });
+    // the other box can be picked now
+    await act(db, p, "heist_pick", { slot: 3 }, t0 + 6 * H + 2 * M);
   });
 
-  it("all five cells taken: no more boxes; a diamond box always holds a tattoo piece not owned yet", async () => {
+  it("all five cells taken: no more boxes; a tattoo piece is one not owned yet", async () => {
     const db = await freshDb();
     await heistOn(db);
     const p = await newPlayer(db);
@@ -75,44 +81,40 @@ describe("«Взлом»: boxes with padlocks", () => {
     const r = await winDatsik(db, p);
     expect(r.result.reward.heistBox).toBe("full");
     expect(r.state.heist!.boxes).toHaveLength(HEIST_SLOTS);
-    const o = await act(db, p, "heist_open", { slot: 3 }, T + M);
+    const o = await act(db, p, "heist_open", { slot: 3 }, T + M, always(0.01));
     const ids = TATTOO_SETS.filter((s) => s.boss === "heist").flatMap((s) => s.pieces.map((x) => x.id));
     expect(ids).toContain(o.result.tattoo);
     expect(await qty(db, p, o.result.tattoo)).toBe(1);
-    const o2 = await act(db, p, "heist_open", { slot: 4 }, T + M);
+    const o2 = await act(db, p, "heist_open", { slot: 4 }, T + M, always(0.01));
     expect(o2.result.tattoo).not.toBe(o.result.tattoo);
   });
 
-  it("each padlock opened for dollars cuts the loot (−40% for all of them); waited out — all of it", async () => {
+  it("a box with every padlock paid in gold bars holds the «bars» loot", async () => {
     const db = await freshDb();
     await heistOn(db);
     const p = await newPlayer(db);
-    await db.query("INSERT INTO heist_boxes (player_id, slot, kind) VALUES ($1, 0, 'silver'), ($1, 1, 'silver')", [p]);
-    await setMoney(db, p, "TOOTH", LOCK_RUSH * 2);
-    // box 0: both padlocks waited out
-    await act(db, p, "heist_pick", { slot: 0 }, T);
-    await act(db, p, "heist_pick", { slot: 0 }, T + H + M);
-    const full = await act(db, p, "heist_open", { slot: 0 }, T + 2 * H + 2 * M, always(0.5));
-    // box 1: one waited, one paid
-    await act(db, p, "heist_pick", { slot: 1 }, T + 3 * H);
-    await act(db, p, "heist_rush", { slot: 1 }, T + 4 * H + M);
-    const cut = await act(db, p, "heist_open", { slot: 1 }, T + 4 * H + 2 * M, always(0.5));
-    expect(full.result.rushed).toBe(false);
-    expect(cut.result.rushed).toBe(true);
-    const rub = (r: { result: { reward: { currencies: Record<string, number> } } }) => r.result.reward.currencies.RUB;
-    // silver: 2 padlocks, one paid — −20%
-    expect(rub(cut)).toBe(Math.floor((rub(full) * 0.8) / 100) * 100);
-    expect([1, 2, 3, 4].map((l) => Math.round((1 - rushedShare(l, l)) * 100))).toEqual([40, 40, 40, 40]);
-    expect(Math.round(rushCut(4) * 100)).toBe(10);
+    await db.query("INSERT INTO heist_boxes (player_id, slot, kind) VALUES ($1, 0, 'silver')", [p]);
+    await setMoney(db, p, "GOLD", LOCK_RUSH_GOLD * 2);
+    await act(db, p, "heist_rush", { slot: 0 }, T);
+    await act(db, p, "heist_rush", { slot: 0 }, T);
+    expect(await wallet(db, p, "GOLD")).toBe(0);
+    const o = await act(db, p, "heist_open", { slot: 0 }, T + M, always(0.99));
+    expect(o.result.pay).toBe("bars");
+    expect(await qty(db, p, "keyboard")).toBe(24);
+    expect(await qty(db, p, "gold-ring")).toBe(6);
+    expect(await qty(db, p, "poker-chip")).toBe(1);
   });
 
   it("odds: weak bosses mostly bronze, the strongest a diamond about one time in four; richer boxes hold more", () => {
     expect(heistOdds(0).bronze).toBeGreaterThan(0.6);
     expect(heistOdds(1).diamond).toBeCloseTo(0.25);
     for (const t of [0, 0.5, 1]) expect(Object.values(heistOdds(t)).reduce((a, b) => a + b, 0)).toBeCloseTo(1);
-    const rub = HEIST_BOXES.map((b) => rollHeistLoot(b.id, always(0.5)).currencies!.RUB!);
-    expect([...rub].sort((a, b) => a - b)).toEqual(rub);
+    const kb = HEIST_BOXES.map((b) => rollHeistLoot(b.id, always(0.5)).items!.find((i) => i.id === "keyboard")!.qty);
+    expect([...kb].sort((a, b) => a - b)).toEqual(kb);
     expect(HEIST_BOXES.map((b) => b.locks)).toEqual([1, 2, 3, 4]);
-    expect(HEIST_BOXES.map((b) => b.tattoo)).toEqual([0.25, 0.5, 0.75, 1]);
+    expect(HEIST_BOXES.map((b) => heistLoot(b.id, "teeth").tattoo)).toEqual([0.1, 0.2, 0.3, 0.4]);
+    expect(HEIST_BOXES.map((b) => heistLoot(b.id, "bars").tattoo)).toEqual([0.2, 0.3, 0.4, 0.5]);
+    // the gold and diamond boxes: «Ящик ништяков» openings as achievement points
+    expect(rollHeistLoot("diamond", always(0.99), "bars").achPoints).toBeGreaterThan(0);
   });
 });

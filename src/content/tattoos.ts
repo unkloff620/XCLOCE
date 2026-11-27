@@ -116,7 +116,7 @@ export const TATTOO_SETS: TattooSet[] = [
   solid("yakuza", "Кухня якудзы", "tosya", "pacan", "rug-pull-gun", 300),
   boxSet("samurai", "Самурай", "rug-pull-gun", 300), boxSet("viking", "Викинг", "rug-pull-gun", 300), boxSet("inferno", "Преисподняя", "rug-pull-gun", 300),
   // the «Ящики со взломом» event (content/heist.ts, boss "heist"): a piece now and then from a picked box
-  solid("dynamite", "Динамит", "heist", "pacan", "rug-pull-gun", 300), solid("masks", "Маски", "heist", "pacan", "gpu", 200),
+  { ...solid("dynamite", "Динамит", "heist", "pacan", "gpu", 600), extra: [{ weapon: "rug-pull-gun", damage: 400 }, { weapon: "keyboard", damage: 150 }] }, solid("masks", "Маски", "heist", "pacan", "gpu", 200),
   solid("nightshift", "Ночная смена", "heist", "pacan", "keyboard", 100),
   // «Колесо удачи» (content/fortune.ts FORTUNE_BAGS, boss "fortune"): one set per bag, a piece with BAG_TATTOO_CHANCE
   solid("luck", "Фарт", "fortune", "pacan", "keyboard", 150), solid("hustler", "Барыга", "fortune", "pacan", "gpu", 200),
