@@ -6,7 +6,7 @@
  * «Вскрыть сейчас» opens it for teeth (bars when the teeth run short); with every padlock off the box opens — the loot lies on its bottom.
  */
 import Link from "next/link";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { useGame, useNow } from "../store.tsx";
 import { Modal, RewardChips } from "../ui.tsx";
 import { Icon } from "../art/icons.tsx";
@@ -15,7 +15,9 @@ import { haptic } from "../telegram.ts";
 import { clock, full as num } from "../format.ts";
 import { leftText } from "../event-banner.tsx";
 import type { GameState, Granted } from "../api.ts";
-import { HEIST_BOXES, HEIST_CASE, HEIST_SET_BOSS, LOCK_ROW, heistBox, heistLoot, heistOdds, rushPrice, type HeistKind } from "../../content/heist.ts";
+import { HEIST_BOX } from "../art/heist-box-data.ts";
+import { ACH_BOX_COST } from "../../content/ach-box.ts";
+import { HEIST_BOXES, HEIST_CASE, HEIST_SET_BOSS, heistBox, heistLoot, heistOdds, rushPrice, type HeistKind } from "../../content/heist.ts";
 import { TATTOO_SETS } from "../../content/tattoos.ts";
 
 type Heist = NonNullable<GameState["heist"]>;
@@ -31,30 +33,60 @@ export function heistReady(h: Heist, now: number) {
   return h.boxes.filter((b) => !picking(b, now)).length;
 }
 
-/** a chest from the front with its padlocks in a row on its band; the one being picked shakes and the picks poke it.
- * `onLock`: the padlocks are buttons (the big chest); `face`: text or a button on the plain lower panel of its front */
-function Chest({ box, now, onLock, face }: { box: Box; now: number; onLock?: (i: number) => void; face?: ReactNode }) {
-  const d = heistBox(box.kind);
-  const done = doneNow(box, now);
-  const busy = picking(box, now);
+const BX = "/assets/heist/box";
+type Part = keyof typeof HEIST_BOX & ("body" | "lid" | "lid-mid" | "lid-open" | "hasp" | "lock" | "shackle" | "ring");
+const at = (n: Part, rel?: { x: number; y: number; w: number; h: number }) => {
+  const b = HEIST_BOX[n];
+  // a part placed in the canvas, or inside another box (`rel`, e.g. the padlock's group)
+  return rel
+    ? { left: `${((b.x - rel.x) / rel.w) * 100}%`, top: `${((b.y - rel.y) / rel.h) * 100}%`, width: `${(b.w / rel.w) * 100}%`, height: `${(b.h / rel.h) * 100}%` }
+    : { left: `${b.x}%`, top: `${b.y}%`, width: `${b.w}%`, height: `${b.h}%` };
+};
+/** the padlock (bow + body): one box round both */
+const PAD = (() => {
+  const s = HEIST_BOX.shackle, l = HEIST_BOX.lock;
+  const x = Math.min(s.x, l.x), y = Math.min(s.y, l.y);
+  return { x, y, w: Math.max(s.x + s.w, l.x + l.w) - x, h: Math.max(s.y + s.h, l.y + l.h) - y };
+})();
+function Img({ src, className, style }: { src: string; className?: string; style?: CSSProperties }) {
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img className={className} src={src} style={style} alt="" draggable={false} />;
+}
+
+/**
+ * The artist's box (tools/heist/build-box.py), coloured by its kind. Locked: the lid shut, the latch, the padlock
+ * through the ring — tap it (`onLock`): its picking starts; while being picked it shakes and the picks poke it. Every
+ * padlock off (`free`): the bow springs up and the padlock drops out of the ring. `open`: the lid swings up (three
+ * pictures) and the loot lies on its inside. The padlocks of the box — a row of little locks above it.
+ */
+function Chest({ kind, locks, done, live, onLock, face, open, loot }: {
+  kind: HeistKind; locks: number; done: number; live?: boolean; onLock?: () => void; face?: ReactNode; open?: boolean; loot?: ReactNode;
+}) {
+  const free = done >= locks;
   return (
-    <div className="hs-chest">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img className="hs-chest-pic" src={`${A}/chest-${box.kind}.webp`} alt={d.name} draggable={false} />
-      {Array.from({ length: d.locks }, (_, i) => {
-        const off = i < done, live = busy && i === done;
-        const x = 0.5 + (i - (d.locks - 1) / 2) * LOCK_ROW.gap;
-        return (
-          <span key={i} className={`hs-lock ${off ? "off" : ""} ${live ? "live" : ""} ${onLock && !off ? "tap" : ""}`} style={{ left: `${x * 100}%`, top: `${LOCK_ROW.y * 100}%`, width: `${LOCK_ROW.w * 100}%` }}
-            role={onLock && !off ? "button" : undefined} aria-label={onLock && !off ? (live ? "Открыть замок сразу" : "Взломать замок") : undefined}
-            onClick={onLock && !off ? (e) => { e.stopPropagation(); onLock(i); } : undefined}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`${A}/${off ? "lock-open" : "lock"}.webp`} alt="" draggable={false} />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            {live && <img className="hs-picks" src={`${A}/picks.webp`} alt="" draggable={false} />}
-          </span>
-        );
-      })}
+    <div className={`hb ${free ? "free" : ""} ${open ? "open" : ""} ${live ? "live" : ""}`}>
+      <Img className="hb-p hb-lid-open" src={`${BX}/${kind}-lid-open.webp`} style={at("lid-open")} />
+      <Img className="hb-p hb-lid-mid" src={`${BX}/${kind}-lid-mid.webp`} style={at("lid-mid")} />
+      <Img className="hb-p hb-body" src={`${BX}/${kind}-body.webp`} style={at("body")} />
+      <Img className="hb-p hb-lid" src={`${BX}/${kind}-lid.webp`} style={at("lid")} />
+      <Img className="hb-p hb-hasp" src={`${BX}/hasp.webp`} style={at("hasp")} />
+      {!open && (
+        <span className={`hb-pad ${onLock && !free ? "tap" : ""}`} style={{ left: `${PAD.x}%`, top: `${PAD.y}%`, width: `${PAD.w}%`, height: `${PAD.h}%` }}
+          role={onLock && !free ? "button" : undefined} aria-label={onLock && !free ? (live ? "Открыть замок сразу" : "Взломать замок") : undefined}
+          onClick={onLock && !free ? (e) => { e.stopPropagation(); onLock(); } : undefined}>
+          <Img className="hb-p hb-shackle" src={`${BX}/shackle.webp`} style={at("shackle", PAD)} />
+          <Img className="hb-p hb-lockb" src={`${BX}/lock.webp`} style={at("lock", PAD)} />
+          {live && <Img className="hb-picks" src={`${A}/picks.webp`} />}
+        </span>
+      )}
+      {!open && <Img className="hb-p hb-ring" src={`${BX}/ring.webp`} style={at("ring")} />}
+      {/* the padlocks of the box: off ones open */}
+      {!open && locks > 1 && (
+        <span className="hb-locks">
+          {Array.from({ length: locks }, (_, i) => <Img key={i} className={i < done ? "off" : ""} src={`${A}/${i < done ? "lock-open" : "lock"}.webp`} />)}
+        </span>
+      )}
+      {open && loot && <div className="hb-loot" style={at("loot" as Part)}>{loot}</div>}
       {face && <div className="hs-face">{face}</div>}
     </div>
   );
@@ -77,7 +109,7 @@ function Possible({ kind, owned }: { kind: HeistKind; owned: Set<string> }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {SET_PIECES[0] && <span title="Наколки сетов ивента"><img src="/assets/ui/drop-tattoo.webp?v=2" width={28} height={28} alt="наколка" draggable={false} /></span>}
         </div>
-        <span className="hs-panel-note">Наколка {Math.round(T.tattoo * 100)}%<br /><span style={{ whiteSpace: "nowrap" }}>за <Icon name="GOLD" size={11} /> {Math.round(B.tattoo * 100)}% · {got}/{SET_PIECES.length}</span></span>
+        <span className="hs-panel-note">Наколка {Math.round(T.tattoo * 100)}% · {got}/{SET_PIECES.length}<br />за слитки {Math.round(B.tattoo * 100)}%</span>
       </div>
     </div>
   );
@@ -130,21 +162,23 @@ export function HeistScreen() {
         <div className="hs-main">
           {got ? (
             <>
-              <div className="hs-opened">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={`${A}/chest-open-${got.kind}.webp`} alt="" draggable={false} />
-                <div className="hs-floor"><RewardChips r={got.reward} size={26} /></div>
-              </div>
+              <Chest kind={got.kind} locks={1} done={1} open loot={
+                <>
+                  <RewardChips r={{ ...got.reward, achPoints: undefined }} size={14} />
+                  {/* «Ящик ништяков» openings (given as achievement points) — as cases */}
+                  {!!got.reward.achPoints && <span className="hb-case"><Icon name="case" size={14} />×{Math.round(got.reward.achPoints / ACH_BOX_COST)}</span>}
+                </>
+              } />
               {got.tattoo && <div className="hs-status">Внутри — наколка из сета ивента!</div>}
               <button className="btn gold block" onClick={() => setGot(null)}>Забрать</button>
             </>
           ) : box && d ? (
             <>
               {/* tap a padlock: the next one starts being picked; tapped again while it is — open it at once for dollars */}
-              <Chest box={box} now={now}
-                onLock={(i) => {
+              <Chest key={box.slot} kind={box.kind} locks={d.locks} done={done} live={busyLock}
+                onLock={() => {
                   if (box.auto) return;
-                  if (busyLock) { if (i === done) { haptic.tap(); setAsk(box.slot); } return; }
+                  if (busyLock) { haptic.tap(); setAsk(box.slot); return; }
                   if (busy !== "heist_pick") void pick(box.slot);
                 }}
                 face={done >= d.locks
@@ -169,7 +203,8 @@ export function HeistScreen() {
                 onClick={() => { if (b) { haptic.tap(); setGot(null); setSel(b.slot); } }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img className="hs-card-bg" src={`${A}/card.webp`} alt="" draggable={false} />
-                {b && <Chest box={b} now={now} />}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {b && <img className="hs-card-box" src={`/assets/heist/box/${b.kind}-closed.webp`} alt="" draggable={false} />}
                 <span className={`hs-card-st num ${b && dn >= b.locks ? "ready" : ""}`}>
                   {!b ? "пусто" : dn >= b.locks ? "Открыть" : picking(b, now) ? clock(b.pickEnds! - now) : `замки ${dn}/${b.locks}`}
                 </span>

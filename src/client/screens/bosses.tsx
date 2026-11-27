@@ -308,7 +308,7 @@ function HeistBoxChip({ size }: { size: number }) {
   return (
     <span className="gain" title="Ящик ивента «Взлом» — с каждой победы, если есть свободная ячейка">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/assets/heist/chest-bronze.webp" alt="" width={Math.round(size * 1.2)} height={size} style={{ objectFit: "contain" }} draggable={false} />
+      <img src="/assets/heist/box/bronze-closed.webp" alt="" width={Math.round(size * 1.2)} height={size} style={{ objectFit: "contain" }} draggable={false} />
       <span className="num rc-n">×1</span>
     </span>
   );
