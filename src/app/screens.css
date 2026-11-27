@@ -8601,6 +8601,10 @@ body:has(.bd-screen) .hud { background: none; border-bottom: 0; box-shadow: none
 .bd-roul-lamp i { position: absolute; left: 50%; top: 92%; width: 420%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; mix-blend-mode: screen;
   background: radial-gradient(rgba(255, 230, 160, 0.55), rgba(255, 190, 100, 0.22) 25%, rgba(255, 170, 80, 0) 62%); animation: bd-roul-bulb 3.1s steps(1) infinite; }
 @keyframes bd-roul-lamp { from { transform: translateX(-50%) rotate(-1.2deg); } to { transform: translateX(-50%) rotate(1.2deg); } }
+/* the cone of light swings with the lamp (the same time, round the cord's top) */
+.bd-roul-dark i { transform-origin: calc(30px + 50cqw) calc(30px - 2cqh); animation: bd-roul-sway 4.2s ease-in-out infinite alternate; }
+.bd-roul-light { transform-origin: 50cqw -2cqh; animation: bd-roul-sway 4.2s ease-in-out infinite alternate; }
+@keyframes bd-roul-sway { from { transform: rotate(-1.2deg); } to { transform: rotate(1.2deg); } }
 @keyframes bd-roul-bulb { 0%, 100% { opacity: 1; } 47% { opacity: 0.4; } 48% { opacity: 1; } 81% { opacity: 0.6; } 82% { opacity: 1; } }
 .bd-roul-scene.bang { animation: bd-roul-bang 0.9s ease-out; }
 @keyframes bd-roul-bang { 0% { background-color: #fff; filter: brightness(3); transform: translate(6px, -4px); } 10% { transform: translate(-6px, 4px); } 20% { transform: translate(3px, 0); filter: brightness(1.5); } 100% { filter: none; transform: none; } }
@@ -8648,7 +8652,7 @@ body:has(.bd-screen) .hud { background: none; border-bottom: 0; box-shadow: none
 .bd-roul-got { position: absolute; right: 4%; top: 10%; z-index: 5; display: inline-flex; align-items: center; gap: 6px; font: 900 24px/1 system-ui; color: #f2c14e; text-shadow: 0 2px 0 #000; }
 .bd-roul-got img { width: 30px; height: 30px; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); }
 .bd-roul-end { font-size: 18px; }
-@media (prefers-reduced-motion: reduce) { .bd-roul-lamp, .bd-roul-lamp i { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .bd-roul-lamp, .bd-roul-lamp i, .bd-roul-dark i, .bd-roul-light { animation: none; } }
 /* «Колба Химика» in the hero's hand (rig.tsx FlaskHand): bubbles rise through the liquid */
 .rig-flask-bub { animation: hmr-bub 2.2s ease-in infinite; transform-box: fill-box; transform-origin: center; }
 html.eco .rig-flask-bub { animation-iteration-count: 1; }
