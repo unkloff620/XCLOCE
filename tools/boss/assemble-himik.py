@@ -106,8 +106,8 @@ for n in order:
     whole.alpha_composite(L[n])
 whole = whole.crop(CROP)
 os.makedirs("public/bosses/himik", exist_ok=True)
-whole.resize((whole.width // 2, whole.height // 2), Image.LANCZOS).save("public/bosses/himik/full.webp", quality=88, method=6)
+whole.resize((whole.width // 2, whole.height // 2), Image.LANCZOS).save("public/bosses/himik/full.webp", quality=75, method=6)
 hb = L["head"].getbbox()
 cx, cy = (hb[0] + hb[2]) // 2 - CROP[0], (hb[1] + hb[3]) // 2 - CROP[1]
-whole.crop((cx - 300, cy - 280, cx + 300, cy + 320)).resize((320, 320), Image.LANCZOS).save("public/bosses/himik/portrait.webp", quality=88, method=6)
+whole.crop((cx - 300, cy - 280, cx + 300, cy + 320)).resize((320, 320), Image.LANCZOS).save("public/bosses/himik/portrait.webp", quality=75, method=6)
 print("ok", whole.size)

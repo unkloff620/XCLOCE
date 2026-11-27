@@ -53,7 +53,7 @@ for n in ["trees"]:
 still.alpha_composite(glass)
 for n in ["room", "machine", "lamp"]:
     still.alpha_composite(L[n])
-still.convert("RGB").resize((1024, 1536), Image.LANCZOS).save("public/assets/arena/nitka.webp", quality=84, method=6)
+still.convert("RGB").resize((1024, 1536), Image.LANCZOS).save("public/assets/arena/nitka.webp", quality=75, method=6)
 os.makedirs("tools/scene/source", exist_ok=True)
 # the home room: the scene canvas 1060×1484 (the picture ×1060/2000, 53 px off the top — as Солнце's)
 still.convert("RGB").resize((1060, round(3000 * 1060 / 2000)), Image.LANCZOS).crop((0, 53, 1060, 53 + 1484)).save("tools/scene/source/room-workshop.png")

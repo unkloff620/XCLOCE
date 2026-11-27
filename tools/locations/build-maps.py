@@ -8,5 +8,5 @@ OUT = os.path.abspath(os.path.join(HERE, "..", "..", "public", "assets", "locati
 os.makedirs(OUT, exist_ok=True)
 for f in sorted(glob.glob(os.path.join(HERE, "source", "map", "*.png"))):
     n = os.path.splitext(os.path.basename(f))[0]
-    Image.open(f).convert("RGB").resize((720, 1080), Image.LANCZOS).save(os.path.join(OUT, n + ".webp"), quality=86, method=6)
+    Image.open(f).convert("RGB").resize((720, 1080), Image.LANCZOS).save(os.path.join(OUT, n + ".webp"), quality=75, method=6)
     print(n)

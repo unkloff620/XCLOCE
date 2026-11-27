@@ -123,7 +123,7 @@ def apply(boss):
         ew = np.array(ext(Image.fromarray((w * 255).astype(np.uint8)), Image.BILINEAR)).astype(np.float32)[..., None] / 255
         er = np.array(ext(Image.fromarray(sheet), Image.BICUBIC)).astype(np.float32)
         a[..., :3] = a[..., :3] * (1 - ew) + er * ew
-        Image.fromarray(a.astype(np.uint8)).save(f"{R}/{n}-blood.webp", quality=88, method=6, exact=True)
+        Image.fromarray(a.astype(np.uint8)).save(f"{R}/{n}-blood.webp", quality=75, method=6, exact=True)
         print(n, o.size, f"{float(ew.mean()) * 100:.2f}%")
     # the layers the artist redrew himself (tools/boss/source/<boss>/blood/<part>-artist.png, on the boss's sheet): his own
     # picture, cut to the part's box
@@ -133,7 +133,7 @@ def apply(boss):
         p = P[n]
         o = Image.open(f"{R}/{n}.webp")
         box = (crop[0] + p["x"] * 2, crop[1] + p["y"] * 2, crop[0] + (p["x"] + p["w"]) * 2, crop[1] + (p["y"] + p["h"]) * 2)
-        Image.open(f).convert("RGBA").transform(o.size, Image.EXTENT, box, Image.BICUBIC).save(f"{R}/{n}-blood.webp", quality=88, method=6, exact=True)
+        Image.open(f).convert("RGBA").transform(o.size, Image.EXTENT, box, Image.BICUBIC).save(f"{R}/{n}-blood.webp", quality=75, method=6, exact=True)
         print(n, "the artist's")
 
 

@@ -178,10 +178,10 @@ ref.save(f"{R}/reference-rig.png")
 os.makedirs("public/bosses/knyaz", exist_ok=True)
 bb = ref.getbbox()
 full = ref.crop((bb[0] - 20, bb[1] - 10, bb[2] + 20, bb[3] + 10))
-full.resize((1024, round(1024 * full.height / full.width)), Image.LANCZOS).save("public/bosses/knyaz/full.webp", quality=88, method=6)
+full.resize((1024, round(1024 * full.height / full.width)), Image.LANCZOS).save("public/bosses/knyaz/full.webp", quality=75, method=6)
 # the portrait: the head and the shoulders; the card: the upper body like the other bosses (640×790)
 hx, hy = 1066, 380
-ref.crop((hx - 420, hy - 330, hx + 420, hy + 510)).resize((512, 512), Image.LANCZOS).save("public/bosses/knyaz/portrait.webp", quality=88, method=6)
+ref.crop((hx - 420, hy - 330, hx + 420, hy + 510)).resize((512, 512), Image.LANCZOS).save("public/bosses/knyaz/portrait.webp", quality=75, method=6)
 cw = 1240
-ref.crop((hx - cw // 2 - 120, 60, hx + cw // 2 - 120, 60 + round(cw * 790 / 640))).resize((640, 790), Image.LANCZOS).save("public/bosses/knyaz/card.webp", quality=88, method=6)
+ref.crop((hx - cw // 2 - 120, 60, hx + cw // 2 - 120, 60 + round(cw * 790 / 640))).resize((640, 790), Image.LANCZOS).save("public/bosses/knyaz/card.webp", quality=75, method=6)
 print("bbox", bb)

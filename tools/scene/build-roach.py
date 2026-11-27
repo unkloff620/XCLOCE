@@ -18,5 +18,5 @@ for name, (x0, y0, x1, y1) in PARTS.items():
     im[..., 3] = np.where(sub == keep, im[..., 3], 0)
     out = Image.fromarray(im)
     out = out.resize((out.width // 2, out.height // 2), Image.LANCZOS)
-    out.save(os.path.join(ROOT, "public", "assets", "yard", f"roach-{name}.webp"), quality=88, method=6)
+    out.save(os.path.join(ROOT, "public", "assets", "yard", f"roach-{name}.webp"), quality=75, method=6)
     print(name, (x0, y0), out.size)

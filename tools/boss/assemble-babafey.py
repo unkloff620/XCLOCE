@@ -105,10 +105,10 @@ os.makedirs("public/bosses/babafey", exist_ok=True)
 bb = ref.getbbox()
 x0, y0, x1, y1 = bb[0] - 20, bb[1] - 10, bb[2] + 20, bb[3] + 10
 full = ref.crop((x0, y0, x1, y1))
-full.resize((1024, round(1024 * full.height / full.width)), Image.LANCZOS).save("public/bosses/babafey/full.webp", quality=88, method=6)
+full.resize((1024, round(1024 * full.height / full.width)), Image.LANCZOS).save("public/bosses/babafey/full.webp", quality=75, method=6)
 hx = PAD + CHIN[0]
 hy = PAD + CHIN[1] - 922 * HEAD_S
-ref.crop((round(hx - 360), round(hy + 120), round(hx + 360), round(hy + 840))).resize((512, 512), Image.LANCZOS).save("public/bosses/babafey/portrait.webp", quality=88, method=6)
+ref.crop((round(hx - 360), round(hy + 120), round(hx + 360), round(hy + 840))).resize((512, 512), Image.LANCZOS).save("public/bosses/babafey/portrait.webp", quality=75, method=6)
 print("crop bbox", bb)
 # joints on the artist's sheet: shoulder, elbow, wrist of each arm; the brows' inner ends on the face sheet
 J = {"armL": (770, 770), "lowL": (590, 1120), "handL": (420, 900), "armR": (1290, 760), "lowR": (1470, 1080), "handR": (1690, 1300)}

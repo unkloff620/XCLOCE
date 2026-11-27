@@ -19,14 +19,14 @@ bag = Image.open(f"{D}/bag.png").convert("RGBA")
 a = np.array(bag); a[..., 3][a[..., 3] < 12] = 0; bag = Image.fromarray(a)
 
 flat = room.copy(); flat.alpha_composite(bag)
-flat.convert("RGB").resize((1024, 1536), Image.LANCZOS).save("public/assets/arena/botsman.webp", quality=88, method=6)
+flat.convert("RGB").resize((1024, 1536), Image.LANCZOS).save("public/assets/arena/botsman.webp", quality=75, method=6)
 import os
 os.makedirs("public/assets/arena/botsman", exist_ok=True)
-room.convert("RGB").resize((1024, 1536), Image.LANCZOS).save("public/assets/arena/botsman/room.webp", quality=88, method=6)
+room.convert("RGB").resize((1024, 1536), Image.LANCZOS).save("public/assets/arena/botsman/room.webp", quality=75, method=6)
 bb = bag.getbbox()
 bc = bag.crop(bb)
 bw, bh = round(bc.width * K), round(bc.height * K)
-bc.resize((bw, bh), Image.LANCZOS).save("public/assets/arena/botsman/bag.webp", quality=88, method=6)
+bc.resize((bw, bh), Image.LANCZOS).save("public/assets/arena/botsman/bag.webp", quality=75, method=6)
 # the chain's top: its middle on the first rows
 al = np.array(bc)[..., 3]
 row = next(y for y in range(al.shape[0]) if (al[y] > 60).any())
@@ -55,7 +55,7 @@ for cx in range(4, TW - 8, CW):
                 d.text((cx, y - TH), random.choice(glyphs), font=font, fill=col)
 tile = Image.alpha_composite(tile.filter(ImageFilter.GaussianBlur(2.4)), tile)
 strip = Image.new("RGBA", (TW, TH * 2), (0, 0, 0, 0)); strip.paste(tile, (0, 0)); strip.paste(tile, (0, TH))
-strip.save("public/assets/arena/botsman/code.webp", quality=86, method=6)
+strip.save("public/assets/arena/botsman/code.webp", quality=75, method=6)
 
 data = {"bag": {"x": round(bb[0] * K, 1), "y": round(bb[1] * K, 1), "w": bw, "h": bh}, "pin": pin,
         "wall": {"x": wx, "y": wy, "w": ww, "h": wh}}

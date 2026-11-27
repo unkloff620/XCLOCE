@@ -59,6 +59,6 @@ save("foreR", placed("fist"))
 # pictures for the lists: the whole boss (2:3) and the face
 full = Image.new("RGBA", (1867, 2800), (0, 0, 0, 0))
 full.alpha_composite(ref.crop((67, 0, 1934, 2800)))
-full.resize((1024, 1536), Image.LANCZOS).save("public/bosses/bebyakyan/full.webp", quality=88, method=6)
-ref.crop((740, 20, 1300, 580)).resize((512, 512), Image.LANCZOS).save("public/bosses/bebyakyan/portrait.webp", quality=88, method=6)
+full.resize((1024, 1536), Image.LANCZOS).save("public/bosses/bebyakyan/full.webp", quality=75, method=6)
+ref.crop((740, 20, 1300, 580)).resize((512, 512), Image.LANCZOS).save("public/bosses/bebyakyan/portrait.webp", quality=75, method=6)
 print("ok")

@@ -15,7 +15,7 @@ x0, y0, x1, y1 = im.getbbox()
 p = im.crop((x0, y0, x1, y1))
 W, H = p.size
 p = p.resize((1200, round(1200 * H / W)), Image.LANCZOS)
-p.save(os.path.join(OUT, "card-plank.webp"), quality=90, method=6)
+p.save(os.path.join(OUT, "card-plank.webp"), quality=75, method=6)
 print("plank", p.size)
 # the template's boxes (on the 2172×541 template)
 BOX = {"name": (162, 50, 594, 112), "pic": (129, 128, 619, 453), "ava-d": (719, 177, 947, 402), "nick-d": (956, 180, 1275, 242),
@@ -31,7 +31,7 @@ b = Image.fromarray(ba)
 bx0, by0, bx1, by1 = b.getbbox()
 b = b.crop((bx0, by0, bx1, by1))
 BW, BH = b.size
-b.resize((1000, round(1000 * BH / BW)), Image.LANCZOS).save(os.path.join(OUT, "biz-plank.webp"), quality=90, method=6)
+b.resize((1000, round(1000 * BH / BW)), Image.LANCZOS).save(os.path.join(OUT, "biz-plank.webp"), quality=75, method=6)
 print("biz", (1000, round(1000 * BH / BW)))
 # the template's boxes (on the 1723×732 template): the tab's word, the title, the two rewards, the button
 BBOX = {"tab": (68, 247, 147, 498), "title": (560, 140, 1180, 235), "rew-1": (422, 263, 856, 378), "rew-2": (897, 263, 1330, 378), "btn": (1265, 530, 1616, 625)}

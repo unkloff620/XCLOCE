@@ -17,10 +17,10 @@ for f in sorted(glob.glob(os.path.join(HERE, "source", "locations", "*.png"))):
     # tall pictures: 800 wide; wide ones: 1500 tall at most (the page shows a phone-shaped middle part)
     k = 800 / im.width if im.height > im.width else min(1.0, 1500 / im.height)
     full = im.resize((round(im.width * k), round(im.height * k)), Image.LANCZOS)
-    full.save(os.path.join(OUT, name + ".webp"), "WEBP", quality=78, method=4)
+    full.save(os.path.join(OUT, name + ".webp"), "WEBP", quality=75, method=4)
     w = im.width
     h = round(w * BANNER[1] / BANNER[0])
     cy = round(im.height * BANNER_Y.get(name, 0.4))
     y0 = max(0, min(im.height - h, cy - h // 2))
-    im.crop((0, y0, w, y0 + h)).resize(BANNER, Image.LANCZOS).save(os.path.join(OUT, name + "-card.webp"), "WEBP", quality=80, method=4)
+    im.crop((0, y0, w, y0 + h)).resize(BANNER, Image.LANCZOS).save(os.path.join(OUT, name + "-card.webp"), "WEBP", quality=75, method=4)
     print(name, full.size, os.path.getsize(os.path.join(OUT, name + ".webp")) // 1024, "KB")

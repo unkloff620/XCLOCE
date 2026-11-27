@@ -20,7 +20,7 @@ for src, dst in [("public/bosses/botsman/rig/handL.webp", "public/bosses/botsman
         if st[i][4] > 30: keep[lab == i] = 1
     a = cv2.GaussianBlur((keep * 255).astype(np.uint8), (3, 3), 0)
     out = np.dstack([np.full_like(a, 255)] * 3 + [a])
-    Image.fromarray(out).save(dst, "WEBP", quality=90, lossless=True)
+    Image.fromarray(out).save(dst, "WEBP", quality=75, lossless=True)
     v = np.where(keep > 0, hsv[..., 2], 0).astype(np.float32)
     v = cv2.GaussianBlur(v, (7, 7), 0)
     y, x = np.unravel_index(np.argmax(v), v.shape)

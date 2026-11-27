@@ -138,11 +138,11 @@ cx, cy = (fx0 + fx1) / 2, (fy0 + fy1) / 2
 box = (round(cx - side), round(cy - side * 1.5), round(cx + side), round(cy + side * 1.5))
 canvas = Image.new("RGBA", (box[2] - box[0], box[3] - box[1]), (0, 0, 0, 0))
 canvas.alpha_composite(full, (max(0, -box[0]), max(0, -box[1])), (max(0, box[0]), max(0, box[1])))
-canvas.resize((1024, 1536), Image.LANCZOS).save("public/bosses/mugo/full.webp", quality=88, method=6)
-ref.crop((1000, 160, 1640, 800)).resize((512, 512), Image.LANCZOS).save("public/bosses/mugo/portrait.webp", quality=88, method=6)
+canvas.resize((1024, 1536), Image.LANCZOS).save("public/bosses/mugo/full.webp", quality=75, method=6)
+ref.crop((1000, 160, 1640, 800)).resize((512, 512), Image.LANCZOS).save("public/bosses/mugo/portrait.webp", quality=75, method=6)
 # the boss card (640×790): head and chest, like the other bosses' cards
 cw = 1180
 card = Image.new("RGBA", (cw, round(cw * 790 / 640)), (0, 0, 0, 0))
 card.alpha_composite(ref, (0, 0), (760, 150, 760 + cw, 150 + card.height))
-card.resize((640, 790), Image.LANCZOS).save("public/bosses/mugo/card.webp", quality=88, method=6)
+card.resize((640, 790), Image.LANCZOS).save("public/bosses/mugo/card.webp", quality=75, method=6)
 print("ok")

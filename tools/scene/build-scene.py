@@ -25,13 +25,13 @@ for f in sorted(os.listdir(os.path.join(HERE, "source"))):
     if name.startswith("room-"):
         # a room with a see-through window (alpha) keeps it: the sky is drawn behind (penthouse)
         has_alpha = im.mode in ("RGBA", "LA") and im.getchannel("A").getextrema()[0] < 250
-        (im.convert("RGBA") if has_alpha else im.convert("RGB")).save(os.path.join(OUT, name + ".webp"), "WEBP", quality=82, method=6)
+        (im.convert("RGBA") if has_alpha else im.convert("RGB")).save(os.path.join(OUT, name + ".webp"), "WEBP", quality=75, method=6)
         if has_alpha and os.path.exists(os.path.join(HERE, "source", "sky", name[5:] + "-sky.png")):
             # the panorama behind the window: SKY_H scene units tall, plus a flat copy (room over sky) for the blurred backdrop
             sky = Image.open(os.path.join(HERE, "source", "sky", name[5:] + "-sky.png")).convert("RGB")
             sw = round(sky.width * SKY_H / sky.height)
             sky = sky.resize((sw, SKY_H), Image.LANCZOS)
-            sky.save(os.path.join(OUT, name[5:] + "-sky.webp"), "WEBP", quality=78, method=6)
+            sky.save(os.path.join(OUT, name[5:] + "-sky.webp"), "WEBP", quality=75, method=6)
             flat = Image.new("RGB", im.size, (40, 30, 30))
             flat.paste(sky.crop((0, 0, im.width, SKY_H)), (0, SKY_Y))
             flat.paste(im.convert("RGBA"), (0, 0), im.convert("RGBA"))
@@ -42,7 +42,7 @@ for f in sorted(os.listdir(os.path.join(HERE, "source"))):
         im = im.convert("RGBA"); a = im.getchannel("A").point(lambda v: 0 if v < 30 else v); im.putalpha(a)
         im = im.crop(im.getbbox())
         w = round(WIDTH[kind] * 1.5); h = round(im.height * w / im.width)
-        im.resize((w, h), Image.LANCZOS).save(os.path.join(OUT, name + ".webp"), "WEBP", quality=88, method=6)
+        im.resize((w, h), Image.LANCZOS).save(os.path.join(OUT, name + ".webp"), "WEBP", quality=75, method=6)
         print(name, "aspect h/w =", round(im.height / im.width, 4))
         if kind in ("desk", "monitor"): DESKS[name] = round(im.height / im.width, 4)
     print(name, os.path.getsize(os.path.join(OUT, name + ".webp")) // 1024, "KB")
@@ -69,7 +69,7 @@ for f in sorted(os.listdir(os.path.join(HERE, "source"))):
         bx0, by0, bx1, by1 = im.getbbox()
         w, h = round((bx1 - bx0) / 2), round((by1 - by0) / 2)
         k = min(1, 720 / w)
-        im.crop((bx0, by0, bx1, by1)).resize((round(w * k), round(h * k)), Image.LANCZOS).save(os.path.join(OUT, m.group(1) + ".webp"), "WEBP", quality=86, method=6)
+        im.crop((bx0, by0, bx1, by1)).resize((round(w * k), round(h * k)), Image.LANCZOS).save(os.path.join(OUT, m.group(1) + ".webp"), "WEBP", quality=75, method=6)
         CHAIRS[m.group(1)] = {"x": bx0 / 2, "y": by0 / 2, "w": w, "h": h}
         print(m.group(1), CHAIRS[m.group(1)], "in place")
         continue
@@ -81,7 +81,7 @@ for f in sorted(os.listdir(os.path.join(HERE, "source"))):
     w, h = round(W / 2), round(H / 2)
     # the picture itself at most 720 px wide (shown ≈ 330 px on a phone): big ones ran phones out of memory
     k = min(1, 720 / w)
-    im.resize((round(w * k), round(h * k)), Image.LANCZOS).save(os.path.join(OUT, m.group(1) + ".webp"), "WEBP", quality=86, method=6)
+    im.resize((round(w * k), round(h * k)), Image.LANCZOS).save(os.path.join(OUT, m.group(1) + ".webp"), "WEBP", quality=75, method=6)
     # a chair drawn without wheels (the throne stands on its own base): lifted so the hero's feet rest on its base
     CHAIRS[m.group(1)] = {"x": x0 / 2 + CHAIR_DX.get(m.group(1), 0), "y": y0 / 2 - CHAIR_LIFT.get(m.group(1), 0), "w": w, "h": h}
     print(m.group(1), CHAIRS[m.group(1)])
@@ -101,5 +101,5 @@ for f in sorted(os.listdir(OUT)):
         t = Image.open(os.path.join(OUT, f)).convert("RGBA")
         t = t.crop(t.getbbox())
         t.thumbnail((128, 128), Image.LANCZOS)
-        t.save(os.path.join(OUT, "thumb", f), "WEBP", quality=82, method=6)
+        t.save(os.path.join(OUT, "thumb", f), "WEBP", quality=75, method=6)
 print("thumbs")

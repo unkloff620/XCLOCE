@@ -42,7 +42,7 @@ for i, p in enumerate(ORDER):
         m = (top == i) & ndimage.binary_erosion(L[p][..., 3] > 128, iterations=5) & ~white
         k = ndimage.gaussian_filter(m.astype(np.float32), 2)[..., None]
         im[..., :3] = np.clip(im[..., :3] * (1 - k) + warped * k, 0, 255).astype(np.uint8)
-        Image.fromarray(im[y:y + h, x:x + w]).save(os.path.join(OUT, p + ".webp"), "WEBP", quality=88, method=4)
+        Image.fromarray(im[y:y + h, x:x + w]).save(os.path.join(OUT, p + ".webp"), "WEBP", quality=75, method=4)
     else:
         shutil.copy(os.path.join(SRC, p + ".webp"), os.path.join(OUT, p + ".webp"))
 print("pepe beaten")

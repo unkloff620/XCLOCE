@@ -117,6 +117,6 @@ for parts, edit, m in ((BODY_PARTS, body_sheet, mb), (FACE_PARTS, face_sheet, mf
         ew = np.array(ext(Image.fromarray((w * 255).astype(np.uint8)), Image.BILINEAR)).astype(np.float32)[..., None] / 255
         er = np.array(ext(Image.fromarray(edit), Image.BICUBIC)).astype(np.float32)
         orig[..., :3] = orig[..., :3] * (1 - ew) + er * ew
-        Image.fromarray(orig.astype(np.uint8)).save(f"public/bosses/psih/rig/{n}-blood.webp", quality=88, method=6, exact=True)
+        Image.fromarray(orig.astype(np.uint8)).save(f"public/bosses/psih/rig/{n}-blood.webp", quality=75, method=6, exact=True)
         w = ew
         print(n, size, f"{float(w.mean()) * 100:.2f}%")

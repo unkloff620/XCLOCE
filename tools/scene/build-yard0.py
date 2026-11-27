@@ -28,6 +28,6 @@ def key_magenta(src: Image.Image) -> Image.Image:
 
 
 for src, dst in (("court0-day.png", "yard0-bg.webp"), ("court0-night.png", "yard0-bg-dark.webp")):
-    key_magenta(Image.open(os.path.join(SRC, src))).save(os.path.join(OUT, dst), "WEBP", quality=80, method=4)
+    key_magenta(Image.open(os.path.join(SRC, src))).save(os.path.join(OUT, dst), "WEBP", quality=75, method=4)
     print(dst, os.path.getsize(os.path.join(OUT, dst)) // 1024, "KB")
 

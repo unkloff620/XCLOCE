@@ -192,7 +192,7 @@ whole = Image.fromarray(np.where(arr(whole)[..., 3:] > 0, arr(whole), 0).astype(
 lay_full = lay(out["legs"], out["armR"], out["body"], face("eyes"), face("pupils"), face("head"), face("throat"),
                face("teeth-up"), face("teeth-low"), face("lips"), br, out["armL"], out["vials"], out["gasmask"], out["lowR"], out["lowL"]).crop(CROP)
 f = lay_full.resize((lay_full.width // 2, lay_full.height // 2), Image.LANCZOS)
-f.save("public/bosses/utilizator/full.webp", quality=88, method=6)
+f.save("public/bosses/utilizator/full.webp", quality=75, method=6)
 p = lay_full.crop((470, 0, 1170, 700)).resize((320, 320), Image.LANCZOS)
-p.save("public/bosses/utilizator/portrait.webp", quality=88, method=6)
+p.save("public/bosses/utilizator/portrait.webp", quality=75, method=6)
 print("ok", lay_full.size)

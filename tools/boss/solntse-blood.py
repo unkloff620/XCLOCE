@@ -71,5 +71,5 @@ for n in HURT:
     ew = np.array(ext(Image.fromarray((w * 255).astype(np.uint8)), Image.BILINEAR)).astype(np.float32)[..., None] / 255
     er = np.array(ext(Image.fromarray(sheet), Image.BICUBIC)).astype(np.float32)
     orig[..., :3] = orig[..., :3] * (1 - ew) + er * ew
-    Image.fromarray(orig.astype(np.uint8)).save(f"{R}/{n}-blood.webp", quality=88, method=6, exact=True)
+    Image.fromarray(orig.astype(np.uint8)).save(f"{R}/{n}-blood.webp", quality=75, method=6, exact=True)
     print(n, size, f"{float(ew.mean()) * 100:.2f}%")

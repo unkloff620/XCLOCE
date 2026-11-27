@@ -149,7 +149,7 @@ for d in sorted(x for x in glob.glob(os.path.join(HERE, "source", "*")) if os.pa
         w, h = round(crop.width * SCALE), round(crop.height * SCALE)
         k, hires = pick(HIRES_BY_BOSS, (1, set()))
         k = k if p in hires else 1
-        crop.resize((w * k, h * k), Image.LANCZOS).save(os.path.join(dest, p + ".webp"), "WEBP", quality=86, method=4)
+        crop.resize((w * k, h * k), Image.LANCZOS).save(os.path.join(dest, p + ".webp"), "WEBP", quality=75, method=4)
         r = {"x": round(max(0, x0) * SCALE, 1), "y": round(max(0, y0) * SCALE, 1), "w": w, "h": h}
         joint = {**JOINT, **pick(JOINT_BY_BOSS, {})}
         if p in joint:
@@ -179,7 +179,7 @@ for d in sorted(x for x in glob.glob(os.path.join(HERE, "source", "*")) if os.pa
         for i, im in enumerate(ims):
             im[im[:, :, 3] < 30] = 0
             strip.paste(Image.fromarray(im[y0:y1, x0:x1]).resize((cw, ch), Image.LANCZOS), (i * cw, 0))
-        strip.save(os.path.join(dest, p + ".webp"), "WEBP", quality=88, method=4)
+        strip.save(os.path.join(dest, p + ".webp"), "WEBP", quality=75, method=4)
         rig[p] = {"x": round(x0 * SCALE, 1), "y": round(y0 * SCALE, 1), "w": cw, "h": ch, "frames": len(ims)}
     out[boss] = {"w": round(W * SCALE), "h": round(H * SCALE), "parts": rig}
     print(boss, json.dumps(rig))

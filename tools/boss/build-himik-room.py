@@ -40,7 +40,7 @@ def part(name, im, q=88, b=None):
 
 P = lambda x, y: [round(x * K, 1), round(y * K, 1)]
 # the sky: the tile, its drawn size (it slides by one tile, endlessly) and the window's hole it fills
-Image.open(f"{S}/sky.png").convert("RGB").resize((560, 560), Image.LANCZOS).save(f"{O}/sky.webp", quality=84, method=6)
+Image.open(f"{S}/sky.png").convert("RGB").resize((560, 560), Image.LANCZOS).save(f"{O}/sky.webp", quality=75, method=6)
 data["sky"] = {"tile": round(760 * K, 1), "x": round(930 * K, 1), "y": round(620 * K, 1)}
 part("city", L["city"])
 full("room", L["room"], 86)
@@ -102,7 +102,7 @@ for n in ["rack", "still-b", "still-a", "lamp"]:
 still.alpha_composite(L["stool"])
 for n in ["rack", "still-b", "still-a", "lamp"]:
     still.alpha_composite(L[n])
-still.convert("RGB").resize((1024, round(H * K)), Image.LANCZOS).save("public/assets/arena/himik.webp", quality=84, method=6)
+still.convert("RGB").resize((1024, round(H * K)), Image.LANCZOS).save("public/assets/arena/himik.webp", quality=75, method=6)
 # the home room: the scene canvas 1060×1484 — the picture ×0.62, 90 px off the left and 430 off the top (content/home-scene.ts
 # LAB_ON_SCENE: the room big round the hero; on the home screen the live room goes on above the canvas — ROOM_TALL)
 HK, HX, HY = 0.62, 90, 430

@@ -31,5 +31,5 @@ for boss, (src, (x0, y0, x1, y1)) in CARDS.items():
     canvas = Image.new("RGBA", (x1 - x0, y1 - y0), (0, 0, 0, 0))
     canvas.alpha_composite(im.crop((max(0, x0), max(0, y0), min(im.width, x1), min(im.height, y1))), (max(0, -x0), max(0, -y0)))
     out = canvas.resize((W, round(W * canvas.height / canvas.width)), Image.LANCZOS)
-    out.save(f"public/bosses/{boss}/card.webp", quality=88, method=6)
+    out.save(f"public/bosses/{boss}/card.webp", quality=75, method=6)
     print(boss, out.size)

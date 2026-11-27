@@ -37,7 +37,7 @@ def glow_of(a, sigma_core=1.4, sigma_halo=10, gain=2.2):
 room = Image.open(f"{S}/room.png").convert("RGBA")
 ball = Image.open(f"{S}/ball.png").convert("RGBA")
 small = room.resize((1024, 1536), Image.LANCZOS)
-small.save(f"{O}/room.webp", quality=86, method=6)
+small.save(f"{O}/room.webp", quality=75, method=6)
 ra = np.array(room)
 # not the sun gate's spikes and rim (lit metal, not lava): an ellipse round the window, down to the grate under it
 yy, xx = np.mgrid[0:3000, 0:2000]
@@ -45,12 +45,12 @@ gate = (((xx - 1000) / 800.0) ** 2 + ((yy - 640) / 480.0) ** 2 < 1) & (yy < 880)
 ra2 = ra.copy()
 ra2[gate, 3] = 0
 cr = Image.fromarray(glow_of(ra2)).resize((1024, 1536), Image.LANCZOS)
-cr.save(f"{O}/cracks.webp", quality=82, method=6)
+cr.save(f"{O}/cracks.webp", quality=75, method=6)
 # its soft copy, blurred here once (an SVG blur on a layer that pulses costs a phone every frame)
 from PIL import ImageFilter
-cr.filter(ImageFilter.GaussianBlur(3)).save(f"{O}/cracks-soft.webp", quality=80, method=6)
+cr.filter(ImageFilter.GaussianBlur(3)).save(f"{O}/cracks-soft.webp", quality=75, method=6)
 bb = ball.getbbox()
-ball.crop(bb).resize((round((bb[2] - bb[0]) * K), round((bb[3] - bb[1]) * K)), Image.LANCZOS).save(f"{O}/ball.webp", quality=88, method=6)
+ball.crop(bb).resize((round((bb[2] - bb[0]) * K), round((bb[3] - bb[1]) * K)), Image.LANCZOS).save(f"{O}/ball.webp", quality=75, method=6)
 box = {"x": round(bb[0] * K, 1), "y": round(bb[1] * K, 1), "w": round((bb[2] - bb[0]) * K), "h": round((bb[3] - bb[1]) * K)}
 # the window's middle and radius (the see-through hole)
 hole = np.array(room)[..., 3] < 128
@@ -66,7 +66,7 @@ open("src/client/art/arena-sun-data.ts", "w").write(
 flat = Image.new("RGBA", room.size, (20, 6, 2, 255))
 flat.alpha_composite(ball)
 flat.alpha_composite(room)
-flat.convert("RGB").resize((1024, 1536), Image.LANCZOS).save("public/assets/arena/solntse.webp", quality=86, method=6)
+flat.convert("RGB").resize((1024, 1536), Image.LANCZOS).save("public/assets/arena/solntse.webp", quality=75, method=6)
 # the home room: the scene canvas 1060×1484 (the 1024×1536 picture ×1060/1024, 53 px off the top)
 sc = flat.convert("RGB").resize((1060, round(3000 * 1060 / 2000)), Image.LANCZOS).crop((0, 53, 1060, 53 + 1484))
 sc.save("tools/scene/source/room-forge.png")
@@ -74,7 +74,7 @@ sc.save("tools/scene/source/room-forge.png")
 # the card
 cool = Image.open(f"{S}/card-cool.png").convert("RGBA")
 hot = Image.open(f"{S}/card-hot.png").convert("RGBA")
-cool.save("public/assets/ui/boss-card-frame-solntse.webp", quality=88, method=6)
-hot.save("public/assets/ui/solntse-card-hot.webp", quality=88, method=6)
-Image.fromarray(glow_of(np.array(hot), 1.0, 6, 1.6)).save("public/assets/ui/solntse-card-cracks.webp", quality=84, method=6)
+cool.save("public/assets/ui/boss-card-frame-solntse.webp", quality=75, method=6)
+hot.save("public/assets/ui/solntse-card-hot.webp", quality=75, method=6)
+Image.fromarray(glow_of(np.array(hot), 1.0, 6, 1.6)).save("public/assets/ui/solntse-card-cracks.webp", quality=75, method=6)
 print("ball", box, "win", win)

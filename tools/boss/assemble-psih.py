@@ -125,9 +125,9 @@ whole = Image.new("RGBA", (2000, 3000), (0, 0, 0, 0))
 for n in order:
     whole.alpha_composite(placed(n))
 whole = whole.crop(CROP)
-whole.resize((whole.width // 2, whole.height // 2), Image.LANCZOS).save("public/bosses/psih/full.webp", quality=88, method=6)
+whole.resize((whole.width // 2, whole.height // 2), Image.LANCZOS).save("public/bosses/psih/full.webp", quality=75, method=6)
 hb = placed("hair").getbbox()
 cx = (hb[0] + hb[2]) // 2 - CROP[0]
 p = whole.crop((cx - 300, 20, cx + 300, 620)).resize((320, 320), Image.LANCZOS)
-p.save("public/bosses/psih/portrait.webp", quality=88, method=6)
+p.save("public/bosses/psih/portrait.webp", quality=75, method=6)
 print("ok", whole.size)

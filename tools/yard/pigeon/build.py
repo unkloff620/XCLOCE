@@ -10,5 +10,5 @@ for f in sorted(glob.glob(os.path.join(HERE, "source", "*.png"))):
     if os.path.basename(f).startswith("ref-"):
         continue  # the artist's pose references (walk, peck, fly), not used in the game
     im = Image.open(f).convert("RGBA").resize((254, 200), Image.LANCZOS)
-    im.save(os.path.join(OUT, os.path.splitext(os.path.basename(f))[0] + ".webp"), quality=88, method=6)
+    im.save(os.path.join(OUT, os.path.splitext(os.path.basename(f))[0] + ".webp"), quality=75, method=6)
     print(os.path.basename(f))

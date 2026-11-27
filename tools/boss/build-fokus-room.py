@@ -36,7 +36,7 @@ def load(n):
 
 
 room = load("room")
-room.save(f"{O}/room.webp", quality=86, method=6)
+room.save(f"{O}/room.webp", quality=75, method=6)
 
 boxes = {}
 
@@ -61,10 +61,10 @@ parts = {"cat-tail": tail, "cat-leg": leg}
 rest = ca.copy()
 for nm, m in parts.items():
     im = ca.copy(); im[..., 3] = np.where(m, im[..., 3], 0)
-    Image.fromarray(im).save(f"{O}/{nm}.webp", quality=88, method=6, exact=True)
+    Image.fromarray(im).save(f"{O}/{nm}.webp", quality=75, method=6, exact=True)
     rest[..., 3] = np.where(m, 0, rest[..., 3])
-Image.fromarray(rest).save(f"{O}/cat-body.webp", quality=88, method=6, exact=True)
-cpaw.save(f"{O}/cat-paw.webp", quality=88, method=6, exact=True)
+Image.fromarray(rest).save(f"{O}/cat-body.webp", quality=75, method=6, exact=True)
+cpaw.save(f"{O}/cat-paw.webp", quality=75, method=6, exact=True)
 bb = cb.getbbox()
 cat_box = Image.open(f"{S}/cat.png").getbbox()
 sx, sy = (cat_box[2] - cat_box[0]) / (bb[2] - bb[0]), (cat_box[3] - cat_box[1]) / (bb[3] - bb[1])
@@ -94,7 +94,7 @@ for src, dst in (("public/assets/yard/sky.webp", "sky-day"), ("public/assets/yar
     sky = Image.open(src).convert("RGB")
     hh = 640
     sky = sky.resize((round(sky.width * hh / sky.height), hh), Image.LANCZOS)
-    sky.save(f"{O}/{dst}.webp", quality=80, method=6)
+    sky.save(f"{O}/{dst}.webp", quality=75, method=6)
     boxes[dst] = {"w": sky.width, "h": sky.height}
 
 geo = {"win": list(WIN), "glassR": GLASS_R, "hub": list(HUB), **boxes}
@@ -111,6 +111,6 @@ for n in ["tree", "room", "propeller", "plant", "props"]:
 cr = boxes["cat-rig"]
 cat_full = cb.copy(); cat_full.alpha_composite(cpaw)
 flat.alpha_composite(cat_full.resize((round(cr["w"]), round(cr["h"])), Image.LANCZOS), (round(cr["x"]), round(cr["y"])))
-flat.convert("RGB").save("public/assets/arena/fokus.webp", quality=84, method=6)
+flat.convert("RGB").save("public/assets/arena/fokus.webp", quality=75, method=6)
 flat.convert("RGB").save("tools/scene/source/room-coder.png")
 print("ok", json.dumps(boxes))

@@ -47,7 +47,7 @@ for n in ORDER:
     b = im.split()[3].point(lambda v: 255 if v > 8 else 0).getbbox()
     part = im.crop(b)
     part = part.resize((max(1, round(part.width * SCALE)), max(1, round(part.height * SCALE))), Image.LANCZOS)
-    part.save(f"{OUT}/rig/{n}.webp", quality=90, method=6)
+    part.save(f"{OUT}/rig/{n}.webp", quality=75, method=6)
     data["layers"][n] = [round(b[0] * SCALE, 1), round(b[1] * SCALE, 1), part.width, part.height]
 # how far each lid slides to shut its eye (rig px, down for the upper ones, up for the lower ones): the two meet a bit
 # below the middle of the white, overlapping a little, on every column of the eye
@@ -100,10 +100,10 @@ open("src/client/art/pepe-data.ts", "w").write(
     f"export const PEPE = {json.dumps(data)} as const;\n")
 # the still pictures for the lists and the boss screen
 full = comp.crop((X0, Y0, X1, Y1))
-full.resize((W, H), Image.LANCZOS).save(f"{OUT}/full.webp", quality=88, method=6)
+full.resize((W, H), Image.LANCZOS).save(f"{OUT}/full.webp", quality=75, method=6)
 hb = layers["head"].split()[3].getbbox()
 side = max(hb[2] - hb[0], hb[3] - hb[1]) + 80
 cx, cy = (hb[0] + hb[2]) // 2, (hb[1] + hb[3]) // 2 + 40
-comp.crop((cx - side // 2, cy - side // 2, cx + side // 2, cy + side // 2)).resize((512, 512), Image.LANCZOS).save(f"{OUT}/portrait.webp", quality=88, method=6)
-comp.crop((X0, Y0, X1, Y0 + round((X1 - X0) * 1.1))).resize((640, round(640 * 1.1)), Image.LANCZOS).save(f"{OUT}/card.webp", quality=86, method=6)
+comp.crop((cx - side // 2, cy - side // 2, cx + side // 2, cy + side // 2)).resize((512, 512), Image.LANCZOS).save(f"{OUT}/portrait.webp", quality=75, method=6)
+comp.crop((X0, Y0, X1, Y0 + round((X1 - X0) * 1.1))).resize((640, round(640 * 1.1)), Image.LANCZOS).save(f"{OUT}/card.webp", quality=75, method=6)
 print("rig", W, H, {k: v for k, v in data["layers"].items()})
