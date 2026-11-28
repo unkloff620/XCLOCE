@@ -3,6 +3,7 @@
  * Друзья (the user 2026-11-25; it was the top of all the players) — полоска над нижним меню: я и мои друзья по
  * авторитету, аватар, под ним место среди нас, зелёная точка — сейчас в игре. Друзей добавляют кнопкой [+] в комнате
  * игрока (systems/friends.ts). Полоску можно свернуть (остаётся язычок «Друзья»), выбор помнится в браузере. Данные — /api/top.
+ * Слева — язычок «Топ 100» (2026-11-28): та же полоска с первой сотней игры по авторитету (/api/top100).
  */
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -16,16 +17,37 @@ import { fromGameId, gameId } from "../content/social.ts";
 
 interface TopRow { id: number; name: string; photo: string | null; xp: number; place: number; frame: string | null; online: boolean }
 interface TopView { friends: TopRow[]; online: number }
+interface Top100 { top: TopRow[]; me: { place: number; xp: number } | null; online: number }
+type Panel = "friends" | "top" | null;
 
 const KEY = "xc2_leaders_open";
-const readOpen = () => {
-  try { return localStorage.getItem(KEY) !== "0"; } catch { return true; }
+// "1" (or nothing) — the friends open, "top" — «Топ 100» open, "0" — folded
+const readOpen = (): Panel => {
+  try { const v = localStorage.getItem(KEY); return v === "0" ? null : v === "top" ? "top" : "friends"; } catch { return "friends"; }
 };
 
+/** a player in the strip: avatar, the place under it, the green dot when in the game */
+function Leader({ r, me }: { r: TopRow; me: boolean }) {
+  return (
+    <Link href={`/profile?id=${r.id}`} className={`leader p${Math.min(r.place, 4)} ${me ? "me" : ""}`} title={`${r.place}. ${r.name} · ${r.xp.toLocaleString("ru-RU")} авторитета${r.online ? " · в игре" : ""}`}>
+      <span className="leader-av">
+        <Avatar name={r.name} photo={r.photo} size={40} frame={r.frame} />
+        {r.online && <i className="leader-on" aria-label="в игре" />}
+      </span>
+      <b className="leader-n num">{r.place}</b>
+    </Link>
+  );
+}
+
+/**
+ * The strip above the bottom menu with two tabs: «Друзья» on the right (me and my friends by authority) and «Топ 100»
+ * on the left (the first hundred players of the game by authority, the user 2026-11-28; /api/top100). One open at a time.
+ */
 export function LeadersStrip() {
   const { state } = useGame();
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState<Panel>("friends");
   const [data, setData] = useState<TopView | null>(null);
+  const [top, setTop] = useState<Top100 | null>(null);
   const [find, setFind] = useState(false);
   useEffect(() => setOpen(readOpen()), []);
   useEffect(() => {
@@ -36,48 +58,68 @@ export function LeadersStrip() {
     const t = window.setInterval(() => document.visibilityState === "visible" && load(), 60_000);
     return () => { alive = false; clearInterval(t); };
   }, []);
+  // «Топ 100»: loaded when opened (and again every minute while it is open)
+  useEffect(() => {
+    if (open !== "top") return;
+    let alive = true;
+    const load = () => api.get<Top100>("/api/top100").then((v) => { if (alive) setTop(v); }).catch(() => {});
+    load();
+    const t = window.setInterval(() => document.visibilityState === "visible" && load(), 60_000);
+    return () => { alive = false; clearInterval(t); };
+  }, [open]);
+  const hasFriends = !!data?.friends.length;
+  const shown: Panel = open === "friends" && !hasFriends ? null : open;
   // the page below makes room for the open strip
   useEffect(() => {
-    document.documentElement.style.setProperty("--strip-h", open && data?.friends.length ? "74px" : "0px");
+    document.documentElement.style.setProperty("--strip-h", shown ? "74px" : "0px");
     return () => { document.documentElement.style.setProperty("--strip-h", "0px"); };
-  }, [open, data?.friends.length]);
-  const set = (v: boolean) => {
+  }, [shown]);
+  const set = (v: Panel) => {
     setOpen(v);
-    try { localStorage.setItem(KEY, v ? "1" : "0"); } catch { /* private mode */ }
+    try { localStorage.setItem(KEY, v === null ? "0" : v === "top" ? "top" : "1"); } catch { /* private mode */ }
   };
-  const toggle = () => set(!open);
   // a tap anywhere outside the open strip folds it away
   useEffect(() => {
-    if (!open) return;
+    if (!shown) return;
     const away = (e: PointerEvent) => {
-      if (!(e.target instanceof Element) || !e.target.closest(".leaders")) set(false);
+      if (!(e.target instanceof Element) || !e.target.closest(".leaders")) set(null);
     };
     document.addEventListener("pointerdown", away, true);
     return () => document.removeEventListener("pointerdown", away, true);
-  }, [open]);
-  if (!data?.friends.length) return null;
+  }, [shown]);
   const meId = state?.player.id;
+  const meInTop = !!top?.top.some((r) => r.id === meId);
   return (
-    <div className={`leaders ${open ? "open" : "closed"}`}>
-      <button className="leaders-tab" onClick={toggle} aria-expanded={open} aria-label={open ? "Скрыть друзей" : "Показать друзей"}>
-        <Icon name="xp" size={14} /> Друзья{data.online > 0 && <span className="leaders-online"><i />{data.online}</span>} <i className="leaders-arrow">▾</i>
+    <div className={`leaders ${shown ? "open" : "closed"} ${shown === "top" ? "is-top" : ""}`}>
+      <button className={`leaders-tab left ${shown === "top" ? "on" : ""}`} onClick={() => set(shown === "top" ? null : "top")} aria-expanded={shown === "top"} aria-label={shown === "top" ? "Скрыть топ 100" : "Показать топ 100"}>
+        <Icon name="xp" size={14} /> Топ 100 <i className="leaders-arrow">▾</i>
       </button>
+      {hasFriends && (
+        <button className={`leaders-tab ${shown === "friends" ? "on" : ""}`} onClick={() => set(shown === "friends" ? null : "friends")} aria-expanded={shown === "friends"} aria-label={shown === "friends" ? "Скрыть друзей" : "Показать друзей"}>
+          <Icon name="xp" size={14} /> Друзья{data!.online > 0 && <span className="leaders-online"><i />{data!.online}</span>} <i className="leaders-arrow">▾</i>
+        </button>
+      )}
       {/* always there: opening and closing slide it (the height), folded it takes no taps */}
-      <div className="leaders-row" inert={!open} aria-hidden={!open}>
-          {data.friends.map((r) => (
-            <Link key={r.id} href={`/profile?id=${r.id}`} className={`leader p${Math.min(r.place, 4)} ${r.id === meId ? "me" : ""}`} title={`${r.place}. ${r.name} · ${r.xp.toLocaleString("ru-RU")} авторитета${r.online ? " · в игре" : ""}`}>
-              <span className="leader-av">
-                <Avatar name={r.name} photo={r.photo} size={40} frame={r.frame} />
-                {r.online && <i className="leader-on" aria-label="в игре" />}
-              </span>
-              <b className="leader-n num">{r.place}</b>
-            </Link>
-          ))}
-          {/* a player found by his game id (on his dossier's cover) — the way to add a friend */}
-          <button type="button" className="leader more find" onClick={() => setFind(true)} aria-label="Найти по ID" title="Найти по ID">
-            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" strokeWidth="3" /><path d="M15 15l6 6" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" /></svg>
-          </button>
-          <Link href="/rating" className="leader more" aria-label="Весь рейтинг">›</Link>
+      <div className="leaders-row" inert={!shown} aria-hidden={!shown}>
+        {shown === "top" ? (
+          <>
+            {/* my own place first when I am not in the hundred */}
+            {top?.me && !meInTop && state && (
+              <Leader r={{ id: state.player.id, name: state.player.name, photo: state.player.photo ?? null, xp: top.me.xp, place: top.me.place, frame: null, online: true }} me />
+            )}
+            {top?.top.map((r) => <Leader key={r.id} r={r} me={r.id === meId} />)}
+            <Link href="/rating" className="leader more" aria-label="Весь рейтинг">›</Link>
+          </>
+        ) : (
+          <>
+            {data?.friends.map((r) => <Leader key={r.id} r={r} me={r.id === meId} />)}
+            {/* a player found by his game id (on his dossier's cover) — the way to add a friend */}
+            <button type="button" className="leader more find" onClick={() => setFind(true)} aria-label="Найти по ID" title="Найти по ID">
+              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" strokeWidth="3" /><path d="M15 15l6 6" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" /></svg>
+            </button>
+            <Link href="/rating" className="leader more" aria-label="Весь рейтинг">›</Link>
+          </>
+        )}
       </div>
       {find && createPortal(<FindById onClose={() => setFind(false)} />, document.body)}
     </div>

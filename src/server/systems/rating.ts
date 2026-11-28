@@ -153,7 +153,8 @@ export async function claimPrize(ctx: Ctx, id: number) {
 
 /* ---------------- the leaders strip ---------------- */
 
-export const TOP_STRIP = 300;
+/** «Топ 100» (the user 2026-11-28): the panel on the left above the bottom menu */
+export const TOP_STRIP = 100;
 /** a player counts as in the game if he was seen this recently (the strip itself pings every minute) */
 export const ONLINE_MS = 3 * 60_000;
 
