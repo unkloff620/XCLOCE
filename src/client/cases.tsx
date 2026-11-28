@@ -4,6 +4,7 @@
  * still secret) and his set's weapon bonus. A case is closed with CASE_WINS wins and the whole set owned (server:
  * systems/collection.ts). Closed cases get the red «ЗАКРЫТО» stamp.
  */
+import { partBonus } from "../content/tattoos.ts";
 import { useState } from "react";
 import { BOSSES, CASE_WINS, EVENT_FIGHTS, bossById, type BossDef } from "../content/bosses.ts";
 import { itemById } from "../content/items.ts";
@@ -86,7 +87,7 @@ function CaseWindow({ c, self, onClose }: { c: CaseRow; self: boolean; onClose: 
             <ItemArt id={c.set.weapon} size={34} />
             <span className="grow">
               <b>Комплект: {weaponName(c.set.weapon)} +{c.set.damage}{c.set.also ? `, ${weaponName(c.set.also.weapon)} +${c.set.also.damage}` : ""} урона</b>
-              <small>{setDone ? "Собран — бонус работает, даже если вещи не надеты" : `Собери все вещи: ${c.set.have}/${c.set.total}`}</small>
+              <small>{setDone ? "Собран — бонус работает, даже если вещи не надеты" : `Вещей ${c.set.have}/${c.set.total} — сейчас +${partBonus(c.set.damage, c.set.have, c.set.total)}${c.set.also ? `, +${partBonus(c.set.also.damage, c.set.have, c.set.total)}` : ""}`}</small>
             </span>
           </div>
         )}

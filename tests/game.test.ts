@@ -424,7 +424,8 @@ describe("boss fights: personal fights, shared damage", () => {
     expect([await qty(db, p, "fist"), await qty(db, p, "mouse"), await qty(db, p, "red-candle")]).toEqual([1, 1, 1]);
     await startDatsik(p);
     const r = await hit(p, "fist");
-    expect(r.result).toMatchObject({ damage: 20, left: null });
+    // 20, and the share of Дацкоу's things the player has (each thing adds its share at once)
+    expect(r.result).toMatchObject({ damage: 20 + (r.state.setBonus?.fist ?? 0), left: null });
     expect((await hit(p, "mouse")).result).toMatchObject({ damage: 5, left: null });
     expect((await hit(p, "red-candle")).result).toMatchObject({ damage: 12, left: null });
     await expect(hit(p, "fist", T0 + 479 * M)).rejects.toMatchObject({ code: "cooldown" });
@@ -2148,18 +2149,18 @@ describe("Бутылка Командате", () => {
 });
 
 describe("boss sets and «Дела»", () => {
-  it("the whole set of Командате (worn or not) adds +70 to the knife; the case shows it", async () => {
+  it("Командате's things add to the knife one by one (70 ÷ 4 rounded up each), the whole set +70; the case shows it", async () => {
     const p = await newPlayer(db);
     await give(db, p, "keyboard", 5);
     await startDatsik(p);
     const plain = await hit(p, "keyboard", T0);
     for (const it of ["bottle-komandate", "jacket-komandate", "pants-komandate"]) await give(db, p, it, 1);
     const three = await hit(p, "keyboard", T0 + 1000);
-    expect(three.result.damage).toBe(plain.result.damage);
+    expect(three.result.damage).toBe(plain.result.damage + 3 * 18);
     await give(db, p, "sneakers-komandate", 1);
     const full4 = await hit(p, "keyboard", T0 + 2000);
     expect(full4.result.damage).toBe(plain.result.damage + 70);
-    expect(full4.state.setBonus).toEqual({ keyboard: 70 });
+    expect(full4.state.setBonus).toMatchObject({ keyboard: 70 });
     const { profileView } = await import("../src/server/systems/state.ts");
     const { loadConfig } = await import("../src/server/config.ts");
     const prof = await profileView(db, p, p, await loadConfig(db), T0);
@@ -2290,7 +2291,6 @@ describe("режимы боя и медали боссов", () => {
     await hit(p, "rug-pull-gun");
     const won = await act(db, p, "fight_claim", { fightId: f.result.fightId }, T0, always(0.99));
     expect(won.result.reward.medal).toBeUndefined();
-    expect(won.state.setBonus ?? {}).toEqual({});
   });
 });
 
@@ -2373,7 +2373,8 @@ describe("Боксёрская", () => {
     expect(await wallet(db, p, "PAP")).toBe(5000 + (c.result.reward.currencies?.PAP ?? 0) - 4000);
     await setBossHp({ datsik: 1000 });
     await startDatsik(p, T0 + M);
-    expect((await hit(p, "fist", T0 + M)).result.damage).toBe(20);
+    // the fist: its own 20 and +4 for the one Дацкоу's thing every new player has (10 ÷ 3 rounded up) — the room adds nothing
+    expect((await hit(p, "fist", T0 + M)).result.damage).toBe(24);
   });
 });
 
@@ -2451,7 +2452,7 @@ describe("«Крафт»", () => {
     const put = await act(db, p, "craft_put", { itemId: "craft-nail-bat" }, T0);
     expect(put.result).toMatchObject({ slot: 0 });
     expect(put.state.craftBoxes[0]).toBe("craft-nail-bat");
-    expect(put.state.setBonus.fist).toBe(3);
+    expect(put.state.setBonus.fist).toBe(3 + (b.state.setBonus?.fist ?? 0));
     const [row] = await db.query<{ talent_biceps: number }>("SELECT talent_biceps FROM players WHERE id=$1", [p]);
     expect(row.talent_biceps).toBe(50);
     await expect(act(db, p, "craft_put", { itemId: "craft-nail-bat" }, T0)).rejects.toMatchObject({ code: "boxes_full" }); // one open cell, taken

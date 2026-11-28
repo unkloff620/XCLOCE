@@ -13,6 +13,12 @@ export interface TattooSet {
   extra?: { weapon: string; damage: number }[];
   pieces: TattooPiece[];
 }
+/**
+ * A set's bonus grows piece by piece (the user 2026-11-28): each piece owned adds bonus ÷ pieces, rounded up
+ * (+500 over 42 tattoos — +12 a tattoo); never more than the whole set's bonus. The same for a boss's things.
+ */
+export const partBonus = (damage: number, have: number, total: number) =>
+  total <= 0 || have <= 0 ? 0 : have >= total ? damage : Math.min(damage, have * Math.ceil(damage / total));
 /** every weapon bonus of a whole set */
 export const setBonusList = (s: Pick<TattooSet, "bonus" | "extra">) => [s.bonus, ...(s.extra ?? [])];
 /** «+300 к урону «Пистолет», +1000 к урону «Rug Pull Gun»» */

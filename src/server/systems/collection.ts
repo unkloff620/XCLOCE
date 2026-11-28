@@ -1,7 +1,7 @@
 import type { Queryable } from "../db.ts";
 import { tattooSetsOfBoss } from "../../content/tattoos.ts";
 import { BOSSES, CASE_WINS, EVENT_FIGHTS, bossById, bossSetItems } from "../../content/bosses.ts";
-import { TATTOO_IDS, TATTOO_SETS, bonusPieces, setBonusList } from "../../content/tattoos.ts";
+import { TATTOO_IDS, TATTOO_SETS, bonusPieces, setBonusList, partBonus } from "../../content/tattoos.ts";
 import { craftBonus } from "./craft.ts";
 
 /*
@@ -26,13 +26,19 @@ export async function setBonuses(q: Queryable, pid: number): Promise<Record<stri
   // the chain's bosses and the event ones (the mentors' things: Химик's flask and coat, Псих's knife)
   for (const b of [...BOSSES, ...EVENT_FIGHTS]) {
     const items = bossSetItems(b);
-    if (!b.set || !items.length || !items.every((id) => have.has(id))) continue;
-    out[b.set.weapon] = (out[b.set.weapon] ?? 0) + b.set.damage;
-    if (b.set.also) out[b.set.also.weapon] = (out[b.set.also.weapon] ?? 0) + b.set.also.damage;
+    if (!b.set || !items.length) continue;
+    // every thing owned adds its share at once (content/tattoos.ts partBonus)
+    const n = items.filter((id) => have.has(id)).length;
+    if (!n) continue;
+    out[b.set.weapon] = (out[b.set.weapon] ?? 0) + partBonus(b.set.damage, n, items.length);
+    if (b.set.also) out[b.set.also.weapon] = (out[b.set.also.weapon] ?? 0) + partBonus(b.set.also.damage, n, items.length);
   }
-  // tattoo sets: every piece of a set owned (inked or not) adds the set's bonus
+  // tattoo sets: every piece owned (inked or not) adds its share of the set's bonus
   const ink = new Set((await q.query<{ item_id: string }>("SELECT item_id FROM inventory WHERE player_id=$1 AND qty > 0 AND item_id = ANY($2)", [pid, TATTOO_IDS])).map((r) => r.item_id));
-  for (const s of TATTOO_SETS) if (bonusPieces(s).every((p) => ink.has(p.id))) for (const b of setBonusList(s)) out[b.weapon] = (out[b.weapon] ?? 0) + b.damage;
+  for (const s of TATTOO_SETS) {
+    const ps = bonusPieces(s), n = ps.filter((p) => ink.has(p.id)).length;
+    if (n) for (const b of setBonusList(s)) out[b.weapon] = (out[b.weapon] ?? 0) + partBonus(b.damage, n, ps.length);
+  }
   for (const [w, v] of Object.entries((await craftBonus(q, pid)).dmg)) out[w] = (out[w] ?? 0) + v;
   return out;
 }
