@@ -25,9 +25,9 @@ import { yardTime } from "../../content/yard.ts";
 import {
   ITEM_VALUES, RANKS, SUITS, UPGRADE_MODES, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue, zonkGroups, zonkScore, ZONK_ROUNDS,
   ZONK_BANK_MIN, ZONK_CONT_PENALTY, ZONK_DAY_PRIZE, ZONK_FAIL_XP, ZONK_LEVELS,
-  POKER_CHEATS, POKER_HANDS, POKER_MAX_LEVEL, POKER_RULES, POKER_CHIP, POKER_STICKER, POKER_CASES, POKER_CASE_TATTOO, pokerCheats, pokerHandDef, pokerPay,
+  POKER_CHEATS, POKER_HANDS, POKER_MAX_LEVEL, POKER_RULES, POKER_FREE, POKER_CHIP, POKER_STICKER, POKER_CASES, POKER_CASE_TATTOO, pokerCheats, pokerHandDef, pokerPay,
   type PokerHand, type UpgradeMode, DUEL_FEE, DUEL_ROUNDS, DUEL_STAKES,
-  ZONK_DICE,
+  ZONK_DICE, GAME_RULES,
 } from "../../content/games.ts";
 
 /* ---------------- a playing card (poker) ---------------- */
@@ -91,7 +91,7 @@ function ZonkHelp() {
       <p>Выбери уровень и набери его цель за {ZONK_ROUNDS} попыток. Набрал — партия сразу кончается победой.</p>
       <ul>
         {ZONK_LEVELS.map((l) => (
-          <li key={l.level}>Уровень {l.level}: {full(l.target)} очков. Вход {l.entry.amount} ₽{l.level === 1 ? " (первая игра дня — бесплатно)" : ""}, победа — {rewardText(l.win)} и +{l.winXp} опыта.</li>
+          <li key={l.level}>Уровень {l.level}: {full(l.target)} очков. Вход {l.entry.amount} ₽{l.level === 1 ? ` (первые ${GAME_RULES.zonk.freePerDay} игры дня — бесплатно)` : ""}, победа — {rewardText(l.win)} и +{l.winXp} опыта.</li>
         ))}
       </ul>
       <p>В попытке бросаешь 6 костей и забираешь очковые (нажми на кость — она встанет в лесенку), потом решаешь: «Бросить» оставшиеся — рискнуть ради большего, или «Сохранить» очки попытки — это можно от {ZONK_BANK_MIN} очков. Бросок без единой очковой кости — «Зонк»: очки этой попытки сгорают. Забрал все шесть — бросаешь все шесть заново.</p>
@@ -792,7 +792,7 @@ function PokerHelp() {
   return (
     <Help topic="poker" title="Покер">
       <p>Сразу сдаётся 5 карт. Собралась комбинация из таблицы под картами — получаешь награду, чем старше комбинация, тем больше.</p>
-      <p>Раздача — {POKER_RULES.price.amount} слитка, до {POKER_RULES.perDay} раздач в сутки. «Фишка» (из кейса у барыги, чашек колеса удачи, заданий) оплачивает одну раздачу вместо денег. Стрит-флеш даёт «Связку ключей»: с ней на боссов нападают без пропусков (кроме Вадима и Боцмана).</p>
+      <p>Каждый день {POKER_FREE} раздачи бесплатно, дальше раздача — {POKER_RULES.price.amount} слитка, до {POKER_RULES.perDay} раздач в сутки. «Фишка» (из кейса у барыги, чашек колеса удачи, заданий) оплачивает одну раздачу вместо денег. Стрит-флеш даёт «Связку ключей»: с ней на боссов нападают без пропусков (кроме Вадима и Боцмана).</p>
       <p>Каждая раздача даёт опыт покера (за старшие комбинации — больше). Уровень покера открывает шулерство (замены карт); всего уровней {POKER_MAX_LEVEL}. Стрит-флеш и роял-флеш, если ключи или Ворон уже есть, дают слитки.</p>
       <p>Шулерство: {POKER_CHEATS.slice().reverse().map((c) => `с ${c.level} уровня — ${c.swaps} ${c.swaps === 1 ? "замена" : c.swaps <= 4 ? "замены" : "замен"}`).join(", ")}. После раздачи нажми на любую карту на столе — она уйдёт, а на её место придёт новая из колоды. Комбинация считается, когда замены кончатся или ты нажмёшь «Вскрыть».</p>
     </Help>
@@ -865,7 +865,9 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
   const [askReset, setAskReset] = useState(false);
   const [cases, setCases] = useState(false);
   const resetPrice = p?.resetPrice;
-  const canReset = !drawing && left <= 0 && !!resetPrice && (p?.resets ?? 0) < (p?.resetsMax ?? 0);
+  // the day's free hands: the deal button is free while they last (they go before the paid ones)
+  const free = p?.free ?? 0;
+  const canReset = !drawing && free <= 0 && left <= 0 && !!resetPrice && (p?.resets ?? 0) < (p?.resetsMax ?? 0);
   const doReset = async () => {
     setAskReset(false);
     haptic.tap();
@@ -967,8 +969,8 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
               <div className="pkt-btns">
                 {/* the hands are over: the reset (an arrow only) takes the deal button's place while resets are left */}
                 {!canReset && (
-                  <button className="btn big gold block" disabled={busy === "poker_play" || left <= 0 || usd < POKER_RULES.price.amount} onClick={() => run("poker_play")} aria-label="Раздать">
-                    {left <= 0 ? "Завтра" : <><Icon name={POKER_RULES.price.currency} size={18} /><b className="num">{POKER_RULES.price.amount}</b></>}
+                  <button className="btn big gold block" disabled={busy === "poker_play" || (free <= 0 && (left <= 0 || usd < POKER_RULES.price.amount))} onClick={() => run("poker_play")} aria-label={free > 0 ? `Раздать бесплатно, осталось ${free}` : "Раздать"}>
+                    {free > 0 ? <>Бесплатно <b className="num">×{free}</b></> : left <= 0 ? "Завтра" : <><Icon name={POKER_RULES.price.currency} size={18} /><b className="num">{POKER_RULES.price.amount}</b></>}
                   </button>
                 )}
                 {canReset && (

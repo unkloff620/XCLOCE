@@ -10,7 +10,7 @@ import { addGameWeekly, setGameBest } from "./minigame-extras.ts";
 import { duelScore } from "./duels.ts";
 import { addItem, addMoney, grantReward, itemQty, ledger, moscowDay, takeItem, takeMoney, type Ctx, type Granted } from "../core.ts";
 import { useItem } from "./shop.ts";
-import { ZONK_CONT_PENALTY, UPGRADE_RULES, POKER_RULES, POKER_RESET, POKER_CHIP, POKER_CASES, POKER_CASE_RUB, POKER_CASE_STASH, POKER_CASE_TATTOO, POKER_CASE_GOLD, POKER_CASE_XP, POKER_STICKER, pokerCheats, pokerHand, pokerHandDef, pokerLevel, pokerPay,
+import { ZONK_CONT_PENALTY, UPGRADE_RULES, POKER_RULES, POKER_FREE, POKER_RESET, POKER_CHIP, POKER_CASES, POKER_CASE_RUB, POKER_CASE_STASH, POKER_CASE_TATTOO, POKER_CASE_GOLD, POKER_CASE_XP, POKER_STICKER, pokerCheats, pokerHand, pokerHandDef, pokerLevel, pokerPay,
   GAME_RULES, ITEM_VALUES, ZONK_BANK_MIN, ZONK_DICE, ZONK_FAIL_XP, ZONK_LEVELS, ZONK_ROUNDS, upgradeChanceOf, upgradeMode, upgradeTarget, upgradeValue,
   zonkCombos, zonkHasScore, zonkLevelDef, zonkScore, zonkXpLevel,
   type Card, type GameKind,
@@ -389,7 +389,13 @@ async function pokerPlaysToday(q: Queryable, pid: number, now: number) {
   return Number(r?.n ?? 0);
 }
 
-interface PokerState { cards: Card[]; deck: Card[]; swaps: number; swapped: number[] }
+interface PokerState { cards: Card[]; deck: Card[]; swaps: number; swapped: number[]; free?: boolean }
+
+/** the day's free hands played already (not paid, marked free) */
+async function pokerFreeToday(q: Queryable, pid: number, now: number) {
+  const [r] = await q.query<{ n: number }>("SELECT COUNT(*)::int AS n FROM games WHERE player_id=$1 AND kind='poker' AND day=$2 AND NOT paid AND state->>'free' = 'true'", [pid, moscowDay(now)]);
+  return Number(r?.n ?? 0);
+}
 
 async function activePoker(q: Queryable, pid: number) {
   const [g] = await q.query<{ id: number; state: PokerState }>("SELECT id, state FROM games WHERE player_id=$1 AND kind='poker' AND status='active' ORDER BY id DESC LIMIT 1", [pid]);
@@ -412,8 +418,9 @@ export async function pokerView(q: Queryable, pid: number, now: number) {
   // perDay 0 would mean no daily limit; every bought reset adds another perDay hands
   const left = POKER_RULES.perDay > 0 ? Math.max(0, POKER_RULES.perDay * (1 + resets) - played) : 9999;
   const chips = await itemQty(q, pid, POKER_CHIP);
+  const free = Math.max(0, POKER_FREE - (await pokerFreeToday(q, pid, now)));
   return {
-    left, played, perDay: POKER_RULES.perDay, price: POKER_RULES.price, chips, xp, ...lv, cheats: pokerCheats(lv.level), active: open ? pokerDrawView(open.id, open.state) : null,
+    left, played, free, freePerDay: POKER_FREE, perDay: POKER_RULES.perDay, price: POKER_RULES.price, chips, xp, ...lv, cheats: pokerCheats(lv.level), active: open ? pokerDrawView(open.id, open.state) : null,
     resets, resetsMax: POKER_RESET.perDay, resetPrice: POKER_RESET.price,
     stickers: await itemQty(q, pid, POKER_STICKER), cases: POKER_CASES,
     // the one-of-a-kind prizes the player has already: a repeat of their hand pays gold bars instead (the table shows it)
@@ -461,7 +468,7 @@ export async function resetPokerLimit(ctx: Ctx) {
 }
 
 /** The hand is counted: the combination pays (more with the poker level) and gives poker xp. */
-async function settlePoker(ctx: Ctx, gameId: number | null, cards: Card[], swapped: number[], chip = false) {
+async function settlePoker(ctx: Ctx, gameId: number | null, cards: Card[], swapped: number[], chip = false, free = false) {
   const [p] = await ctx.q.query<{ poker_xp: number }>("SELECT poker_xp FROM players WHERE id=$1", [ctx.pid]);
   const { hand, used } = pokerHand(cards);
   const def = pokerHandDef(hand);
@@ -486,10 +493,10 @@ async function settlePoker(ctx: Ctx, gameId: number | null, cards: Card[], swapp
   if (gameId === null) {
     await ctx.q.query(
       "INSERT INTO games (player_id, kind, day, paid, status, state, result, created_at, updated_at) VALUES ($1,'poker',$2,$6,'done',$3,$4,$5,$5)",
-      [ctx.pid, moscowDay(ctx.now), JSON.stringify({ cards }), JSON.stringify(result), new Date(ctx.now), !chip],
+      [ctx.pid, moscowDay(ctx.now), JSON.stringify(free ? { cards, free } : { cards }), JSON.stringify(result), new Date(ctx.now), !chip && !free],
     );
   } else {
-    await ctx.q.query("UPDATE games SET status='done', state=$2, result=$3, updated_at=$4 WHERE id=$1", [gameId, JSON.stringify({ cards, swapped }), JSON.stringify(result), new Date(ctx.now)]);
+    await ctx.q.query("UPDATE games SET status='done', state=$2, result=$3, updated_at=$4 WHERE id=$1", [gameId, JSON.stringify(free ? { cards, swapped, free } : { cards, swapped }), JSON.stringify(result), new Date(ctx.now)]);
   }
   return { kind: "poker" as const, phase: "done" as const, cards, swapped, swapsLeft: 0, hand, used, title: def.name, reward, gainedXp: def.xp, levelUp: after.level > before.level, poker: await pokerView(ctx.q, ctx.pid, ctx.now) };
 }
@@ -502,8 +509,10 @@ export async function playPoker(ctx: Ctx, chip = false) {
   // one hand at a time per player, so the daily limit holds
   const [p] = await ctx.q.query<{ poker_xp: number }>("SELECT poker_xp FROM players WHERE id=$1 FOR UPDATE", [ctx.pid]);
   if (await activePoker(ctx.q, ctx.pid)) throw new GameError("poker_open", "Сначала доиграй раздачу");
+  // the day's free hands go first (no money, outside the limit)
+  const free = !chip && (await pokerFreeToday(ctx.q, ctx.pid, ctx.now)) < POKER_FREE;
   // the daily limit is for the hands paid with money; a chip hand can be played over it
-  if (!chip && POKER_RULES.perDay > 0) {
+  if (!chip && !free && POKER_RULES.perDay > 0) {
     const [r] = await ctx.q.query<{ poker_reset_day: string | null; poker_resets: number }>("SELECT poker_reset_day, poker_resets FROM players WHERE id=$1", [ctx.pid]);
     const limit = POKER_RULES.perDay * (1 + pokerResetsToday(r, ctx.now));
     if ((await pokerPlaysToday(ctx.q, ctx.pid, ctx.now)) >= limit) throw new GameError("poker_limit", `На сегодня все ${limit} раздач сыграны`);
@@ -512,15 +521,15 @@ export async function playPoker(ctx: Ctx, chip = false) {
   if (chip) {
     if ((await itemQty(ctx.q, ctx.pid, POKER_CHIP)) <= 0) throw new GameError("no_chip", "Фишек нет — они выпадают из кейса у барыги, в чашках колеса удачи и за задания");
     await takeItem(ctx, POKER_CHIP, 1, "game:poker");
-  } else await takeMoney(ctx, POKER_RULES.price.currency, POKER_RULES.price.amount, "game:poker");
+  } else if (!free) await takeMoney(ctx, POKER_RULES.price.currency, POKER_RULES.price.amount, "game:poker");
   const deck = shuffled(ctx.rng);
   const cards = deck.slice(0, 5);
   const swaps = pokerCheats(pokerLevel(Number(p?.poker_xp ?? 0)).level);
-  if (swaps <= 0) return settlePoker(ctx, null, cards, [], chip);
-  const st: PokerState = { cards, deck: deck.slice(5, 5 + swaps), swaps, swapped: [] };
+  if (swaps <= 0) return settlePoker(ctx, null, cards, [], chip, free);
+  const st: PokerState = { cards, deck: deck.slice(5, 5 + swaps), swaps, swapped: [], ...(free ? { free } : {}) };
   const [row] = await ctx.q.query<{ id: number }>(
     "INSERT INTO games (player_id, kind, day, paid, status, state, created_at, updated_at) VALUES ($1,'poker',$2,$5,'active',$3,$4,$4) RETURNING id",
-    [ctx.pid, moscowDay(ctx.now), JSON.stringify(st), new Date(ctx.now), !chip],
+    [ctx.pid, moscowDay(ctx.now), JSON.stringify(st), new Date(ctx.now), !chip && !free],
   );
   return { kind: "poker" as const, phase: "draw" as const, ...pokerDrawView(row.id, st), poker: await pokerView(ctx.q, ctx.pid, ctx.now) };
 }
@@ -547,5 +556,5 @@ export async function pokerStand(ctx: Ctx) {
   await ctx.q.query("SELECT id FROM players WHERE id=$1 FOR UPDATE", [ctx.pid]);
   const g = await activePoker(ctx.q, ctx.pid);
   if (!g) throw new GameError("no_game", "Раздача не начата");
-  return settlePoker(ctx, g.id, g.state.cards, g.state.swapped);
+  return settlePoker(ctx, g.id, g.state.cards, g.state.swapped, false, !!g.state.free);
 }

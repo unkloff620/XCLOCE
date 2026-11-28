@@ -1429,6 +1429,12 @@ describe("batch hits, extra pass", () => {
   });
 });
 
+
+/** the day's free poker hands (POKER_FREE) played already: the next hand is paid */
+async function noFreePoker(db: Db, p: number, now: number) {
+  const { moscowDay } = await import("../src/server/core.ts");
+  for (let i = 0; i < 3; i++) await db.query("INSERT INTO games (player_id, kind, day, paid, status, state, created_at, updated_at) VALUES ($1,'poker',$2,false,'done','{\"free\":true}',$3,$3)", [p, moscowDay(now), new Date(now)]);
+}
 describe("yard mini games", () => {
   it("blackjack: hand values, outcomes, side bets", async () => {
     const { handValue, bjOutcome, perfectPairs, twentyOnePlus3, canSplitCards } = await import("../src/content/games.ts");
@@ -1642,6 +1648,7 @@ describe("yard mini games", () => {
 
   it("poker: «Сбросить лимит» — 1500 слитков for another 25 hands, only when the hands are over, at most 3 a day", async () => {
     const p = await newPlayer(db);
+    await noFreePoker(db, p, T0);
     await setMoney(db, p, "GOLD", 10_000);
     const { moscowDay } = await import("../src/server/core.ts");
     await expect(act(db, p, "poker_reset", {}, T0)).rejects.toMatchObject({ code: "poker_has_left" });
@@ -1660,6 +1667,7 @@ describe("yard mini games", () => {
 
   it("poker: 5 слитков a hand, 25 a day, poker xp grows; a «Фишка» pays for a hand instead", async () => {
     const p = await newPlayer(db);
+    await noFreePoker(db, p, T0);
     await setMoney(db, p, "GOLD", 500);
     let xp = 0;
     for (let i = 0; i < 24; i++) {
@@ -1743,6 +1751,7 @@ describe("yard mini games", () => {
   it("poker: from level 10 a card on the table can be swapped (шулерство), the last swap counts the hand", async () => {
     const { pokerXpFor } = await import("../src/content/games.ts");
     const p = await newPlayer(db);
+    await noFreePoker(db, p, T0);
     await setMoney(db, p, "GOLD", 100);
     await db.query("UPDATE players SET poker_xp=$2 WHERE id=$1", [p, pokerXpFor(15)]);
     const d = await act(db, p, "poker_play", {}, T0, always(0.37));
@@ -1771,11 +1780,28 @@ describe("yard mini games", () => {
     expect(st.result.poker.played).toBe(2);
   });
 
+  it("poker: 3 free hands a day go first — no money, outside the day's limit", async () => {
+    const p = await newPlayer(db);
+    await setMoney(db, p, "GOLD", 0);
+    for (let i = 0; i < 3; i++) {
+      const r = await act(db, p, "poker_play", {}, T0, always(0.1));
+      expect(r.result.poker.free).toBe(2 - i);
+    }
+    expect(await wallet(db, p, "GOLD")).toBe(0);
+    await expect(act(db, p, "poker_play", {}, T0)).rejects.toBeTruthy();
+    await setMoney(db, p, "GOLD", 5);
+    const paid = await act(db, p, "poker_play", {}, T0, always(0.1));
+    expect(paid.result.poker).toMatchObject({ free: 0, left: 24 });
+    // a new day: 3 again
+    expect((await act(db, p, "poker_play", {}, T0 + 86_400_000, always(0.1))).result.poker.free).toBe(2);
+  });
+
   it("poker: not enough gold", async () => {
     const p = await newPlayer(db);
+    await noFreePoker(db, p, T0);
     await setMoney(db, p, "GOLD", 2);
     await expect(act(db, p, "poker_play", {}, T0)).rejects.toBeTruthy();
-    const n = await db.query("SELECT 1 FROM games WHERE player_id=$1 AND kind='poker'", [p]);
+    const n = await db.query("SELECT 1 FROM games WHERE player_id=$1 AND kind='poker' AND paid", [p]);
     expect(n).toHaveLength(0);
   });
 
@@ -1826,7 +1852,8 @@ describe("yard mini games", () => {
     expect(await wallet(db, p, "RUB")).toBe(rub);
     expect(await qty(db, p, "matches")).toBe(150); // level 1 pays спички
     expect(b.state.games.zonk).toMatchObject({ xp: 10, level: 0, record: { points: 5000, playerId: p, day: "today" } });
-    // the second level-1 game today costs roubles
+    // after the day's 3 free level-1 games it costs roubles
+    await db.query("INSERT INTO games (player_id, kind, day, paid, status, state, created_at, updated_at) VALUES ($1,'zonk',$2,false,'done','{}',$3,$3), ($1,'zonk',$2,false,'done','{}',$3,$3)", [p, (await import("../src/server/core.ts")).moscowDay(T0), new Date(T0)]);
     await setMoney(db, p, "RUB", 5);
     await expect(act(db, p, "game_start", { game: "zonk", level: 1 }, T0 + M)).rejects.toMatchObject({ code: "no_money" });
     // level 2: 30 ₽; giving up ends it as not passed: only 1 xp, no consolation money

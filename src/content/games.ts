@@ -1,7 +1,7 @@
 import { RETIRED_FINDS } from "./items.ts";
 /*
  * Мини-игры во дворе: блэкджек (общий стол до 6 игроков, ставки), зонк (кости), покер и апгрейдер находок.
- * Зонк — 4 уровня сложности (ZONK_LEVELS): 1-й за рубли (первая игра дня бесплатно), 2–4-й за доллары.
+ * Зонк — 4 уровня сложности (ZONK_LEVELS): 1-й за рубли (первые 3 игры дня бесплатно), 2–4-й за доллары.
  * Апгрейдер: находку из двора (или несколько одинаковых) пробуем превратить в вещь дороже; шанс = стоимость ставки /
  * стоимость цели × 0,9, не больше 75%. Проигрыш — ставка сгорает.
  * Здесь только правила и числа; сервер (server/systems/games.ts) раздаёт карты и кидает кости.
@@ -13,7 +13,7 @@ import type { Reward } from "./rewards.ts";
 export type GameKind = "zonk";
 export interface GameRules { freePerDay: number; price: { currency: Currency; amount: number }; title: string }
 export const GAME_RULES: Record<GameKind, GameRules> = {
-  zonk: { freePerDay: 1, price: { currency: "RUB", amount: 150 }, title: "Зонк" },
+  zonk: { freePerDay: 3, price: { currency: "RUB", amount: 150 }, title: "Зонк" },
 };
 
 /* ---------------- blackjack ---------------- */
@@ -266,6 +266,8 @@ export const upgradeValue = (stake: number, mult: number) => Math.max(1, Math.ro
  * с 15 — две замены, с 30 — три, с 50 — четыре, с 75 — пять, со 100 — шесть (POKER_CHEATS). Уровней покера — до 1000. Комбинация считается после замен.
  */
 export const POKER_RULES = { perDay: 25, price: { currency: "GOLD" as const, amount: 5 } };
+/** free hands a Moscow day (the user 2026-11-28): played first, before the paid ones, not counted in the day's limit */
+export const POKER_FREE = 3;
 /** the day's limit can be bought again (another perDay hands): this price, at most `perDay` times a Moscow day */
 export const POKER_RESET = { price: { currency: "GOLD" as const, amount: 1500 }, perDay: 3 };
 /** the yard item that pays for one poker hand */
