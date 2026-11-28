@@ -5921,33 +5921,36 @@ html.eco .hs-page::after, html.eco .hs-page::before { animation: none; }
 .hb-ring { z-index: 6; }
 .hb-shackle, .hb-lockb { transform-origin: 50% 0; }
 /* being picked: the padlock shakes on the ring, the picks poke its keyhole */
-.hb.live .hb-pad { animation: hs-shake 0.42s ease-in-out infinite; transform-origin: 50% 0; }
+.hb-latch.live .hb-pad { animation: hs-shake 0.42s ease-in-out infinite; transform-origin: 50% 0; }
 .hb-picks { position: absolute; left: 44%; top: 64%; width: 95%; height: auto; transform-origin: 6% 6%; animation: hs-picks 0.36s ease-in-out infinite alternate; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.6)); z-index: 1; }
 /* every padlock off: the bow springs up and swings open on its left leg, then the padlock drops out of the ring */
-.hb.free .hb-shackle { transform-origin: 18% 100%; animation: hb-bow 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) 0.15s both; }
-@keyframes hb-bow { 0% { transform: none; } 55% { transform: translateY(-22%); } 100% { transform: translateY(-22%) rotate(-28deg); } }
-.hb.free .hb-pad { pointer-events: none; animation: hb-drop 0.75s cubic-bezier(0.5, 0, 0.9, 0.6) 0.75s both; transform-origin: 50% 0; }
+.hb-latch.free .hb-shackle { transform-origin: 18% 100%; animation: hb-bow 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) 0.15s both; }
+@keyframes hb-bow { 0% { transform: none; } 30% { transform: translateY(4%) scaleY(0.92); } 60% { transform: translateY(-26%) scaleY(1.06); } 100% { transform: translateY(-22%) rotate(-28deg); } }
+.hb-latch.free .hb-pad { pointer-events: none; animation: hb-drop 0.75s cubic-bezier(0.5, 0, 0.9, 0.6) 0.75s both; transform-origin: 50% 0; }
 @keyframes hb-drop { 0% { transform: none; opacity: 1; } 25% { transform: translate(-3%, 10%) rotate(-8deg); opacity: 1; } 100% { transform: translate(-30%, 260%) rotate(-70deg); opacity: 0; } }
-/* the little padlocks of the box over it */
-.hb-locks { position: absolute; left: 0; right: 0; top: 24%; z-index: 7; display: flex; justify-content: center; gap: 1.5cqw; }
-.hb-locks img { width: 8cqw; height: auto; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.7)); }
-.hb-locks img.off { opacity: 0.85; }
 /* opened: the lid shut — half up — up (the three pictures), the latch and the padlock gone; the loot on its inside */
 .hb.open .hb-hasp { display: none; }
-.hb.open .hb-lid { animation: hb-f1 0.3s steps(1, end) both; }
-.hb.open .hb-lid-mid { animation: hb-f2 0.3s steps(1, end) both; }
-.hb.open .hb-lid-open { opacity: 1; transform-origin: 50% 100%; animation: hb-f3 0.55s cubic-bezier(0.3, 1.5, 0.5, 1) both; }
-@keyframes hb-f1 { 0% { opacity: 1; } 40% { opacity: 0; } 100% { opacity: 0; } }
-@keyframes hb-f2 { 0% { opacity: 0; } 40% { opacity: 1; } 80% { opacity: 0; } 100% { opacity: 0; } }
-@keyframes hb-f3 { 0%, 50% { opacity: 0; transform: scaleY(0.82); } 51% { opacity: 1; transform: scaleY(0.85); } 75% { transform: scaleY(1.05); } 100% { opacity: 1; transform: none; } }
-.hb-loot { position: absolute; z-index: 1; display: flex; align-items: center; justify-content: center; animation: hb-loot 0.4s ease-out 0.5s both; }
+/* the three lid pictures cross-fade while stretching on their hinge line (each from its own bottom), the box squats
+   first and springs back: one smooth swing */
+.hb.open .hb-lid, .hb.open .hb-lid-mid, .hb.open .hb-lid-open, .hb.open .hb-body { transform-origin: 50% 100%; animation-duration: 0.85s; animation-fill-mode: both; animation-timing-function: linear; }
+.hb.open .hb-lid { animation-name: hb-f1; }
+.hb.open .hb-lid-mid { animation-name: hb-f2; }
+.hb.open .hb-lid-open { animation-name: hb-f3; }
+.hb.open .hb-body { animation-name: hb-squat; }
+@keyframes hb-f1 { 0% { opacity: 1; transform: none; } 16% { opacity: 1; transform: scale(1.03, 0.88); } 34% { opacity: 1; transform: translateY(-8%) scale(0.98, 0.7); } 44%, 100% { opacity: 0; transform: translateY(-12%) scale(0.97, 0.6); } }
+@keyframes hb-f2 { 0%, 26% { opacity: 0; transform: scaleY(0.55); } 40% { opacity: 1; transform: scaleY(0.82); } 56% { opacity: 1; transform: scaleY(1.06); } 70%, 100% { opacity: 0; transform: scaleY(1.2); } }
+@keyframes hb-f3 { 0%, 52% { opacity: 0; transform: scaleY(0.7); } 66% { opacity: 1; transform: scaleY(0.94); } 80% { opacity: 1; transform: scaleY(1.07); } 91% { opacity: 1; transform: scaleY(0.98); } 100% { opacity: 1; transform: none; } }
+@keyframes hb-squat { 0% { transform: none; } 16% { transform: scale(1.03, 0.94); } 40% { transform: scale(0.985, 1.03); } 60%, 100% { transform: none; } }
+.hb-loot { position: absolute; z-index: 1; display: flex; align-items: center; justify-content: center; animation: hb-loot 0.45s cubic-bezier(0.3, 1.4, 0.5, 1) 0.75s both; }
 .hb-loot { flex-wrap: wrap; align-content: center; gap: 1cqw 2.4cqw; font-size: 4.4cqw; }
 .hb-loot .rchips { display: contents; }
 .hb-loot .chip, .hb-loot .gain, .hb-case { font-size: 4.4cqw !important; gap: 0.6cqw; padding: 0 !important; background: none !important; border: 0 !important; color: #fff; text-shadow: 0 1px 2px #000; }
 .hb-case { display: inline-flex; align-items: center; font-weight: 800; line-height: 1; }
 @keyframes hb-loot { from { opacity: 0; transform: scale(0.6); } }
-.hs-card-box { position: absolute; left: 9%; right: 9%; top: 28%; width: 82%; height: auto; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.5)); }
-@media (prefers-reduced-motion: reduce) { .hb.live .hb-pad, .hb-picks { animation: none; } }
+/* the small cards: the same box, its empty top (the open lid's room) cut off */
+.hs-card-box { position: absolute; left: 7%; right: 7%; top: 24%; aspect-ratio: 887 / 465; overflow: hidden; pointer-events: none; }
+.hs-card-box .hb { width: 100%; margin-top: -32.4%; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5)); }
+@media (prefers-reduced-motion: reduce) { .hb-latch.live .hb-pad, .hb-picks { animation: none; } }
 .hs-face-t { font: 600 11cqw/1 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #fff4dc; letter-spacing: 0.02em; white-space: nowrap;
   text-shadow: 0 0 2px #000, 0 2px 3px rgba(0, 0, 0, 0.85), 0 0 1px #000; }
 .hs-face-t.sm { font-size: 5.6cqw; font-weight: 600; }

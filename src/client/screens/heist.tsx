@@ -59,33 +59,45 @@ function Img({ src, className, style }: { src: string; className?: string; style
  * padlock off (`free`): the bow springs up and the padlock drops out of the ring. `open`: the lid swings up (three
  * pictures) and the loot lies on its inside. The padlocks of the box — a row of little locks above it.
  */
-function Chest({ kind, locks, done, live, onLock, face, open, loot }: {
-  kind: HeistKind; locks: number; done: number; live?: boolean; onLock?: () => void; face?: ReactNode; open?: boolean; loot?: ReactNode;
+/** what each box had off when last seen: only padlocks that came off since then drop (heist.tsx Chest) */
+const SEEN = new Map<number, number>();
+/** the padlocks' places along the lid's edge: each its own latch, ring and padlock, this far apart (% of the canvas) */
+const LOCK_GAP = 17;
+
+function Chest({ slot, kind, locks, done, live, onLock, face, open, loot }: {
+  slot?: number; kind: HeistKind; locks: number; done: number; live?: boolean; onLock?: () => void; face?: ReactNode; open?: boolean; loot?: ReactNode;
 }) {
-  const free = done >= locks;
+  // the padlocks that came off since this box was last seen fall now; the older ones are gone already
+  const [seen] = useState(() => (slot === undefined ? done : Math.min(SEEN.get(slot) ?? done, done)));
+  useEffect(() => { if (slot !== undefined) SEEN.set(slot, done); }, [slot, done]);
+  const shift = (i: number) => (i - (locks - 1) / 2) * LOCK_GAP;
+  const moved = (n: Part, dx: number) => { const st = at(n); return { ...st, left: `${HEIST_BOX[n].x + dx}%` }; };
   return (
-    <div className={`hb ${free ? "free" : ""} ${open ? "open" : ""} ${live ? "live" : ""}`}>
+    <div className={`hb ${open ? "open" : ""}`}>
       <Img className="hb-p hb-lid-open" src={`${BX}/${kind}-lid-open.webp`} style={at("lid-open")} />
       <Img className="hb-p hb-lid-mid" src={`${BX}/${kind}-lid-mid.webp`} style={at("lid-mid")} />
       <Img className="hb-p hb-body" src={`${BX}/${kind}-body.webp`} style={at("body")} />
       <Img className="hb-p hb-lid" src={`${BX}/${kind}-lid.webp`} style={at("lid")} />
-      <Img className="hb-p hb-hasp" src={`${BX}/hasp.webp`} style={at("hasp")} />
-      {!open && (
-        <span className={`hb-pad ${onLock && !free ? "tap" : ""}`} style={{ left: `${PAD.x}%`, top: `${PAD.y}%`, width: `${PAD.w}%`, height: `${PAD.h}%` }}
-          role={onLock && !free ? "button" : undefined} aria-label={onLock && !free ? (live ? "Открыть замок сразу" : "Взломать замок") : undefined}
-          onClick={onLock && !free ? (e) => { e.stopPropagation(); onLock(); } : undefined}>
-          <Img className="hb-p hb-shackle" src={`${BX}/shackle.webp`} style={at("shackle", PAD)} />
-          <Img className="hb-p hb-lockb" src={`${BX}/lock.webp`} style={at("lock", PAD)} />
-          {live && <Img className="hb-picks" src={`${A}/picks.webp`} />}
-        </span>
-      )}
-      {!open && <Img className="hb-p hb-ring" src={`${BX}/ring.webp`} style={at("ring")} />}
-      {/* the padlocks of the box: off ones open */}
-      {!open && locks > 1 && (
-        <span className="hb-locks">
-          {Array.from({ length: locks }, (_, i) => <Img key={i} className={i < done ? "off" : ""} src={`${A}/${i < done ? "lock-open" : "lock"}.webp`} />)}
-        </span>
-      )}
+      {Array.from({ length: locks }, (_, i) => {
+        const dx = shift(i);
+        const off = i < done, falling = off && i >= seen, isLive = !!live && i === done;
+        const tap = !!onLock && !off;
+        return (
+          <span key={i} className={`hb-latch ${falling ? "free" : ""} ${isLive ? "live" : ""}`}>
+            <Img className="hb-p hb-hasp" src={`${BX}/hasp.webp`} style={moved("hasp", dx)} />
+            {!open && (!off || falling) && (
+              <span className={`hb-pad ${tap ? "tap" : ""}`} style={{ left: `${PAD.x + dx}%`, top: `${PAD.y}%`, width: `${PAD.w}%`, height: `${PAD.h}%` }}
+                role={tap ? "button" : undefined} aria-label={tap ? (isLive ? "Открыть замок сразу" : "Взломать замок") : undefined}
+                onClick={tap ? (e) => { e.stopPropagation(); onLock!(); } : undefined}>
+                <Img className="hb-p hb-shackle" src={`${BX}/shackle.webp`} style={at("shackle", PAD)} />
+                <Img className="hb-p hb-lockb" src={`${BX}/lock.webp`} style={at("lock", PAD)} />
+                {isLive && <Img className="hb-picks" src={`${A}/picks.webp`} />}
+              </span>
+            )}
+            {!open && <Img className="hb-p hb-ring" src={`${BX}/ring.webp`} style={moved("ring", dx)} />}
+          </span>
+        );
+      })}
       {open && loot && <div className="hb-loot" style={at("loot" as Part)}>{loot}</div>}
       {face && <div className="hs-face">{face}</div>}
     </div>
@@ -175,7 +187,7 @@ export function HeistScreen() {
           ) : box && d ? (
             <>
               {/* tap a padlock: the next one starts being picked; tapped again while it is — open it at once for dollars */}
-              <Chest key={box.slot} kind={box.kind} locks={d.locks} done={done} live={busyLock}
+              <Chest key={box.slot} slot={box.slot} kind={box.kind} locks={d.locks} done={done} live={busyLock}
                 onLock={() => {
                   if (box.auto) return;
                   if (busyLock) { haptic.tap(); setAsk(box.slot); return; }
@@ -203,8 +215,7 @@ export function HeistScreen() {
                 onClick={() => { if (b) { haptic.tap(); setGot(null); setSel(b.slot); } }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img className="hs-card-bg" src={`${A}/card.webp`} alt="" draggable={false} />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                {b && <img className="hs-card-box" src={`/assets/heist/box/${b.kind}-closed.webp`} alt="" draggable={false} />}
+                {b && <span className="hs-card-box"><Chest kind={b.kind} locks={b.locks} done={dn} /></span>}
                 <span className={`hs-card-st num ${b && dn >= b.locks ? "ready" : ""}`}>
                   {!b ? "пусто" : dn >= b.locks ? "Открыть" : picking(b, now) ? clock(b.pickEnds! - now) : `замки ${dn}/${b.locks}`}
                 </span>
