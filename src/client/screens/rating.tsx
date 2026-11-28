@@ -74,7 +74,7 @@ function MyPrizes() {
             <b className="small">{p.title}</b>
             <RewardChips r={p.reward} size={14} />
           </span>
-          <button className="btn gold sm" disabled={busy === "prize_claim"} onClick={() => void take(p.id)}>Забрать</button>
+          <button className="btn green sm" disabled={busy === "prize_claim"} onClick={() => void take(p.id)}>Забрать</button>
         </div>
       ))}
     </div>
@@ -206,7 +206,7 @@ export function RatingBoard({ onClose }: { onClose: () => void }) {
       )}
           </div>
           <div className="rt-foot">
-            {tab === "damage" && data && <button className="btn dark sm rt-prize-btn" onClick={() => { haptic.tap(); setPrizesOpen((v) => !v); scroll.current?.scrollTo({ top: 0, behavior: "smooth" }); }}>{prizesOpen ? "Скрыть" : "Призы"}</button>}
+            {tab === "damage" && data && <button className="btn gold sm rt-prize-btn" onClick={() => { haptic.tap(); setPrizesOpen((v) => !v); scroll.current?.scrollTo({ top: 0, behavior: "smooth" }); }}>{prizesOpen ? "Скрыть" : "Призы"}</button>}
             {data && tab !== "authority" && tab !== "ach" && <span>Сброс через <b className="num">{untilText(data.week.end - now)}</b></span>}
           </div>
           {/* on the strip of tape at the bottom left, turned with it */}

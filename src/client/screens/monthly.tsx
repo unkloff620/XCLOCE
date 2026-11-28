@@ -130,7 +130,7 @@ export function MonthlyWindow({ onClose }: { onClose: () => void }) {
               <b>{task.title}</b>
               <div className="quest-bar" style={{ ["--p" as string]: `${Math.round((m.progress / task.target) * 100)}%` }}><i /><span className="num">{fmt(m.progress)}/{fmt(task.target)}</span></div>
               {task.hint && <span className="tiny muted">{task.hint}</span>}
-              {task.href && <Link href={task.href} className="btn dark sm" onClick={onClose}>Идти</Link>}
+              {task.href && <Link href={task.href} className="btn gold sm" onClick={onClose}>Идти</Link>}
             </div>
           ) : sel < m.today ? (
             <div className="mt-task-body">
@@ -158,7 +158,7 @@ export function MonthlyWindow({ onClose }: { onClose: () => void }) {
                 <div className="mt-plank-row">
                   {chest ? <button type="button" className="mt-chest-btn" onClick={() => setInfo(true)} aria-label="Что в сундуке"><TierArt id={t.id} month={m.month} /></button> : <TierArt id={t.id} month={m.month} />}
                   {t.got ? <i className="mt-check big" aria-label="получено" />
-                    : t.ready ? <button className="btn gold sm" disabled={busy === "month_claim"} onClick={() => claim(t.id)}>{chest ? "Открыть" : "Забрать"}</button>
+                    : t.ready ? <button className="btn green sm" disabled={busy === "month_claim"} onClick={() => claim(t.id)}>{chest ? "Открыть" : "Забрать"}</button>
                     : <span className="mt-need">Выполни<br /><b className="num">{t.need}</b> делюг{t.need === 2 ? "и" : ""}</span>}
                 </div>
                 {chest && (opened ?? t.got) && <Got g={(opened ?? t.got)!} />}

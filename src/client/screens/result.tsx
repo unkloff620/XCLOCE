@@ -86,7 +86,7 @@ export function ResultWindow() {
               <b className="num">{view.myHits}</b>
             </div>
           </div>
-          <button className="btn dark block" disabled={busy === "fight_claim"} onClick={seen}>Понятно</button>
+          <button className="btn gold block" disabled={busy === "fight_claim"} onClick={seen}>Понятно</button>
         </div>
       </Modal>
     );
@@ -164,7 +164,7 @@ export function ResultWindow() {
           </div>
         )}
 
-        <button className="btn gold big result-take" disabled={busy === "fight_claim"} onClick={take}>Забрать</button>
+        <button className="btn green big result-take" disabled={busy === "fight_claim"} onClick={take}>Забрать</button>
       </div>
     </Modal>
   );

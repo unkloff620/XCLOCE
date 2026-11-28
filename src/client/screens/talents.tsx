@@ -191,7 +191,7 @@ export function TalentPanel() {
             <span className="small">Сбросить все таланты за <b>{TALENT_RESET_PRICE.amount} ₽</b>? Вернётся <b className="num">{spent}</b>, их можно вложить заново.</span>
             {usd < TALENT_RESET_PRICE.amount && <span className="small" style={{ color: "var(--red)" }}>Не хватает рублей.</span>}
             <div className="row" style={{ gap: 8 }}>
-              <button className="btn dark grow" onClick={() => setConfirm(false)}>Нет</button>
+              <button className="btn red grow" onClick={() => setConfirm(false)}>Нет</button>
               <button className="btn red grow" disabled={busy === "talent_reset" || usd < TALENT_RESET_PRICE.amount} onClick={reset}>Сбросить</button>
             </div>
           </div>

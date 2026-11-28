@@ -210,7 +210,7 @@ export function Tutorial() {
         )}
         <p className="tour-text">{step.text}</p>
         <div className="row" style={{ justifyContent: "space-between" }}>
-          {i > 0 ? <button className="btn dark" onClick={back}>‹ Назад</button> : <span />}
+          {i > 0 ? <button className="btn gold" onClick={back}>‹ Назад</button> : <span />}
           <button className="btn gold" onClick={next}>{i === 0 ? "Поехали" : i === STEPS.length - 1 ? "Играть" : "Дальше"} ›</button>
         </div>
       </div>

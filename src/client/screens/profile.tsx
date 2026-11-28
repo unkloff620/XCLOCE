@@ -800,7 +800,7 @@ export function ProfileScreen() {
       {unfriend && (
         <Modal title="Убрать из друзей?" onClose={() => setUnfriend(false)}>
           <div className="row" style={{ gap: 8 }}>
-            <button className="btn dark grow" onClick={() => setUnfriend(false)}>Нет</button>
+            <button className="btn red grow" onClick={() => setUnfriend(false)}>Нет</button>
             <button className="btn red grow" disabled={busy === "friend_remove"} onClick={async () => { const r = await act("friend_remove", { id: p.id }); setUnfriend(false); if (r) reload(); }}>Убрать</button>
           </div>
         </Modal>
@@ -823,12 +823,12 @@ function SettingsPanel() {
     <div className="panel col" style={{ gap: 8 }}>
       <div className="small muted">НАСТРОЙКИ</div>
       <VolumeSliders />
-      <button className="btn dark block wide" onClick={() => setLooks(true)}>Внешность: кожа и глаза</button>
+      <button className="btn gold block wide" onClick={() => setLooks(true)}>Внешность: кожа и глаза</button>
       {looks && <LooksWindow onClose={() => setLooks(false)} />}
       <NotifySwitch />
-      <button className="btn dark block wide" onClick={() => setNews(true)}>Что нового в игре</button>
+      <button className="btn gold block wide" onClick={() => setNews(true)}>Что нового в игре</button>
       {news && <UpdatesWindow onClose={() => setNews(false)} />}
-      <button className="btn dark block wide" onClick={() => { router.push("/"); setTimeout(replayTutorial, 400); }}>Пройти обучение заново</button>
+      <button className="btn gold block wide" onClick={() => { router.push("/"); setTimeout(replayTutorial, 400); }}>Пройти обучение заново</button>
     </div>
   );
 }
@@ -860,7 +860,7 @@ function LooksWindow({ onClose }: { onClose: () => void }) {
             ))}
           </div>
         </div>
-        <button className="btn green block" disabled={!changed || !!busy} onClick={save}>{changed ? "Сохранить" : "Без изменений"}</button>
+        <button className="btn gold block" disabled={!changed || !!busy} onClick={save}>{changed ? "Сохранить" : "Без изменений"}</button>
       </div>
     </Modal>
   );

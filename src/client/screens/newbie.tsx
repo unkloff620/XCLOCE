@@ -62,14 +62,14 @@ function NewbieWindow({ onClose }: { onClose: () => void }) {
             <div className="nb-bar"><i style={{ width: `${(t.have / t.n) * 100}%` }} /><span className="num">{t.have}/{t.n}</span></div>
             <RewardChips r={def.reward} size={20} />
             {t.have >= t.n
-              ? <button className="btn gold block" disabled={busy === "newbie_claim"} onClick={() => claim(def.id)}>Забрать</button>
-              : <Link href={def.href} className="btn green block" onClick={onClose}>Пойти</Link>}
+              ? <button className="btn green block" disabled={busy === "newbie_claim"} onClick={() => claim(def.id)}>Забрать</button>
+              : <Link href={def.href} className="btn gold block" onClick={onClose}>Пойти</Link>}
           </div>
         ) : (
           <div className="nb-cur">
             <b>Сундук Бабы Зины</b>
             <RewardChips r={NEWBIE_CHEST} size={20} />
-            <button className="btn gold block" disabled={busy === "newbie_claim"} onClick={() => claim("chest")}>Открыть сундук</button>
+            <button className="btn green block" disabled={busy === "newbie_claim"} onClick={() => claim("chest")}>Открыть сундук</button>
           </div>
         )}
         <div className="nb-list">

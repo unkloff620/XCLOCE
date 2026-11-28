@@ -788,7 +788,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
               <ItemArt id={rushAsk.id} size={72} />
               <span className="small center rush-q">Ещё {clock(rushAsk.left)}. Ударить сейчас за <span className="nowrap-ic"><Icon name={rushPrice(rushAsk.id).currency} size={14} /><b>{rushPrice(rushAsk.id).amount}</b>?</span> После удара — снова перезарядка.</span>
               <div className="row" style={{ gap: 8, width: "100%" }}>
-                <button className="btn dark grow" onClick={() => setRushAsk(null)}>Отмена</button>
+                <button className="btn red grow" onClick={() => setRushAsk(null)}>Отмена</button>
                 <button className="btn gold grow" disabled={(state?.wallet[rushPrice(rushAsk.id).currency] ?? 0) < rushPrice(rushAsk.id).amount}
                   onClick={() => { const id = rushAsk.id; setRushAsk(null); void hit(id, true); }}>
                   Ударить за <Icon name={rushPrice(rushAsk.id).currency} size={16} />{rushPrice(rushAsk.id).amount}
@@ -817,7 +817,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
               </div>
               {!!won.clanXp && <div className="rd-clan-xp"><Icon name="clan-xp" size={22} />Опыт клана <b className="num">+{won.clanXp.toLocaleString("ru-RU")}</b></div>}
               {!!won.influence && <div className="rd-clan-xp"><Icon name="influence" size={22} />Влияние <b className="num">+{won.influence.toLocaleString("ru-RU")}</b></div>}
-              <button className="btn gold big result-take" onClick={() => void toYard()}>Забрать</button>
+              <button className="btn green big result-take" onClick={() => void toYard()}>Забрать</button>
             </div>
           </Modal>
         )}
@@ -864,7 +864,7 @@ export function RaidAttackScreen({ yard, building }: { yard: string; building: s
             // held by another clan: the building alone, or the building with its holders (more HP, more reward)
             <div className="row rd-attack-modes">
               <button type="button" className="btn gold grow" disabled={busy === "raid_start"} onClick={() => void start("active")}>{RAID_MODE_NAME.active}</button>
-              <button type="button" className="btn red grow" disabled={busy === "raid_start"} onClick={() => void start("cut")}>{RAID_MODE_NAME.cut}</button>
+              <button type="button" className="btn gold grow" disabled={busy === "raid_start"} onClick={() => void start("cut")}>{RAID_MODE_NAME.cut}</button>
             </div>
           )
           : <button type="button" className="btn gold block rd-attack-go" disabled={busy === "raid_start"} onClick={() => void start("active")}>Атаковать</button>}

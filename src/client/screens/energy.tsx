@@ -39,7 +39,7 @@ export function EnergyWindow({ onClose }: { onClose: () => void }) {
           <b className="display energy-drinks-n">У тебя {have} / {ENERGY_DRINKS_MAX} шт.</b>
         </div>
         <div className="row" style={{ gap: 8 }}>
-          <button className="btn green grow" disabled={have < 1 || full || busy === "use"}
+          <button className="btn gold grow" disabled={have < 1 || full || busy === "use"}
             onClick={() => { haptic.tap(); void act("use", { itemId: "energy-drink" }, "Энергия до полной"); }}>
             <ItemArt id="energy-drink" size={20} /> Выпить
           </button>

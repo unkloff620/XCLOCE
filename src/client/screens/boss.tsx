@@ -156,11 +156,11 @@ export function MultPicker({ mult, setMult }: { mult: Mult; setMult: (m: Mult) =
   const [open, setOpen] = useState(false);
   return (
     <div className={`mult-pick ${open ? "open" : ""}`}>
-      <button className={`btn sm ${mult > 1 ? "gold" : "dark"} mult-btn`} onClick={() => setOpen((o) => !o)} aria-expanded={open} title="Сколько оружия тратить за одно нажатие">
+      <button className={`btn sm ${mult > 1 ? "gold" : ""} mult-btn`} onClick={() => setOpen((o) => !o)} aria-expanded={open} title="Сколько оружия тратить за одно нажатие">
         ×{mult}
       </button>
       {open && MULTS.map((m) => (
-        <button key={m} className={`btn sm ${m === mult ? "gold" : "dark"}`} onClick={() => { setMult(m); setOpen(false); }}>×{m}</button>
+        <button key={m} className={`btn sm ${m === mult ? "gold" : ""}`} onClick={() => { setMult(m); setOpen(false); }}>×{m}</button>
       ))}
       {open && <span className="tiny muted mult-note">кулак, тычок и пинок — всегда ×1</span>}
     </div>
@@ -496,7 +496,7 @@ export function BossScreen({ id }: { id: string }) {
               <ItemArt id="rug-pull-gun" size={22} />
             </button>
             {(state?.obshak?.pool ?? 0) > 0 && (
-              <button type="button" className="btn sm violet fbtn-needle" onClick={() => { haptic.tap(); setNeedleAsk(true); }} aria-label="Урон от Иглы" title="Урон от Иглы — запас из общака">
+              <button type="button" className="btn sm gold fbtn-needle" onClick={() => { haptic.tap(); setNeedleAsk(true); }} aria-label="Урон от Иглы" title="Урон от Иглы — запас из общака">
                 <ItemArt id={NEEDLE_ID} size={22} /><span className="num">{short(state!.obshak!.pool)}</span>
               </button>
             )}
@@ -528,7 +528,7 @@ export function BossScreen({ id }: { id: string }) {
               <ItemArt id={rushAsk.id} size={72} />
               <span className="small center rush-q">Ещё {clock(rushAsk.left)}. Ударить сейчас за <span className="nowrap-ic"><Icon name={rushPrice(rushAsk.id).currency} size={14} /><b>{rushPrice(rushAsk.id).amount}</b>?</span> После удара — снова перезарядка.</span>
               <div className="row" style={{ gap: 8, width: "100%" }}>
-                <button className="btn dark grow" onClick={() => setRushAsk(null)}>Отмена</button>
+                <button className="btn red grow" onClick={() => setRushAsk(null)}>Отмена</button>
                 <button className="btn gold grow" disabled={(state?.wallet[rushPrice(rushAsk.id).currency] ?? 0) < rushPrice(rushAsk.id).amount}
                   onClick={() => { const id = rushAsk.id; setRushAsk(null); void attack(id, true); }}>
                   Ударить за <Icon name={rushPrice(rushAsk.id).currency} size={16} />{rushPrice(rushAsk.id).amount}
@@ -680,7 +680,7 @@ export function BossScreen({ id }: { id: string }) {
           <span className="chip" title="Боёв сегодня из дневного лимита · побед над этим боссом за всё время">Сегодня {row?.fightsToday ?? 0}/{row?.fightsPerDay ?? 7} · всего {row?.myWins ?? 0}</span>
         </div>
         {otherFight && (
-          <Link className="btn violet block" href={`/bosses/${otherFight.bossId}`}>Идёт бой с {bossById(otherFight.bossId)?.name} — к нему</Link>
+          <Link className="btn gold block" href={`/bosses/${otherFight.bossId}`}>Идёт бой с {bossById(otherFight.bossId)?.name} — к нему</Link>
         )}
       </div>
     </div>

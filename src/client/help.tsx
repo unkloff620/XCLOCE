@@ -22,7 +22,7 @@ export function Help({ topic, title, children }: { topic: HelpTopic; title: stri
       {open && (
         <Modal title={title} onClose={() => setOpen(false)}>
           <div className="help-body">{children}</div>
-          <button className="btn green block" style={{ marginTop: 12 }} onClick={() => setOpen(false)}>Понятно</button>
+          <button className="btn gold block" style={{ marginTop: 12 }} onClick={() => setOpen(false)}>Понятно</button>
         </Modal>
       )}
     </>

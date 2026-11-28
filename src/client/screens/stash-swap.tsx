@@ -46,7 +46,7 @@ export function StashWishWindow({ onClose }: { onClose: () => void }) {
         </p>
         <div className="row" style={{ justifyContent: "space-between" }}>
           <b className="small">Выбрано: <span className="num">{pick.length}/{WISH_MAX}</span></b>
-          {pick.length > 0 && <button className="btn dark sm" onClick={() => setPick([])}>Сбросить</button>}
+          {pick.length > 0 && <button className="btn red sm" onClick={() => setPick([])}>Сбросить</button>}
         </div>
         {/* everything asked for, from both tabs: a tap takes it off (the limit is shared by the stashes and the parts) */}
         {pick.length > 0 && (
@@ -114,7 +114,7 @@ export function StashWishWindow({ onClose }: { onClose: () => void }) {
             ))}
           </div>
         )}
-        <button className="btn green block" disabled={!changed || !!busy} onClick={save}>{changed ? "Сохранить" : "Без изменений"}</button>
+        <button className="btn gold block" disabled={!changed || !!busy} onClick={save}>{changed ? "Сохранить" : "Без изменений"}</button>
       </div>
     </Modal>
   );
@@ -215,8 +215,8 @@ export function MessagesWindow({ onClose }: { onClose: () => void }) {
               <span className="tiny muted" style={{ display: "block" }}>хочет в друзья · {when(f.at)}</span>
             </div>
             <div className="msg-fr-btns">
-              <button className="btn green sm" disabled={!!busy} onClick={() => answer(f.id, true)}>Принять</button>
-              <button className="btn dark sm" disabled={!!busy} onClick={() => answer(f.id, false)}>Нет</button>
+              <button className="btn gold sm" disabled={!!busy} onClick={() => answer(f.id, true)}>Принять</button>
+              <button className="btn red sm" disabled={!!busy} onClick={() => answer(f.id, false)}>Нет</button>
             </div>
           </div>
         ))}
@@ -229,7 +229,7 @@ export function MessagesWindow({ onClose }: { onClose: () => void }) {
                 <b className="small ellipsis" style={{ display: "block" }}>{itemById(g.itemId)?.name ?? g.itemId}{(g.qty ?? 1) > 1 && ` ×${g.qty}`}</b>
                 <span className="tiny muted">подарок от <Link href={`/profile?id=${g.fromId}`} onClick={onClose}>{g.from}</Link> · {when(g.at)}</span>
               </div>
-              <button className="btn green sm" disabled={!!busy} onClick={() => accept(g.id)}>Принять</button>
+              <button className="btn gold sm" disabled={!!busy} onClick={() => accept(g.id)}>Принять</button>
             </div>
           ) : n && (
             <div key={key} className={`msg-row note ${n.kind} ${n.unread ? "new" : ""}`}>

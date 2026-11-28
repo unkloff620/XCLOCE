@@ -569,7 +569,7 @@ function RouletteWindow({ r, look, onView, onClose }: { r: Roulette; look?: Para
         ) : (
           <>
             <span className="small">Пуль осталось: <b className="num">{left}</b> · мимо +{fmt(ROULETTE_PAY)}<img className="bd-roul-ico" src={BLUE} alt="синих коробков" /></span>
-            <button type="button" className="btn block" disabled={!!busy || playing || !!over} onClick={() => void stop()}>{used > 0 ? "Забрать и уйти" : "Уйти"}</button>
+            <button type="button" className={`btn block ${used > 0 ? "green" : "red"}`} disabled={!!busy || playing || !!over} onClick={() => void stop()}>{used > 0 ? "Забрать и уйти" : "Уйти"}</button>
           </>
         )}
         </div>

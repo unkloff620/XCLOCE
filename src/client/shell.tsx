@@ -483,8 +483,8 @@ export function Shell({ children }: { children: ReactNode }) {
               <p>{error ?? "Не удалось подключиться"}</p>
               {/* a new release is out: «Ещё раз» would keep the old page — reload into the new one */}
               {isOutdated() || /обновлени/i.test(error ?? "")
-                ? <button className="btn green block" onClick={reloadFresh}>Обновить</button>
-                : <button className="btn green block" onClick={retryAuth}>Ещё раз</button>}
+                ? <button className="btn gold block" onClick={reloadFresh}>Обновить</button>
+                : <button className="btn gold block" onClick={retryAuth}>Ещё раз</button>}
             </div>
           </div>
         )}

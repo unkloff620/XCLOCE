@@ -191,7 +191,7 @@ export function WeaponPanel({ tray, onClose }: { tray: Tray[]; onClose: () => vo
                   <b>{itemById(boost.weapon)?.name}: +{boost.pct}% урона</b>
                   <small>Сходняк · ещё {clock(Math.max(0, (boost.until ?? 0) - Date.now()))}</small>
                 </span>
-                <button type="button" className={`btn sm ${boost.on ? "gold" : "dark"}`} onClick={() => act("shod_boost_on", { on: !boost.on }, boost.on ? "Усиление выключено" : "Усиление включено")}>
+                <button type="button" className={`btn sm ${boost.on ? "gold" : ""}`} onClick={() => act("shod_boost_on", { on: !boost.on }, boost.on ? "Усиление выключено" : "Усиление включено")}>
                   {boost.on ? "Вкл" : "Выкл"}
                 </button>
               </div>

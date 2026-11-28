@@ -161,7 +161,7 @@ function FindById({ onClose }: { onClose: () => void }) {
             <b className="ellipsis" style={{ display: "block" }}>{found.name}</b>
             <small className="muted">ID {gameId(found.id)} · уровень {found.level}</small>
           </span>
-          <span className="btn green sm">{found.self ? "Это ты" : "В комнату"}</span>
+          <span className="btn gold sm">{found.self ? "Это ты" : "В комнату"}</span>
         </button>
       )}
     </Modal>

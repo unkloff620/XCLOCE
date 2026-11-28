@@ -39,7 +39,7 @@ export function ExchangeNotice({ wait }: { wait: boolean }) {
         <b className="display">Обменник снова работает!</b>
         <span className="muted small">Сегодня он готов обменять тебе валюту. Он {exchangeScheduleText(sched)} — не упусти.</span>
         <div className="row" style={{ gap: 8, width: "100%" }}>
-          <button className="btn grow" onClick={close}>Позже</button>
+          <button className="btn red grow" onClick={close}>Позже</button>
           <Link className="btn gold grow" href="/exchange" onClick={close}>В обменник</Link>
         </div>
       </div>

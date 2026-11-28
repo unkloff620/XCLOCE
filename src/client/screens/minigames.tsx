@@ -273,12 +273,12 @@ function DuelPicker({ onClose }: { onClose: () => void }) {
                 <b className="ellipsis">{who.name}</b>
                 <small className="muted">{who.online ? "сейчас в игре" : "не в сети — получит уведомление в Telegram"}</small>
               </span>
-              <button className="btn dark sm" onClick={() => setWho(null)}>Другой</button>
+              <button className="btn gold sm" onClick={() => setWho(null)}>Другой</button>
             </div>
             <span className="tiny muted">Ставка (спишется сейчас, вернётся при отказе):</span>
             <div className="dp-stakes">
               {DUEL_STAKES.map((st) => (
-                <button key={st} className="btn green" disabled={busy === "duel_create" || usd < st} onClick={() => call(st)}>
+                <button key={st} className="btn gold" disabled={busy === "duel_create" || usd < st} onClick={() => call(st)}>
                   {st} <Icon name="RUB" size={15} />
                 </button>
               ))}
@@ -964,13 +964,13 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
 
           <div className="pkt-ctrl" style={{ left: px(318), top: py(2027), width: px(444) }}>
             {drawing ? (
-              <button className="btn big green block" disabled={busy === "poker_stand" || busy === "poker_swap"} onClick={() => run("poker_stand")}>Вскрыть</button>
+              <button className="btn big gold block" disabled={busy === "poker_stand" || busy === "poker_swap"} onClick={() => run("poker_stand")}>Вскрыть</button>
             ) : (
               <div className="pkt-btns">
                 {/* the hands are over: the reset (an arrow only) takes the deal button's place while resets are left */}
                 {!canReset && (
                   <button className="btn big gold block" disabled={busy === "poker_play" || (free <= 0 && (left <= 0 || usd < POKER_RULES.price.amount))} onClick={() => run("poker_play")} aria-label={free > 0 ? `Раздать бесплатно, осталось ${free}` : "Раздать"}>
-                    {free > 0 ? <>Бесплатно <b className="num">×{free}</b></> : left <= 0 ? "Завтра" : <><Icon name={POKER_RULES.price.currency} size={18} /><b className="num">{POKER_RULES.price.amount}</b></>}
+                    {free > 0 ? <b className="num">{free}/{p?.freePerDay ?? POKER_FREE}</b> : left <= 0 ? "Завтра" : <><Icon name={POKER_RULES.price.currency} size={18} /><b className="num">{POKER_RULES.price.amount}</b></>}
                   </button>
                 )}
                 {canReset && (
@@ -982,7 +982,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
                 )}
                 {/* a «Фишка» from the yard: one hand without the money */}
                 {chips > 0 && (
-                  <button className="btn big pkt-chip" disabled={busy === "poker_play"} onClick={() => run("poker_play", { chip: true })} aria-label={`Раздать за фишку, фишек: ${chips}`}>
+                  <button className="btn big gold pkt-chip" disabled={busy === "poker_play"} onClick={() => run("poker_play", { chip: true })} aria-label={`Раздать за фишку, фишек: ${chips}`}>
                     <ItemArt id={POKER_CHIP} size={30} /><b className="num">{chips}</b>
                   </button>
                 )}
@@ -997,7 +997,7 @@ export function PokerWindow({ onClose }: { onClose: () => void }) {
           <p className="pkt-ask-q">Сбросить лимит<br /><span>за <Icon name={resetPrice.currency} size={24} /><b className="num">{resetPrice.amount.toLocaleString("ru-RU")}</b>?</span></p>
           <div className="pkt-ask-btns">
             <button type="button" className="btn gold" disabled={busy === "poker_reset" || usd < resetPrice.amount} onClick={doReset}>Да</button>
-            <button type="button" className="btn dark" onClick={() => setAskReset(false)}>Нет</button>
+            <button type="button" className="btn red" onClick={() => setAskReset(false)}>Нет</button>
           </div>
           {usd < resetPrice.amount && <p className="tiny center" style={{ color: "#ff8a9e", margin: "8px 0 0" }}>Не хватает слитков</p>}
         </Modal>
@@ -1336,7 +1336,7 @@ export function UpgraderWindow({ onClose }: { onClose: () => void }) {
                 <div key={u.uid} className="ug-mine-row">
                   <ItemArt id={u.itemId} size={34} />
                   <span className="grow ellipsis small"><b>{d.name} ★</b></span>
-                  {d.use && <button className="btn sm green" disabled={!!busy || spinning} onClick={() => void act("up_take", { uid: u.uid, use: true }, `+${d.use?.energy} энергии`)}>Выпить</button>}
+                  {d.use && <button className="btn sm gold" disabled={!!busy || spinning} onClick={() => void act("up_take", { uid: u.uid, use: true }, `+${d.use?.energy} энергии`)}>Выпить</button>}
                   <button className="btn sm gold" disabled={!!busy || spinning} onClick={async () => { const r = await act<{ got: number }>("up_sell", { uid: u.uid }, (x) => `Продано за ${x.got} ₽`); if (r) haptic.ok(); }}>
                     {full(u.value)} ₽
                   </button>

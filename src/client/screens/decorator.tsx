@@ -194,10 +194,10 @@ export function RoomEditor({ draft, setDraft, tab, setTab, onClose, onBack }: { 
         ) : null}
 
         <div className="sty-actions">
-          <button className="btn dark room-ed-back" onClick={onBack ?? onClose} aria-label="Назад без сохранения" title="Назад">
+          <button className="btn red room-ed-back" onClick={onBack ?? onClose} aria-label="Назад без сохранения" title="Назад">
             <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M15 4 7 12l8 8" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </button>
-          <button className="btn green grow" disabled={!changed || notOwned.length > 0 || saving || !!busy} onClick={save}>
+          <button className="btn gold grow" disabled={!changed || notOwned.length > 0 || saving || !!busy} onClick={save}>
             {notOwned.length ? "Сначала купи выбранное" : changed ? "Сохранить" : "Без изменений"}
           </button>
         </div>

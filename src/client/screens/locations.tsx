@@ -161,7 +161,7 @@ function BizDrawer({ rows, onDone }: { rows: LocRow[]; onDone: () => void }) {
         <span className="bz-rew num"><Icon name="xp" size={24} />+{full(xp)}</span>
         <span className="bz-rew num"><Icon name="rep" size={24} />+{full(loc)}</span>
       </span>
-      <button type="button" className="btn gold bz-go" disabled={!ready || busy === "business_claim"} onClick={take}>
+      <button type="button" className="btn green bz-go" disabled={!ready || busy === "business_claim"} onClick={take}>
         {ready ? "Собрать" : <>Нечего{nextAt ? <small className="num">{clock(Math.max(0, nextAt - now))}</small> : null}</>}
       </button>
     </div>
@@ -286,7 +286,7 @@ export function LocationsScreen() {
                 <Link href={`/locations/${l.id}`}>{plank}</Link>
                 <div className="loc-claim">
                   <RewardChips r={r!.nextReward} size={14} />
-                  <button className="btn gold" disabled={busy === "location_claim"} onClick={() => claim(l.id)}>
+                  <button className="btn green" disabled={busy === "location_claim"} onClick={() => claim(l.id)}>
                     <Icon name="chest" size={20} /> Забрать награду
                   </button>
                 </div>

@@ -59,8 +59,8 @@ export function BaulWindow({ onClose }: { onClose: () => void }) {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img className="bl-bag" src={baulImg(b.level)} alt="" draggable={false} />
       <div className="bl-btns">
-        <button type="button" className="btn" disabled={b.level < 1} onClick={() => { haptic.tap(); setLook(true); }}>Посмотреть</button>
-        <button type="button" className="btn gold" disabled={!can} onClick={() => void take()}>{b.level < 1 ? "С 1 уровня" : takeLabel}</button>
+        <button type="button" className="btn gold" disabled={b.level < 1} onClick={() => { haptic.tap(); setLook(true); }}>Посмотреть</button>
+        <button type="button" className="btn green" disabled={!can} onClick={() => void take()}>{b.level < 1 ? "С 1 уровня" : takeLabel}</button>
       </div>
       {b.sets.length > 0 && (
         <div className="bl-sets">
@@ -74,11 +74,11 @@ export function BaulWindow({ onClose }: { onClose: () => void }) {
       )}
       {look && b.pack && (
         <Inside r={b.pack} onClose={() => setLook(false)}
-          button={<button type="button" className="btn gold bl-in-ok" disabled={!can} onClick={() => void take()}>{takeLabel}</button>} />
+          button={<button type="button" className="btn green bl-in-ok" disabled={!can} onClick={() => void take()}>{takeLabel}</button>} />
       )}
       {got && (
         <Inside r={got.reward} title="Красава!" onClose={() => setGot(null)}
-          button={<button type="button" className="btn gold bl-in-ok" onClick={() => { haptic.tap(); setGot(null); }}>Забрать</button>} />
+          button={<button type="button" className="btn green bl-in-ok" onClick={() => { haptic.tap(); setGot(null); }}>Забрать</button>} />
       )}
     </Modal>
   );

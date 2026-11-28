@@ -108,7 +108,7 @@ export function ComboDone({ c, onClose }: { c: ComboState; bossId: string; onClo
           <GainLine r={rest} size={30} />
         </div>
         {/* the payout is already his: «Забрать» only closes the window */}
-        <button type="button" className="btn gold combo-done-take" onClick={() => { haptic.big(); onClose(); }}>Забрать</button>
+        <button type="button" className="btn green combo-done-take" onClick={() => { haptic.big(); onClose(); }}>Забрать</button>
       </div>
     </div>
   );

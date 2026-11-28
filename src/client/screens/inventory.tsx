@@ -35,10 +35,10 @@ function SellBox({ id, have, price }: { id: string; have: number; price: number 
         <b><Coin c={cur} v={price * qty} /></b>
       </div>
       <div className="row">
-        <button className="btn sm dark" onClick={() => setN(Math.max(1, qty - 1))} disabled={qty <= 1}>−</button>
+        <button className="btn sm gold" onClick={() => setN(Math.max(1, qty - 1))} disabled={qty <= 1}>−</button>
         <span className="num grow center"><b>{qty}</b> / {have}</span>
-        <button className="btn sm dark" onClick={() => setN(Math.min(have, qty + 1))} disabled={qty >= have}>+</button>
-        <button className="btn sm dark" onClick={() => setN(have)}>Все</button>
+        <button className="btn sm gold" onClick={() => setN(Math.min(have, qty + 1))} disabled={qty >= have}>+</button>
+        <button className="btn sm gold" onClick={() => setN(have)}>Все</button>
       </div>
       <button className="btn gold block" disabled={busy === "sell"} onClick={sell}>Продать ×{qty}</button>
     </div>
@@ -123,7 +123,7 @@ export function InventoryFull() {
                 Продать за {upOpen.value} ₽
               </button>
               {upDef.use && (
-                <button className="btn green block" disabled={!!busy} onClick={async () => { const r = await act("up_take", { uid: upOpen.uid, use: true }, `+${upDef.use?.energy} энергии`); if (r) setOpenUp(null); }}>
+                <button className="btn gold block" disabled={!!busy} onClick={async () => { const r = await act("up_take", { uid: upOpen.uid, use: true }, `+${upDef.use?.energy} энергии`); if (r) setOpenUp(null); }}>
                   Использовать
                 </button>
               )}
@@ -173,17 +173,17 @@ export function InventoryFull() {
             <div className="tiny muted center">Откуда: {open.sources.join(", ")}</div>
             <div className="col" style={{ marginTop: 12, gap: 8 }}>
               {open.weapon && (
-                <button className="btn red block" onClick={() => router.push(state.fight ? `/bosses/${state.fight.bossId}` : "/bosses")}>
+                <button className="btn gold block" onClick={() => router.push(state.fight ? `/bosses/${state.fight.bossId}` : "/bosses")}>
                   {open.weapon.action} — к боссу
                 </button>
               )}
               {open.use && (
-                <button className="btn green block" disabled={busy === "use" || qtyOf(open.id) < 1} onClick={() => act("use", { itemId: open.id }, open.use?.energyFull ? "Энергия до полной" : `+${open.use?.energy} энергии`)}>
+                <button className="btn gold block" disabled={busy === "use" || qtyOf(open.id) < 1} onClick={() => act("use", { itemId: open.id }, open.use?.energyFull ? "Энергия до полной" : `+${open.use?.energy} энергии`)}>
                   Использовать
                 </button>
               )}
               {open.slot && (
-                <button className="btn violet block" disabled={!!busy} onClick={() => act(worn ? "unequip" : "equip", worn ? { slot: open.slot } : { itemId: open.id }, worn ? "Снято" : "Надето")}>
+                <button className="btn gold block" disabled={!!busy} onClick={() => act(worn ? "unequip" : "equip", worn ? { slot: open.slot } : { itemId: open.id }, worn ? "Снято" : "Надето")}>
                   {worn ? "Снять" : "Надеть"}
                 </button>
               )}

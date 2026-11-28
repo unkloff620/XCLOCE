@@ -36,7 +36,7 @@ function MyRequest() {
         <Link href={`/clans/${r.clanId}`} className="ellipsis" style={{ display: "block", color: "inherit" }}><b>{r.name}</b> <span className="muted">[{r.tag}]</span></Link>
         <span className="tiny muted">Ждём ответа лидера</span>
       </div>
-      <button className="btn sm dark" disabled={busy === "clan_cancel"} onClick={() => act("clan_cancel", {}, "Заявка отменена")}>Отменить</button>
+      <button className="btn sm red" disabled={busy === "clan_cancel"} onClick={() => act("clan_cancel", {}, "Заявка отменена")}>Отменить</button>
     </div>
   );
 }
@@ -102,7 +102,7 @@ function ClanSettings({ c, onClose, onSaved }: { c: ClanPage; onClose: () => voi
           onChange={(v) => { if (v.symbol) setSymbol(v.symbol); if (v.shield) setShield(v.shield); if (v.color) setColor(v.color); }} />
         <label className="tiny muted">Описание <span className="num">({desc.length}/300)</span></label>
         <textarea className="input clan-desc-input" maxLength={300} rows={4} placeholder="Кто вы, кого зовёте, когда бьёте боссов…" value={desc} onChange={(e) => setDesc(e.target.value)} />
-        <button className="btn green block" disabled={busy === "clan_edit" || name.trim().length < 3} onClick={save}>Сохранить</button>
+        <button className="btn gold block" disabled={busy === "clan_edit" || name.trim().length < 3} onClick={save}>Сохранить</button>
       </div>
     </Modal>
   );
@@ -128,7 +128,7 @@ function CreateClan({ emblems, colors, onClose }: { emblems: string[]; colors: s
         <input className="input" placeholder="Тег (2–5 букв)" maxLength={5} value={tag} onChange={(e) => setTag(e.target.value.toUpperCase())} />
         <ArmsPicker symbols={emblems} colors={colors} symbol={symbol} shield={shield} color={color}
           onChange={(v) => { if (v.symbol) setSymbol(v.symbol); if (v.shield) setShield(v.shield); if (v.color) setColor(v.color); }} />
-        <button className="btn green block" disabled={busy === "clan_create" || name.trim().length < 3 || tag.length < 2} onClick={go}>Создать</button>
+        <button className="btn gold block" disabled={busy === "clan_create" || name.trim().length < 3 || tag.length < 2} onClick={go}>Создать</button>
       </div>
     </Modal>
   );
@@ -172,7 +172,7 @@ export function ClansScreen() {
             <p>Клановые задания, боссы и войны появятся позже.</p>
           </Help>
         </div>
-        {!state?.clan && data && <button className="btn sm green" onClick={() => setCreate(true)}>+ Создать</button>}
+        {!state?.clan && data && <button className="btn sm gold" onClick={() => setCreate(true)}>+ Создать</button>}
       </div>
       <MyRequest />
       {state?.clan && (
@@ -191,7 +191,7 @@ export function ClansScreen() {
         <div className="clan-search">
           <span aria-hidden="true">🔍</span>
           <input className="input" placeholder={`Поиск по ${data.clans.length} кланам: название или тег`} value={query} onChange={(e) => setQuery(e.target.value)} />
-          {query && <button className="btn dark sm" onClick={() => setQuery("")} aria-label="Очистить">×</button>}
+          {query && <button className="btn red sm" onClick={() => setQuery("")} aria-label="Очистить">×</button>}
         </div>
       )}
       {!data ? null : data.clans.length === 0 ? (
@@ -369,13 +369,13 @@ export function ClanScreen({ id }: { id: number }) {
     <div>
       <div className="title">
         <span className="chip">#{c.rank} в рейтинге</span>
-        {!mine && <Link href="/clans?all=1" className="btn dark sm">🔍 Все кланы</Link>}
+        {!mine && <Link href="/clans?all=1" className="btn gold sm">🔍 Все кланы</Link>}
       </div>
       <div className="panel center col clan-head" style={{ alignItems: "center" }}>
         {/* the leader's tools: edit the member list, the clan settings */}
         {leader && (
           <div className="clan-tools row" style={{ gap: 6 }}>
-            <button className={`btn sm icon-only ${editing ? "gold" : "dark"}`} onClick={() => {
+            <button className={`btn sm icon-only ${editing ? "gold" : ""}`} onClick={() => {
                 const on = !editing;
                 setEditing(on); setKickAsk(null); setLeadAsk(null);
                 // the list is further down the page: show it
@@ -384,7 +384,7 @@ export function ClanScreen({ id }: { id: number }) {
               aria-label={editing ? "Готово" : "Редактировать"} title={editing ? "Готово" : "Редактировать"}>
               {editing ? "✓" : <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z" fill="#ffcc33" stroke="#140d24" strokeWidth="2" strokeLinejoin="round" /><path d="M13 7l4 4" stroke="#140d24" strokeWidth="2" /></svg>}
             </button>
-            <button className="btn sm dark" onClick={() => setSettings(true)} aria-label="Настройки клана" title="Настройки клана">⚙</button>
+            <button className="btn sm gold" onClick={() => setSettings(true)} aria-label="Настройки клана" title="Настройки клана">⚙</button>
           </div>
         )}
         <Emblem emblem={c.emblem} color={c.color} size={92} />
@@ -413,14 +413,14 @@ export function ClanScreen({ id }: { id: number }) {
         {!state?.clan && (req?.clanId === c.id ? (
           <div className="col" style={{ gap: 6, width: "100%" }}>
             <span className="small muted center">Заявка подана — ждём ответа лидера</span>
-            <button className="btn dark block" disabled={busy === "clan_cancel"} onClick={() => act("clan_cancel", {}, "Заявка отменена")}>Отменить заявку</button>
+            <button className="btn red block" disabled={busy === "clan_cancel"} onClick={() => act("clan_cancel", {}, "Заявка отменена")}>Отменить заявку</button>
           </div>
         ) : req ? (
           <span className="small muted center">У тебя заявка в «{req.name}». Отмени её, чтобы подать сюда.</span>
         ) : (
-          <button className="btn green block" disabled={busy === "clan_join" || c.members.length >= c.max} onClick={() => act("clan_join", { clanId: c.id }, "Заявка отправлена лидеру")}>Подать заявку</button>
+          <button className="btn gold block" disabled={busy === "clan_join" || c.members.length >= c.max} onClick={() => act("clan_join", { clanId: c.id }, "Заявка отправлена лидеру")}>Подать заявку</button>
         ))}
-        {mine && <button className="btn dark block" disabled={busy === "clan_leave"} onClick={() => act("clan_leave", {}, "Ты вышел из клана")}>Выйти из клана</button>}
+        {mine && <button className="btn red block" disabled={busy === "clan_leave"} onClick={() => act("clan_leave", {}, "Ты вышел из клана")}>Выйти из клана</button>}
       </div>
       {menu}
       {/* the clan boss moves to the brigade bosses (Боссы → «Бригадные»), soon */}
@@ -436,7 +436,7 @@ export function ClanScreen({ id }: { id: number }) {
                   <span className="tiny muted row" style={{ gap: 3 }}><Icon name="xp" size={13} /><b className="num" style={{ color: "var(--ink)" }}>{full(r.xp)}</b> · урон {short(r.damage)}</span>
                 </div>
               </Link>
-              <button className="btn sm green" disabled={busy === "clan_accept"} onClick={() => answer(r.id, r.name, true)}>Принять</button>
+              <button className="btn sm gold" disabled={busy === "clan_accept"} onClick={() => answer(r.id, r.name, true)}>Принять</button>
               <button className="btn sm red" disabled={busy === "clan_reject"} onClick={() => answer(r.id, r.name, false)} aria-label="Отклонить">✕</button>
             </div>
           ))}
@@ -457,7 +457,7 @@ export function ClanScreen({ id }: { id: number }) {
             </Link>
             {editing && leader && m.role !== "leader" ? (
               <span className="row" style={{ gap: 6, flex: "none" }}>
-                <button className={`btn sm ${leadAsk === m.id ? "gold" : "dark"}`} disabled={busy === "clan_transfer"} onClick={() => makeLeader(m.id, m.name)} aria-label={`Сделать ${m.name} лидером`} title="Передать лидерство">{leadAsk === m.id ? "Сделать лидером?" : "👑"}</button>
+                <button className={`btn sm ${leadAsk === m.id ? "gold" : ""}`} disabled={busy === "clan_transfer"} onClick={() => makeLeader(m.id, m.name)} aria-label={`Сделать ${m.name} лидером`} title="Передать лидерство">{leadAsk === m.id ? "Сделать лидером?" : "👑"}</button>
                 {leadAsk !== m.id && <button className="btn sm red" disabled={busy === "clan_kick"} onClick={() => kick(m.id, m.name)}>{kickAsk === m.id ? "Точно?" : "Исключить"}</button>}
               </span>
             ) : (

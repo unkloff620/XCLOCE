@@ -104,7 +104,7 @@ function Quests() {
           <div key={x.id} className={`wp-quest ${x.claimed ? "done" : ""}`}>
             <span className="wp-quest-t">{def.title}</span>
             {x.claimed ? <span className="wp-ok">✓</span>
-              : x.done ? <button className="btn gold sm" disabled={busy === "quest_claim"} onClick={async () => { if (await act("quest_claim", { id: x.id })) haptic.ok(); }}>Забрать</button>
+              : x.done ? <button className="btn green sm" disabled={busy === "quest_claim"} onClick={async () => { if (await act("quest_claim", { id: x.id })) haptic.ok(); }}>Забрать</button>
               : <span className="wp-muted num">{x.progress}/{x.target}</span>}
             {!x.claimed && <i className="wp-bar" style={{ ["--p" as string]: `${Math.round((x.progress / x.target) * 100)}%` }} />}
           </div>

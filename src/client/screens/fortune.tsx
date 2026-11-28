@@ -302,7 +302,7 @@ export function FortuneScreen() {
           </div>
           <div className="fo-go">
             <Toggle on={running} onChange={setAutoOn}>Автопрокрутка</Toggle>
-            <button type="button" className="btn green fo-spin" disabled={running || spinning || busy === "fortune_spin"} onClick={go}>
+            <button type="button" className="btn gold fo-spin" disabled={running || spinning || busy === "fortune_spin"} onClick={go}>
               <b>Крутить</b>
               <span className="num"><ItemArt id={TICKET_ID} size={14} />1</span>
             </button>
@@ -462,7 +462,7 @@ function PrizeChoice({ onTake, onRisk }: { onTake: () => void; onRisk: () => voi
           <span className="fo-choice-sum">чашки и джекпот</span>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <span className="fo-choice-pic"><img src={`${A}/cup.webp`} alt="" /><img src={`${A}/cup.webp`} alt="" /><img src={`${A}/cup.webp`} alt="" /></span>
-          <button type="button" className="btn green" onClick={() => { haptic.tap(); onRisk(); }}>Рискнуть</button>
+          <button type="button" className="btn gold" onClick={() => { haptic.tap(); onRisk(); }}>Рискнуть</button>
         </div>
       </div>
     </div>
@@ -608,8 +608,8 @@ function BuyTickets({ price, onClose, onDone }: { price: number; onClose: () => 
         <ItemArt id={TICKET_ID} size={72} />
         <p className="small">Один билет — одна прокрутка. Ещё билеты выпадают на колесе и в чашках.</p>
         <div className="fo-qty">
-          {[1, 5, 10, 25].map((q) => <button key={q} type="button" className={`btn sm ${n === q ? "gold" : "dark"}`} onClick={() => setN(q)}>{q}</button>)}
-          <button type="button" className={`btn sm ${n === max ? "gold" : "dark"}`} onClick={() => setN(max)}>макс</button>
+          {[1, 5, 10, 25].map((q) => <button key={q} type="button" className={`btn sm ${n === q ? "gold" : ""}`} onClick={() => setN(q)}>{q}</button>)}
+          <button type="button" className={`btn sm ${n === max ? "gold" : ""}`} onClick={() => setN(max)}>макс</button>
         </div>
         <button className="btn gold block" disabled={busy === "fortune_buy" || usd < price * n} onClick={async () => {
           if (await act("fortune_buy", { qty: n }, `Билетов: +${n}`)) { haptic.ok(); onDone(); onClose(); }

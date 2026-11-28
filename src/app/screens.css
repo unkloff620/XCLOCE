@@ -421,7 +421,6 @@ body:has(.fit-page) .nav { background: linear-gradient(0deg, rgba(24, 15, 9, 0.9
 .fight-bar { gap: 6px; }
 .mult-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-bottom: 6px; }
 .mult-pick .btn { min-width: 50px; padding: 0 8px; }
-.mult-pick .btn.dark { background: rgba(24, 15, 9, 0.85); }
 .mult-pick .mult-note { background: rgba(0, 0, 0, 0.55); padding: 2px 6px; border-radius: 6px; }
 .weapon .w-mult { position: absolute; top: -6px; left: -5px; height: 18px; padding: 0 5px; display: grid; place-items: center; border-radius: 9px; background: var(--red); color: #fff; font-size: 10px; font-weight: 800; z-index: 2; }
 .feed-line .feed-x { color: var(--gold); font-size: 0.9em; }
@@ -1533,7 +1532,7 @@ body:has(.fit-page) .hud { background: linear-gradient(180deg, rgba(20, 12, 6, 0
   color: var(--ink); background: linear-gradient(180deg, rgba(255, 240, 210, 0.08), rgba(90, 50, 15, 0.1)), var(--tx-light), #cc9e6c; }
 .modal .panel { background: rgba(120, 70, 25, 0.16); }
 /* dark islands inside the light surfaces (game tables, machines, bars, dark buttons): back to light text */
-.modal :is(.slots, .mg-table, .bar, .btn.dark, .upg-box, .upg-mode, .upg-chip), .panel :is(.bar, .btn.dark, .ph-auth, .talent-chip) {
+.modal :is(.slots, .mg-table, .bar, .upg-box, .upg-mode, .upg-chip), .panel :is(.bar, .ph-auth, .talent-chip) {
   --ink: #fff3e3; --muted: #cdb497; --dim: #8f735a; --panel: #2a1d14; --panel2: #36261a; --panel3: #443021; --bg2: #1f1610;
   --tex: var(--tx-dark); color: var(--ink); }
 :is(.modal, .panel) .ach-bar { background: rgba(20, 14, 10, 0.72); }
@@ -4413,7 +4412,6 @@ body { background-attachment: fixed; }
 .sty-tabs button img { width: 34px; height: 34px; object-fit: contain; pointer-events: none; filter: drop-shadow(0 0 2px rgba(255, 240, 220, 0.35)) drop-shadow(0 1px 1px rgba(0, 0, 0, 0.5)); opacity: 0.85; }
 .sty-tabs button.on img { opacity: 1; transform: scale(1.08); }
 .sty-act { display: grid; place-items: center; padding: 8px 0; }
-.sty-actions .btn.dark.sty-act { width: 64px; }
 /* the hero editor, take 3: the three editors in a column right of the hero, ✕ and ✓ over the panel, more room for the lists */
 .sty-panel { overflow: visible; }
 .sty-side-tabs { position: absolute; right: 10px; bottom: calc(100% + 86px); display: flex; flex-direction: column; gap: 8px; }

@@ -258,7 +258,7 @@ function Race({ v, run, busy }: { v: ZarubView; run: Run; busy: boolean }) {
                   <span className="zr-task-n num">{full(t.progress)}/{full(t.target)}</span>
                 </div>
                 {done ? <span className="zr-task-ok" aria-label="выполнено">✓</span> : !over && (
-                  <button type="button" className="btn sm zr-skip" disabled={busy} onClick={() => { haptic.tap(); void run("zarub_skip", { index: i }); }}>
+                  <button type="button" className="btn sm gold zr-skip" disabled={busy} onClick={() => { haptic.tap(); void run("zarub_skip", { index: i }); }}>
                     <Icon name="GOLD" size={16} />{ZARUB_SKIP_GOLD}
                   </button>
                 )}

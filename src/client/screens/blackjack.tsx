@@ -301,7 +301,7 @@ function InvitePicker({ view, onClose, onPick }: { view: BjView; onClose: () => 
             <div key={m.id} className="row bj-mate">
               <b className="grow">{m.name}</b>
               {m.busy ? <span className="tiny muted">за столом</span> : (
-                <button className="btn small green" disabled={m.invited} onClick={() => onPick(m.id)}>{m.invited ? "Позван" : "Позвать"}</button>
+                <button className="btn small gold" disabled={m.invited} onClick={() => onPick(m.id)}>{m.invited ? "Позван" : "Позвать"}</button>
               )}
             </div>
           ))}
@@ -438,8 +438,8 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
         {view.invites.map((inv) => (
           <div key={inv.id} className="bj-inv row">
             <span className="grow"><b>{inv.from}</b> зовёт тебя за стол</span>
-            <button className="btn small green" disabled={busy === "bj_join"} onClick={() => run("bj_join", { inviteId: inv.id })}>Сесть</button>
-            <button className="btn small dark" onClick={() => run("bj_decline", { inviteId: inv.id })} aria-label="Отказаться">✕</button>
+            <button className="btn small gold" disabled={busy === "bj_join"} onClick={() => run("bj_join", { inviteId: inv.id })}>Сесть</button>
+            <button className="btn small red" onClick={() => run("bj_decline", { inviteId: inv.id })} aria-label="Отказаться">✕</button>
           </div>
         ))}
         <button className="btn big block gold" disabled={busy === "bj_open"} onClick={() => run("bj_open")}>Сесть за стол</button>
@@ -472,7 +472,7 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
         <div className="bjt-line tiny">{line}</div>
         {table.phase === "insurance" && me?.ins === null && reveal ? (
           <div className="bjt-acts">
-            <button className="btn dark grow" disabled={!!busy} onClick={() => run("bj_insure", { take: false })}>Без страховки</button>
+            <button className="btn red grow" disabled={!!busy} onClick={() => run("bj_insure", { take: false })}>Без страховки</button>
             <button className="btn gold grow" disabled={!!busy || usd < bjInsurance(me.hands[0]?.bet ?? 0)} onClick={() => run("bj_insure", { take: true })}>
               Страховка · {money(bjInsurance(me.hands[0]?.bet ?? 0))} <Icon name="RUB" size={16} />
             </button>
@@ -480,9 +480,9 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
         ) : table.phase === "playing" && myTurn && reveal ? (
           <div className="bj-moves">
             <button className="btn gold" disabled={!!busy || !view.moves?.hit} onClick={() => run("bj_move", { move: "hit" })}>Ещё</button>
-            <button className="btn red" disabled={!!busy || !view.moves?.stand} onClick={() => run("bj_move", { move: "stand" })}>Хватит</button>
-            <button className="btn green" disabled={!!busy || !view.moves?.double} onClick={() => run("bj_move", { move: "double" })}>Удвоить</button>
-            <button className="btn dark" disabled={!!busy || !view.moves?.split} onClick={() => run("bj_move", { move: "split" })}>Разбить</button>
+            <button className="btn gold" disabled={!!busy || !view.moves?.stand} onClick={() => run("bj_move", { move: "stand" })}>Хватит</button>
+            <button className="btn gold" disabled={!!busy || !view.moves?.double} onClick={() => run("bj_move", { move: "double" })}>Удвоить</button>
+            <button className="btn gold" disabled={!!busy || !view.moves?.split} onClick={() => run("bj_move", { move: "split" })}>Разбить</button>
           </div>
         ) : betting ? (
           <>
@@ -498,7 +498,7 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
               )}
             </div>
             <div className="bjt-acts">
-              <button className="btn dark" disabled={!(cost > 0 || free)} onClick={() => { haptic.tap(); setPending(NO_BET); setFree(false); }}>Убрать</button>
+              <button className="btn red" disabled={!(cost > 0 || free)} onClick={() => { haptic.tap(); setPending(NO_BET); setFree(false); }}>Убрать</button>
               <button className="btn gold grow" disabled={busy === "bj_bet" || (!free && pending.main.length === 0) || cost > usd} onClick={place}>
                 {free ? "Бесплатно" : <>Ставка {money(cost)} <Icon name="RUB" size={16} /></>}{free && cost > 0 ? <> + {money(cost)} <Icon name="RUB" size={16} /></> : null}
               </button>
@@ -506,7 +506,7 @@ export function BlackjackWindow({ onClose }: { onClose: () => void }) {
           </>
         ) : me?.ready && table.phase === "betting" ? (
           <div className="bjt-acts">
-            <button className="btn dark grow" disabled={!!busy} onClick={() => run("bj_unbet")}>Снять ставку</button>
+            <button className="btn red grow" disabled={!!busy} onClick={() => run("bj_unbet")}>Снять ставку</button>
           </div>
         ) : null}
       </div>

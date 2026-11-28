@@ -33,9 +33,9 @@ export function NotifySwitch() {
         </span>
       </span>
       {live ? (
-        <button className="btn dark sm" disabled={busy === "notify_set"} onClick={disable}>Выкл</button>
+        <button className="btn red sm" disabled={busy === "notify_set"} onClick={disable}>Выкл</button>
       ) : (
-        <button className="btn green sm" disabled={busy === "notify_set"} onClick={enable}>{n.on ? "Разрешить" : "Включить"}</button>
+        <button className="btn gold sm" disabled={busy === "notify_set"} onClick={enable}>{n.on ? "Разрешить" : "Включить"}</button>
       )}
     </div>
   );
@@ -76,9 +76,9 @@ export function QuestsWindow({ onClose }: { onClose: () => void }) {
               {x.claimed ? (
                 <span className="quest-ok display">✓</span>
               ) : x.done ? (
-                <button className="btn gold sm" disabled={busy === "quest_claim"} onClick={() => claim(x.id)}>Забрать</button>
+                <button className="btn green sm" disabled={busy === "quest_claim"} onClick={() => claim(x.id)}>Забрать</button>
               ) : def.href ? (
-                <Link href={def.href} className="btn dark sm" onClick={onClose}>Идти</Link>
+                <Link href={def.href} className="btn gold sm" onClick={onClose}>Идти</Link>
               ) : null}
             </div>
           );
@@ -92,7 +92,7 @@ export function QuestsWindow({ onClose }: { onClose: () => void }) {
             {q.chest.opened && q.chest.reward && <RewardChips r={q.chest.reward} size={14} />}
           </div>
           {q.chest.opened ? <span className="quest-ok display">✓</span>
-            : <button className="btn gold sm" disabled={!q.chest.ready || busy === "quest_chest"} onClick={openChest}>{q.chest.ready ? "Открыть" : `${q.list.filter((x) => x.claimed).length}/${q.list.length}`}</button>}
+            : <button className="btn green sm" disabled={!q.chest.ready || busy === "quest_chest"} onClick={openChest}>{q.chest.ready ? "Открыть" : `${q.list.filter((x) => x.claimed).length}/${q.list.length}`}</button>}
         </div>
         <NotifySwitch />
       </div>

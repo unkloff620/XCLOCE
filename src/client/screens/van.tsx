@@ -162,7 +162,7 @@ function VanPacks() {
       <button type="button" className="van-arrow l" onClick={() => turn(-1)} aria-label="Предыдущая акция"><IcArrow /></button>
       <button type="button" className="van-arrow r" onClick={() => turn(1)} aria-label="Следующая акция"><IcArrow flip /></button>
       <div className="van-ctl">
-        <button type="button" className="btn gold van-go" disabled={taken || !!got || !can || busy === "van_pack"} onClick={take}>
+        <button type="button" className="btn green van-go" disabled={taken || !!got || !can || busy === "van_pack"} onClick={take}>
           {taken || got ? "Получено" : !can ? "Не хватает" : p.price ? "Купить" : "Забрать"}
         </button>
       </div>

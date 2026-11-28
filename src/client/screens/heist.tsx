@@ -166,7 +166,7 @@ export function HeistScreen() {
             <b className="display">Взлом</b>
             <span className="small">{h?.on && h.endsAt ? <>Ящики падают с боссов ещё <b>{leftText(h.endsAt - now)}</b></> : "Ивент закончился — вскрой то, что осталось"}</span>
           </div>
-          <button type="button" className="btn dark sm" onClick={() => setHelp(true)} aria-label="Как это работает">?</button>
+          <button type="button" className="btn gold sm" onClick={() => setHelp(true)} aria-label="Как это работает">?</button>
         </div>
       </div>
 
@@ -233,7 +233,7 @@ export function HeistScreen() {
               Открыть замок сразу за <span style={{ display: "inline-flex", alignItems: "center", gap: 3, whiteSpace: "nowrap" }}><Icon name={price.currency} size={16} /><b className="num">{num(price.amount)}</b>?</span>
             </p>
             <div className="row" style={{ gap: 8 }}>
-              <button className="btn dark" style={{ flex: 1 }} onClick={() => setAsk(null)}>Нет</button>
+              <button className="btn red" style={{ flex: 1 }} onClick={() => setAsk(null)}>Нет</button>
               <button className="btn gold" style={{ flex: 1 }} disabled={busy === "heist_rush"} onClick={async () => { const s0 = ask; setAsk(null); await rush(s0); }}>Открыть</button>
             </div>
           </Modal>

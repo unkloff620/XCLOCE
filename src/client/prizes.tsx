@@ -23,7 +23,7 @@ export function PrizeWindow() {
         <div className="prize-cup"><Icon name="trophy" size={72} /></div>
         <b className="display" style={{ fontSize: 20 }}>{p.title}</b>
         <RewardChips r={p.reward} size={28} />
-        <button className="btn gold big block" disabled={busy === "prize_claim"} onClick={claim}><Icon name="gift" size={22} /> Забрать приз</button>
+        <button className="btn green big block" disabled={busy === "prize_claim"} onClick={claim}><Icon name="gift" size={22} /> Забрать приз</button>
         <Link href="/rating" className="tiny muted" onClick={() => setLater(true)}>Открыть рейтинг</Link>
         {state.prizes.length > 1 && <span className="tiny muted">Ещё призов: {state.prizes.length - 1}</span>}
       </div>

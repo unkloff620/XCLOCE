@@ -181,13 +181,13 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
     return (
       <div className="ink-open">
         <div className="ink-open-head">
-          <button type="button" className="btn dark sm" onClick={() => { haptic.tap(); setFocus({ ...focus, part: null }); }}>‹</button>
+          <button type="button" className="btn gold sm" onClick={() => { haptic.tap(); setFocus({ ...focus, part: null }); }}>‹</button>
           <span className="grow ink-open-t">
             <b>Место: {TATTOO_ZONE_NAME[zone]} <span className="num">{mineN}/{list.length}</span></b>
             <small>Сюда можно набить одну наколку — из любого сета. Новая заменит старую.</small>
           </span>
           {[...inked].some((t) => tattooZone(t) === zone) && (
-            <button type="button" className="btn dark sm" onClick={() => setInk([...inked].filter((t) => tattooZone(t) !== zone))}>Свести</button>
+            <button type="button" className="btn red sm" onClick={() => setInk([...inked].filter((t) => tattooZone(t) !== zone))}>Свести</button>
           )}
         </div>
         <div className="ink-grid">{list.map(({ s, p }) => piece(s, p!))}</div>
@@ -200,13 +200,13 @@ export function Stylist({ draft, setDraft, onClose, focus, setFocus, onRoom }: {
     return (
       <div className="ink-open">
         <div className="ink-open-head">
-          <button type="button" className="btn dark sm" onClick={() => { haptic.tap(); setInkSet(null); }}>‹</button>
+          <button type="button" className="btn gold sm" onClick={() => { haptic.tap(); setInkSet(null); }}>‹</button>
           <span className="grow ink-open-t">
             <b>«{openSet.name}» <span className="num">{mine.length}/{openSet.pieces.length}</span></b>
             <small>Падает {tattooSource(openSet, (b) => bossById(b)?.name)} · весь сет: {setBonusText(openSet, (id) => weaponById(id)?.name)}</small>
           </span>
           {all ? (
-            <button type="button" className="btn dark sm" onClick={() => setInk([...inked].filter((t) => !openSet.pieces.some((p) => p.id === t)))}>Свести все</button>
+            <button type="button" className="btn red sm" onClick={() => setInk([...inked].filter((t) => !openSet.pieces.some((p) => p.id === t)))}>Свести все</button>
           ) : (
             <button type="button" className="btn gold sm" disabled={!mine.length} data-nosfx onClick={() => { setInk([...inked, ...mine.map((p) => p.id)]); sfx("ink"); }}>Набить все</button>
           )}

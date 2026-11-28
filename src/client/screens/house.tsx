@@ -38,7 +38,7 @@ export function RoomsWindow({ onClose }: { onClose: () => void }) {
               {here ? (
                 <span className="chip green">Ты здесь</span>
               ) : owned ? (
-                <button className="btn sm violet block" disabled={!!busy} onClick={() => act("room_set", { id: r.id }, `Переезд: ${r.name}`)}>Перейти</button>
+                <button className="btn sm gold block" disabled={!!busy} onClick={() => act("room_set", { id: r.id }, `Переезд: ${r.name}`)}>Перейти</button>
               ) : (
                 <button className="btn sm gold block" disabled={!can || busy === "room_buy"} onClick={() => act("room_buy", { id: r.id }, `Куплено: ${r.name}`)}>
                   <Icon name={r.price!.currency} size={15} /> {money(r.price!.currency, r.price!.amount)}

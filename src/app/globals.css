@@ -144,12 +144,12 @@ h2.h { margin: 4px 2px 8px; font-size: 16px; text-shadow: 0 2px 0 var(--line); }
   background: radial-gradient(circle at var(--rv) var(--rv), var(--r)), radial-gradient(circle at calc(100% - var(--rv)) var(--rv), var(--r)),
     radial-gradient(circle at var(--rv) calc(100% - var(--rv)), var(--r)), radial-gradient(circle at calc(100% - var(--rv)) calc(100% - var(--rv)), var(--r)); }
 .btn:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 0 0 1.5px var(--e), inset 0 2px 0 1.5px rgba(255, 255, 255, 0.45), inset 0 -3px 0 1.5px rgba(0, 0, 0, 0.16), 0 0 0 #3b2410, 0 1px 3px rgba(0, 0, 0, 0.3); }
-.btn:disabled { filter: grayscale(0.9) brightness(0.8); cursor: default; }
 .btn.gold { --a: #ffe066; --b: #f7b51e; --c: #d98c06; --e: #7a4a05; --t: #5a3404; }
 .btn.green { --a: #b6f07a; --b: #5cc23a; --c: #2f8a1e; --e: #1d4a0c; --t: #10300a; }
 .btn.red { --a: #ff9c7a; --b: #e2452c; --c: #a8231a; --e: #5a0e08; --t: #fff; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45); }
-.btn.violet { --a: #9fd4ff; --b: #3f8fe0; --c: #1f5aa8; --e: #0c2a5a; --t: #fff; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.45); }
-.btn.dark { --a: #8a6a4c; --b: #6d513b; --c: #4e3826; --e: #150d07; --t: #ffe6b0; text-shadow: 0 -1px 0 #000; }
+/* the colours by what the button does (the user 2026-11-28): gold — an action or a way somewhere, green — taking a
+   reward, red — dangerous or refusing, plain (grey) — not available / closed: every disabled button turns grey */
+.btn:disabled, .btn[aria-disabled="true"] { --a: #eceff3; --b: #bfc6cf; --c: #8a929c; --e: #3d434a; --t: #2b2f34; text-shadow: none; filter: brightness(0.85); cursor: default; }
 .btn.big { font-size: 15px; }
 /* «block»: the same plate, centred; in menu lists (.wide) and with .sm it fills its place */
 .btn.block { display: flex; margin-left: auto; margin-right: auto; align-self: center; }

@@ -112,7 +112,7 @@ export function ClanChat() {
         <textarea className="input cchat-input" rows={1} maxLength={MAX} placeholder="Сообщение клану…" value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); } }} />
-        <button className="btn green cchat-send" type="submit" disabled={sending || !text.trim()} aria-label="Отправить">
+        <button className="btn gold cchat-send" type="submit" disabled={sending || !text.trim()} aria-label="Отправить">
           <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M3 11.5 21 3l-6.5 18-3-7.5L3 11.5Z" fill="#fff3e3" stroke="#0b0604" strokeWidth="2" strokeLinejoin="round" /><path d="M11.5 13.5 21 3" stroke="#0b0604" strokeWidth="2" /></svg>
         </button>
       </form>

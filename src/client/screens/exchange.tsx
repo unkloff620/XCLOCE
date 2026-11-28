@@ -156,7 +156,7 @@ function ChatExchange({ ex, bonus, disabled, onDone, onBack }: { ex: ShopData["e
         <span className="tiny">{!rate ? "курс скоро" : rate >= 1 ? `1 ${from} = ${money(to, floorTo(to, rate))} ${to}` : `${Math.ceil(1 / rate)} ${from} = 1 ${to}`}{bonus > 0 && <b className="dl-up"> +{Math.round(bonus * 100)}%</b>}</span>
       </div>
       <div className="dl-ex-go">
-        <button type="button" className="btn dark sm" onClick={onBack}>Назад</button>
+        <button type="button" className="btn gold sm" onClick={onBack}>Назад</button>
         <button type="button" className="btn gold sm" disabled={disabled || !(a > 0 && a <= have && quote > 0)} onClick={go}>{a > have ? "Не хватает" : "Обменять"}</button>
       </div>
       <div className="tiny muted center">Комиссия {Math.round(ex.fee * 100)}%{bonus > 0 ? ", но барыга накинул сверху" : ""} · валюта игровая</div>

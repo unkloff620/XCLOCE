@@ -69,7 +69,7 @@ function LockedInfo({ itemId, onClose }: { itemId: string; onClose: () => void }
             <span className="small">Выпадает с <b>{boss.name}</b> ({thingsModeName(boss)}). Выпала — сразу твоя, покупать не надо. Не везёт {boss.wear?.pity ?? 10} побед подряд — выпадет точно.</span>
           )}
         </div>
-        <Link href={`/bosses/${boss.id}`} className="btn red block" onClick={onClose}>К боссу {boss.name}</Link>
+        <Link href={`/bosses/${boss.id}`} className="btn gold block" onClick={onClose}>К боссу {boss.name}</Link>
       </div>
     </Modal>
   );
@@ -227,9 +227,9 @@ function Cards({ offers, batch }: { offers: Offer[]; batch: number }) {
               // bought already: no second price, the thing goes on right here (weapons are picked in the fight)
               def.slot && def.slot !== "SPECIAL" && !def.weapon ? (
                 state?.look.equipped[def.slot] === def.id
-                  ? <span className="btn sm dark block" aria-disabled="true">Надето</span>
-                  : <button className="btn sm green block" disabled={!!busy} onClick={() => { haptic.tap(); void act("equip", { itemId: def.id }, `Надето: ${def.name}`); }}>Надеть</button>
-              ) : <span className="btn sm dark block" aria-disabled="true">Куплено</span>
+                  ? <span className="btn sm block" aria-disabled="true">Надето</span>
+                  : <button className="btn sm gold block" disabled={!!busy} onClick={() => { haptic.tap(); void act("equip", { itemId: def.id }, `Надето: ${def.name}`); }}>Надеть</button>
+              ) : <span className="btn sm block" aria-disabled="true">Куплено</span>
             ) : (
               <button className="btn sm gold block" disabled={!can || full || busy === "buy"} onClick={() => buy(o, n)}>
                 <Icon name={o.price.currency} size={16} />
